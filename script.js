@@ -185,6 +185,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Interactive Envelope
     window.toggleEnvelope = () => {
         const envelope = document.getElementById('envelope');
-        envelope.classList.toggle('open');
+        const overlay = document.getElementById('letter-overlay');
+        const isOpen = envelope.classList.toggle('open');
+        
+        if (isOpen) {
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.classList.add('show'), 10);
+            document.body.style.overflow = 'hidden';
+        } else {
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }, 500);
+        }
     };
 });

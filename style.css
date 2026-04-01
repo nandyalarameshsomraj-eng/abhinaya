@@ -312,48 +312,93 @@ input {
 
 .letter-content {
   position: absolute;
-  top: 10px;
+  top: 5px;
   left: 5%;
   width: 90%;
   height: 90%;
   background: #fff;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 30px;
+  border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   z-index: 2;
-  transition: transform 0.8s ease, z-index 0.4s 0.2s;
+  transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   overflow-y: auto;
   text-align: left;
 }
 
 .envelope.open .letter-content {
-  transform: translateY(-160px) scale(1.05);
-  z-index: 15;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  width: 90vw;
+  max-width: 600px;
   height: auto;
-  min-height: 200px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  max-height: 85vh;
+  z-index: 1000;
+  padding: 50px 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border-radius: 32px;
 }
 
-/* Blooming Doodles on Letter */
+/* Backdrop Overlay for Letter */
+#letter-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 900;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#letter-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+/* Blooming Doodles on Full-Screen Letter */
 .letter-content .lily-doodle,
 .letter-content .sunflower-doodle {
   opacity: 0;
   transform: scale(0);
   transition: opacity 0.5s 0.6s, transform 0.5s 0.6s;
-  z-index: 16;
+  z-index: 1001;
 }
 
 .envelope.open .letter-content .lily-doodle,
 .envelope.open .letter-content .sunflower-doodle {
-  opacity: 0.9;
-  transform: scale(0.8) rotate(var(--rot, 0deg));
+  opacity: 1;
+  transform: scale(1) rotate(var(--rot, 0deg));
+}
+
+.close-letter-btn {
+  background: var(--primary);
+  color: white;
+  padding: 10px 25px;
+  border-radius: 50px;
+  border: none;
+  font-weight: 700;
+  margin-top: 30px;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.close-letter-btn:hover {
+  transform: scale(1.05);
 }
 
 @media (max-width: 600px) {
   .envelope.open .letter-content {
-    transform: translateY(-130px) scale(1.1);
-    width: 100%;
-    left: 0;
+    width: 95vw;
+    padding: 40px 25px;
+    max-height: 90vh;
   }
 }
 
