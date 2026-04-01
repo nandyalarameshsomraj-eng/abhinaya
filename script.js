@@ -186,16 +186,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toggleEnvelope = () => {
         const envelope = document.getElementById('envelope');
         const overlay = document.getElementById('letter-overlay');
+        const modal = document.getElementById('letter-modal');
         const isOpen = envelope.classList.toggle('open');
         
         if (isOpen) {
             overlay.style.display = 'block';
-            setTimeout(() => overlay.classList.add('show'), 10);
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                overlay.classList.add('show');
+                modal.classList.add('show');
+            }, 10);
             document.body.style.overflow = 'hidden';
         } else {
             overlay.classList.remove('show');
+            modal.classList.remove('show');
             setTimeout(() => {
                 overlay.style.display = 'none';
+                modal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             }, 500);
         }

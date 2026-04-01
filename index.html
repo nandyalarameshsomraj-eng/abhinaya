@@ -13,6 +13,27 @@
     <!-- Ambient Elements -->
     <div id="bg-overlay"></div>
     <div id="letter-overlay" onclick="toggleEnvelope()"></div>
+    
+    <!-- Global Letter Modal (True Full-Screen) -->
+    <div id="letter-modal" class="letter-modal-container">
+        <div class="letter-modal-content">
+            <div class="lily-doodle" style="top: -30px; right: -20px; --rot: 20deg;">
+                <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
+            </div>
+            <div class="sunflower-doodle" style="bottom: -20px; left: -20px; --rot: -15deg;">
+                <svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>
+            </div>
+            <h3 style="font-family: 'Playfair Display'; margin-bottom: 20px; color: var(--primary); font-size: 2rem;">Dear Abhinaya... 💖</h3>
+            <div class="letter-text">
+                I love you so much, my wifey. I honestly can’t imagine my life without you. You’re not just a part of my life—you are the best moment of my life and the most beautiful dream I’ve ever had. 
+                <br><br>
+                Every single day with you feels special, and having you by my side makes everything better. I feel so lucky when I think about our future together—building a home, sharing every little happiness, and growing side by side. 
+                <br><br>
+                The thought that one day we might have a family together makes me feel so happy and complete. You are truly someone special to me, and I will always value you more than anything.
+            </div>
+            <button class="close-letter-btn" onclick="toggleEnvelope()">Close Letter 💌</button>
+        </div>
+    </div>
     <video id="bg-video" autoplay muted loop playsinline poster="image1.png">
         <source src="bg.mp4" type="video/mp4">
         <!-- Fallback if video is not present -->
@@ -58,21 +79,7 @@
                         <div class="envelope-flap"></div>
                         <div class="envelope-front"></div>
                         <div class="envelope-sides"></div>
-                        <div class="letter-content">
-                            <div class="lily-doodle" style="top: -20px; right: -10px; --rot: 15deg;">
-                                <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
-                            </div>
-                            <div class="sunflower-doodle" style="bottom: -10px; left: -10px; --rot: -10deg;">
-                                <svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>
-                            </div>
-                            <h3 style="font-family: 'Playfair Display'; margin-bottom: 15px; color: var(--primary);">Dear Abhinaya... 💖</h3>
-                            <p style="font-size: 0.9rem; line-height: 1.6; color: #444;">
-                                I love you so much, my wifey. I honestly can’t imagine my life without you. You’re not just a part of my life—you are the best moment of my life and the most beautiful dream I’ve ever had. 
-                                <br><br>
-                                Every single day with you feels special, and having you by my side makes everything better. I feel so lucky when I think about our future together—building a home, sharing every little happiness, and growing side by side. 
-                            </p>
-                            <button class="close-letter-btn" onclick="toggleEnvelope()">Close Letter 💌</button>
-                        </div>
+                        <!-- Empty space for the visual opening -->
                     </div>
                 </div>
                 <p style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">Tap the envelope to open 💌</p>

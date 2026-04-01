@@ -310,35 +310,52 @@ input {
   z-index: 4;
 }
 
-.letter-content {
-  position: absolute;
-  top: 5px;
-  left: 5%;
-  width: 90%;
-  height: 90%;
+/* Global Letter Modal (True Full-Screen) */
+.letter-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.letter-modal-container.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.letter-modal-content {
   background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  z-index: 2;
-  transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  width: 90vw;
+  max-width: 600px;
+  max-height: 85vh;
+  padding: 50px 40px;
+  border-radius: 32px;
+  position: relative;
+  box-shadow: 0 30px 100px rgba(0,0,0,0.4);
+  transform: scale(0.8) translateY(50px);
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   overflow-y: auto;
   text-align: left;
 }
 
-.envelope.open .letter-content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(1);
-  width: 90vw;
-  max-width: 600px;
-  height: auto;
-  max-height: 85vh;
-  z-index: 1000;
-  padding: 50px 40px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  border-radius: 32px;
+.letter-modal-container.show .letter-modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.letter-text {
+  line-height: 1.8;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 20px;
 }
 
 /* Backdrop Overlay for Letter */
@@ -348,9 +365,9 @@ input {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 900;
   display: none;
   opacity: 0;
@@ -362,17 +379,17 @@ input {
   opacity: 1;
 }
 
-/* Blooming Doodles on Full-Screen Letter */
-.letter-content .lily-doodle,
-.letter-content .sunflower-doodle {
+/* Blooming Doodles on Modal Letter */
+.letter-modal-content .lily-doodle,
+.letter-modal-content .sunflower-doodle {
   opacity: 0;
   transform: scale(0);
   transition: opacity 0.5s 0.6s, transform 0.5s 0.6s;
   z-index: 1001;
 }
 
-.envelope.open .letter-content .lily-doodle,
-.envelope.open .letter-content .sunflower-doodle {
+.letter-modal-container.show .letter-modal-content .lily-doodle,
+.letter-modal-container.show .letter-modal-content .sunflower-doodle {
   opacity: 1;
   transform: scale(1) rotate(var(--rot, 0deg));
 }
@@ -380,25 +397,27 @@ input {
 .close-letter-btn {
   background: var(--primary);
   color: white;
-  padding: 10px 25px;
+  padding: 12px 30px;
   border-radius: 50px;
   border: none;
   font-weight: 700;
+  font-size: 1rem;
   margin-top: 30px;
   width: 100%;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(230, 0, 35, 0.3);
 }
 
 .close-letter-btn:hover {
   transform: scale(1.05);
+  background: var(--primary-light);
 }
 
 @media (max-width: 600px) {
-  .envelope.open .letter-content {
-    width: 95vw;
+  .letter-modal-content {
     padding: 40px 25px;
-    max-height: 90vh;
+    width: 95vw;
   }
 }
 
