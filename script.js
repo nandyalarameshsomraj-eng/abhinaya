@@ -224,11 +224,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Auto-Scatter 40 Scrapbook Stickers
     const scatterStickers = () => {
         const stickerSVGs = [
+            // Soft Bow
             `<svg viewBox="0 0 100 100"><path d="M50 50 C 25 25, 5 40, 15 65 C 25 90, 50 65, 50 50 Z" fill="#bde0fe"/><path d="M50 50 C 75 25, 95 40, 85 65 C 75 90, 50 65, 50 50 Z" fill="#bde0fe"/><circle cx="50" cy="50" r="10" fill="#a2d2ff"/><path d="M42 58 Q 20 90, 10 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M58 58 Q 80 90, 90 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none"/></svg>`,
+            // Pastel Butterfly
             `<svg viewBox="0 0 100 100"><path d="M50 10 C 70 20, 90 20, 95 45 C 100 70, 70 55, 50 60" fill="#ffccd5"/><path d="M50 10 C 30 20, 10 20, 5 45 C 0 70, 30 55, 50 60" fill="#ffccd5"/><path d="M50 60 C 65 75, 80 95, 50 95 C 35 80, 50 70, 50 60" fill="#ffaab8"/><path d="M50 60 C 35 75, 20 95, 50 95 C 65 80, 50 70, 50 60" fill="#ffaab8"/><ellipse cx="50" cy="50" rx="4" ry="22" fill="#ff8fab"/></svg>`,
+            // Sparkling Star
             `<svg viewBox="0 0 100 100"><path d="M50 0 Q 50 40, 100 50 Q 50 60, 50 100 Q 50 60, 0 50 Q 50 40, 50 0 Z" fill="#ffecd1"/></svg>`,
+            // Little Cloud
             `<svg viewBox="0 0 100 100"><path d="M30 60 A 20 20 0 0 1 50 30 A 25 25 0 0 1 90 45 A 20 20 0 0 1 80 80 L 30 80 A 20 20 0 0 1 30 60 Z" fill="#e0fbfc"/></svg>`,
-            `<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="15" fill="#fbc4ab"/><circle cx="70" cy="50" r="15" fill="#fbc4ab"/><circle cx="50" cy="70" r="15" fill="#fbc4ab"/><circle cx="30" cy="50" r="15" fill="#fbc4ab"/><circle cx="50" cy="50" r="10" fill="#ffb703"/></svg>`
+            // Pastel Flower
+            `<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="15" fill="#fbc4ab"/><circle cx="70" cy="50" r="15" fill="#fbc4ab"/><circle cx="50" cy="70" r="15" fill="#fbc4ab"/><circle cx="30" cy="50" r="15" fill="#fbc4ab"/><circle cx="50" cy="50" r="10" fill="#ffb703"/></svg>`,
+            // Diamond
+            `<svg viewBox="0 0 100 100"><polygon points="30,20 70,20 90,40 50,90 10,40" fill="#ccffff"/><polygon points="30,20 70,20 50,40" fill="#aeeeee"/><polygon points="10,40 50,90 50,40" fill="#aeeeee"/><polygon points="90,40 50,90 50,40" fill="#98f5ff"/></svg>`,
+            // Strawberry
+            `<svg viewBox="0 0 100 100"><path d="M50 85 C 10 60, 20 20, 50 25 C 80 20, 90 60, 50 85" fill="#ff7da5"/><path d="M50 25 C 40 10, 60 10, 50 25" fill="#a7e89e"/><circle cx="40" cy="45" r="3" fill="#fff"/><circle cx="60" cy="55" r="3" fill="#fff"/><circle cx="50" cy="40" r="3" fill="#fff"/></svg>`,
+            // Music Note
+            `<svg viewBox="0 0 100 100"><circle cx="40" cy="70" r="15" fill="#cda4ff"/><rect x="45" y="20" width="10" height="50" fill="#cda4ff"/><path d="M45 20 Q 75 20, 85 50" fill="none" stroke="#cda4ff" stroke-width="10" stroke-linecap="round"/></svg>`,
+            // Crescent Moon
+            `<svg viewBox="0 0 100 100"><path d="M50 10 A 40 40 0 1 0 80 80 A 30 30 0 1 1 50 10 Z" fill="#fff8b5"/></svg>`,
+            // Mini Love Letter
+            `<svg viewBox="0 0 100 100"><rect x="10" y="25" width="80" height="50" rx="5" fill="#ffccd5"/><polygon points="10,25 50,55 90,25" fill="#ffaab8"/><circle cx="50" cy="55" r="8" fill="#e60023"/></svg>`
         ];
 
         const pins = document.querySelectorAll('.pin');
