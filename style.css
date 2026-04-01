@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Annie+Use+Your+Telescope&display=swap');
 
 :root {
   --primary: #E60023; /* Pinterest Red */
@@ -19,10 +19,11 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-family: 'Annie Use Your Telescope', cursive; /* Handwritten Global Font */
   color: var(--text-dark);
   overflow-x: hidden;
-  background-color: var(--babypink); /* Changed to Babypink */
+  background-color: var(--babypink);
+  font-size: 1.3rem; /* Slightly larger for handwriting */
 }
 
 #bg-overlay {
@@ -69,13 +70,28 @@ video {
   transform: translateY(20px);
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Gloria Hallelujah', cursive;
+  line-height: 1.3;
+}
+
 h1 {
-  font-family: 'Playfair Display', serif;
   font-size: clamp(2.2rem, 10vw, 3.5rem);
   color: var(--primary);
   margin-bottom: 1rem;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-  line-height: 1.2;
+}
+
+h2 {
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  color: var(--text-dark);
+  margin-bottom: 0.75rem;
+}
+
+h3 {
+  font-size: clamp(1.2rem, 5vw, 1.6rem);
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
 }
 
 .glass-card {
@@ -107,11 +123,12 @@ button {
   background: var(--primary);
   color: white;
   border: none;
-  padding: 14px 28px;
-  font-size: 1rem;
+  padding: 14px 30px;
+  font-size: 1.2rem;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-family: 'Gloria Hallelujah', cursive;
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(230, 0, 35, 0.2);
   margin-top: 10px;
@@ -130,8 +147,9 @@ input {
   border-radius: 12px;
   border: 1px solid rgba(0,0,0,0.1);
   background: rgba(255,255,255,0.8);
-  font-size: 1rem;
+  font-size: 1.2rem;
   text-align: center;
+  font-family: 'Annie Use Your Telescope', cursive;
 }
 
 #main {
@@ -358,10 +376,11 @@ input {
 }
 
 .letter-text {
-  line-height: 1.8;
-  font-size: 1.1rem;
+  line-height: 1.9;
+  font-size: 1.35rem;
   color: #333;
   margin-bottom: 20px;
+  font-family: 'Annie Use Your Telescope', cursive;
 }
 
 /* Backdrop Overlay for Letter */
@@ -454,9 +473,9 @@ input {
   padding: 12px 30px;
   border-radius: 50px;
   border: none;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Gloria Hallelujah', cursive;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin-top: 30px;
   width: 100%;
   cursor: pointer;
