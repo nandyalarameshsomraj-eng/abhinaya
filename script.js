@@ -94,16 +94,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const svgs = type === 'sunflower' ? sunflowerSVGs : lilySVGs;
         flower.classList.add(type === 'sunflower' ? 'floating-sunflower' : 'floating-lily');
         flower.innerHTML = svgs[Math.floor(Math.random() * svgs.length)];
+        
+        // Random responsive size
+        const baseSize = window.innerWidth < 600 ? 25 : 35;
+        const size = (Math.random() * 20 + baseSize) + 'px';
+        
         flower.style.left = Math.random() * 100 + 'vw';
-        flower.style.width = (Math.random() * 30 + 30) + 'px';
-        flower.style.height = flower.style.width;
+        flower.style.width = size;
+        flower.style.height = size;
         flower.style.animationDuration = (Math.random() * 8 + 10) + 's';
         document.body.appendChild(flower);
         setTimeout(() => flower.remove(), 20000);
     };
 
-    setInterval(() => createFlower('lily'), 2500);
-    setInterval(() => createFlower('sunflower'), 4000);
+    // Adjust spawning based on screen size
+    const floralFrequency = window.innerWidth < 600 ? 6000 : 3000;
+    const heartFrequency = window.innerWidth < 600 ? 1500 : 700;
+
+    let flowerInterval = setInterval(() => {
+        createFlower(Math.random() > 0.4 ? 'lily' : 'sunflower');
+    }, floralFrequency);
+
+    let heartInterval = setInterval(createHeart, heartFrequency);
+
+    // Re-adjust on resize
+    window.addEventListener('resize', () => {
+        clearInterval(flowerInterval);
+        clearInterval(heartInterval);
+        const newFloralFreq = window.innerWidth < 600 ? 6000 : 3000;
+        const newHeartFreq = window.innerWidth < 600 ? 1500 : 700;
+        flowerInterval = setInterval(() => {
+            createFlower(Math.random() > 0.4 ? 'lily' : 'sunflower');
+        }, newFloralFreq);
+        heartInterval = setInterval(createHeart, newHeartFreq);
+    });
 
     // 4. Proposal Modal
     window.showProposal = () => {
