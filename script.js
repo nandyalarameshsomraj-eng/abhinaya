@@ -78,6 +78,25 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => heart.remove(), 10000);
     };
     setInterval(createHeart, 500);
+    
+    // 3.5 Floating Lily Logic
+    const lilySVGs = [
+        `<svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>`,
+        `<svg viewBox="0 0 100 100"><path d="M40 90 Q 40 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 60 10, 85 20, 70 40 C 80 50, 60 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 40 10, 15 20, 30 40 C 20 50, 40 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="38" r="2" fill="#ffd700"/></svg>`
+    ];
+
+    const createLily = () => {
+        const lily = document.createElement('div');
+        lily.classList.add('floating-lily');
+        lily.innerHTML = lilySVGs[Math.floor(Math.random() * lilySVGs.length)];
+        lily.style.left = Math.random() * 100 + 'vw';
+        lily.style.width = (Math.random() * 30 + 30) + 'px';
+        lily.style.height = lily.style.width;
+        lily.style.animationDuration = (Math.random() * 8 + 8) + 's';
+        document.body.appendChild(lily);
+        setTimeout(() => lily.remove(), 16000);
+    };
+    setInterval(createLily, 2000);
 
     // 4. Proposal Modal
     window.showProposal = () => {
@@ -127,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startConfetti = () => {
         for(let i=0; i<50; i++) {
             setTimeout(createHeart, i * 50);
+            if (i % 5 === 0) setTimeout(createLily, i * 60);
         }
     };
 });
