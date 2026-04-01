@@ -1,13 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;600&display=swap');
 
 :root {
-  --primary: #ff4d6d;
-  --primary-light: #ff8fab;
+  --primary: #E60023; /* Pinterest Red */
+  --primary-light: #ff5252;
   --accent: #fbc2eb;
   --bg-gradient: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
-  --glass: rgba(255, 255, 255, 0.45);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --text: #4a4a4a;
+  --pin-bg: rgba(255, 255, 255, 0.95);
+  --pin-border: rgba(0,0,0,0.05);
+  --text-dark: #111111;
+  --text-gray: #767676;
 }
 
 * {
@@ -17,12 +18,10 @@
 }
 
 body {
-  font-family: 'Montserrat', sans-serif;
-  color: var(--text);
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-  background: var(--bg-gradient);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  color: var(--text-dark);
+  overflow-x: hidden;
+  background: #fdfcfb;
 }
 
 #bg-overlay {
@@ -78,17 +77,17 @@ h1 {
 }
 
 .glass-card {
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
+  background: var(--pin-bg);
+  border: 1px solid var(--pin-border);
+  border-radius: 32px;
   padding: 40px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-  max-width: 600px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+  max-width: 500px;
   width: 90%;
   text-align: center;
   animation: fadeIn 1.5s ease-out;
+  position: relative;
+  overflow: hidden;
 }
 
 @keyframes fadeIn {
@@ -106,13 +105,13 @@ button {
   background: var(--primary);
   color: white;
   border: none;
-  padding: 14px 32px;
-  font-size: 1.1rem;
+  padding: 14px 28px;
+  font-size: 1rem;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-weight: 600;
-  box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(230, 0, 35, 0.2);
   margin-top: 10px;
 }
 
@@ -136,23 +135,97 @@ input {
 #main {
   overflow-y: auto;
   justify-content: flex-start;
-  padding-top: 50px;
+  padding: 80px 20px;
 }
 
-.box {
-  background: var(--glass);
-  backdrop-filter: blur(8px);
-  border-radius: 20px;
-  padding: 30px;
-  margin-bottom: 30px;
+.pin-container {
+  column-count: 3;
+  column-gap: 20px;
   width: 100%;
-  max-width: 700px;
-  border: 1px solid var(--glass-border);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .pin-container { column-count: 2; }
+}
+@media (max-width: 600px) {
+  .pin-container { column-count: 1; }
+}
+
+.pin {
+  display: inline-block;
+  width: 100%;
+  background: var(--pin-bg);
+  border-radius: 32px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--pin-border);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  break-inside: avoid;
+}
+
+.pin:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.pin-image-wrapper {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.pin-image-wrapper img {
+  width: 100%;
+  display: block;
+}
+
+.pin-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pin:hover .pin-overlay {
+  opacity: 1;
+}
+
+.save-btn {
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.heart-icon {
+  background: rgba(255,255,255,0.8);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
 }
 
 .timer-box {
-  font-size: 2rem;
-  font-weight: 300;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: var(--primary);
   margin-top: 10px;
 }
