@@ -207,4 +207,57 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
         }
     };
+
+    // 7. Global Touch-Hearts Interaction
+    document.addEventListener('pointerdown', (e) => {
+        const clickHeart = document.createElement('div');
+        clickHeart.classList.add('click-heart');
+        clickHeart.innerHTML = ['❤️', '💖', '💕', '💗', '🎀', '✨'][Math.floor(Math.random() * 6)];
+        clickHeart.style.left = e.clientX + 'px';
+        clickHeart.style.top = e.clientY + 'px';
+        clickHeart.style.setProperty('--rot', (Math.random() * 60 - 30) + 'deg');
+        document.body.appendChild(clickHeart);
+
+        setTimeout(() => clickHeart.remove(), 800);
+    });
+
+    // 8. Auto-Scatter 40 Scrapbook Stickers
+    const scatterStickers = () => {
+        const stickerSVGs = [
+            `<svg viewBox="0 0 100 100"><path d="M50 50 C 25 25, 5 40, 15 65 C 25 90, 50 65, 50 50 Z" fill="#bde0fe"/><path d="M50 50 C 75 25, 95 40, 85 65 C 75 90, 50 65, 50 50 Z" fill="#bde0fe"/><circle cx="50" cy="50" r="10" fill="#a2d2ff"/><path d="M42 58 Q 20 90, 10 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M58 58 Q 80 90, 90 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none"/></svg>`,
+            `<svg viewBox="0 0 100 100"><path d="M50 10 C 70 20, 90 20, 95 45 C 100 70, 70 55, 50 60" fill="#ffccd5"/><path d="M50 10 C 30 20, 10 20, 5 45 C 0 70, 30 55, 50 60" fill="#ffccd5"/><path d="M50 60 C 65 75, 80 95, 50 95 C 35 80, 50 70, 50 60" fill="#ffaab8"/><path d="M50 60 C 35 75, 20 95, 50 95 C 65 80, 50 70, 50 60" fill="#ffaab8"/><ellipse cx="50" cy="50" rx="4" ry="22" fill="#ff8fab"/></svg>`,
+            `<svg viewBox="0 0 100 100"><path d="M50 0 Q 50 40, 100 50 Q 50 60, 50 100 Q 50 60, 0 50 Q 50 40, 50 0 Z" fill="#ffecd1"/></svg>`,
+            `<svg viewBox="0 0 100 100"><path d="M30 60 A 20 20 0 0 1 50 30 A 25 25 0 0 1 90 45 A 20 20 0 0 1 80 80 L 30 80 A 20 20 0 0 1 30 60 Z" fill="#e0fbfc"/></svg>`,
+            `<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="15" fill="#fbc4ab"/><circle cx="70" cy="50" r="15" fill="#fbc4ab"/><circle cx="50" cy="70" r="15" fill="#fbc4ab"/><circle cx="30" cy="50" r="15" fill="#fbc4ab"/><circle cx="50" cy="50" r="10" fill="#ffb703"/></svg>`
+        ];
+
+        const pins = document.querySelectorAll('.pin');
+        if (pins.length === 0) return;
+
+        for (let i = 0; i < 40; i++) {
+            const sticker = document.createElement('div');
+            sticker.classList.add('scatter-sticker');
+            sticker.innerHTML = stickerSVGs[Math.floor(Math.random() * stickerSVGs.length)];
+            
+            const size = Math.random() * 30 + 20;
+            const rot = Math.random() * 360;
+            const x = Math.random() * 110 - 5;
+            const y = Math.random() * 110 - 5;
+            const delay = Math.random() * 2;
+            const scale = Math.random() * 0.5 + 0.8;
+
+            sticker.style.width = size + 'px';
+            sticker.style.height = size + 'px';
+            sticker.style.left = x + '%';
+            sticker.style.top = y + '%';
+            sticker.style.setProperty('--rot', rot + 'deg');
+            sticker.style.setProperty('--delay', delay + 's');
+            sticker.style.setProperty('--sc', scale);
+
+            const randomPin = pins[Math.floor(Math.random() * pins.length)];
+            randomPin.appendChild(sticker);
+        }
+    };
+
+    scatterStickers();
 });
