@@ -231,9 +231,9 @@ input {
 }
 
 @keyframes heartPop {
-  0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; filter: drop-shadow(0 2px 5px rgba(255, 77, 109, 0.5)); }
-  50% { transform: translate(-50%, -60px) scale(1.2) rotate(var(--rot, 15deg)); opacity: 1; filter: drop-shadow(0 4px 8px rgba(255, 77, 109, 0.3));}
-  100% { transform: translate(-50%, -100px) scale(0.8) rotate(calc(var(--rot, 15deg) * 1.5)); opacity: 0; filter: drop-shadow(0 2px 5px rgba(255, 77, 109, 0));}
+  0% { transform: translate3d(-50%, -50%, 0) scale(0) rotate(0deg); opacity: 1; filter: drop-shadow(0 2px 5px rgba(255, 77, 109, 0.5)); }
+  50% { transform: translate3d(-50%, -60px, 0) scale(1.2) rotate(var(--rot, 15deg)); opacity: 1; filter: drop-shadow(0 4px 8px rgba(255, 77, 109, 0.3));}
+  100% { transform: translate3d(-50%, -100px, 0) scale(0.8) rotate(calc(var(--rot, 15deg) * 1.5)); opacity: 0; filter: drop-shadow(0 2px 5px rgba(255, 77, 109, 0));}
 }
 
 /* Scattered Scrapbook Stickers */
@@ -241,15 +241,16 @@ input {
   position: absolute;
   pointer-events: none;
   z-index: 10;
-  /* Thick white border effect typical of scrapbook stickers */
-  filter: drop-shadow(0px 0px 0px white) drop-shadow(0px 0px 2px white) drop-shadow(0px 3px 5px rgba(0,0,0,0.1));
+  /* Optimized shadow for performance */
+  filter: drop-shadow(0px 1px 3px rgba(0,0,0,0.12));
   animation: scatterFloat 6s ease-in-out infinite alternate;
   animation-delay: var(--delay, 0s);
+  will-change: transform;
 }
 
 @keyframes scatterFloat {
-  0%, 100% { transform: scale(var(--sc)) rotate(var(--rot, 0deg)) translateY(0); }
-  50% { transform: scale(var(--sc)) rotate(calc(var(--rot, 0deg) + 3deg)) translateY(-4px); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(var(--sc)) rotate(var(--rot, 0deg)); }
+  50% { transform: translate3d(0, -4px, 0) scale(var(--sc)) rotate(calc(var(--rot, 0deg) + 3deg)); }
 }
 
 .timer-box {
@@ -567,13 +568,14 @@ input {
   pointer-events: none;
   animation: floatUp 8s linear infinite;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes floatUp {
-  0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+  0% { transform: translate3d(0, 100vh, 0) scale(0.5); opacity: 0; }
   10% { opacity: 0.8; }
   90% { opacity: 0.8; }
-  100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  100% { transform: translate3d(0, -10vh, 0) scale(1.2); opacity: 0; }
 }
 
 /* Modal Popup */
@@ -634,8 +636,8 @@ input {
 }
 
 @keyframes lilySway {
-  0%, 100% { transform: rotate(-5deg) translateY(0); }
-  50% { transform: rotate(5deg) translateY(-10px); }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-5deg); }
+  50% { transform: translate3d(0, -10px, 0) rotate(5deg); }
 }
 
 .floating-lily {
@@ -684,13 +686,14 @@ input {
   pointer-events: none;
   animation: sunflowerFloatUp 15s linear forwards;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes sunflowerFloatUp {
-  0% { transform: translateY(110vh) rotate(0deg) scale(0.5); opacity: 0; }
+  0% { transform: translate3d(0, 110vh, 0) rotate(0deg) scale(0.5); opacity: 0; }
   10% { opacity: 0.6; }
   90% { opacity: 0.6; }
-  100% { transform: translateY(-20vh) rotate(180deg) scale(1); opacity: 0; }
+  100% { transform: translate3d(0, -20vh, 0) rotate(180deg) scale(1); opacity: 0; }
 }
 
 /* Album Player Animation States */
