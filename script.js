@@ -79,24 +79,31 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setInterval(createHeart, 500);
     
-    // 3.5 Floating Lily Logic
+    // 3.5 Floating Floral Logic
     const lilySVGs = [
         `<svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>`,
         `<svg viewBox="0 0 100 100"><path d="M40 90 Q 40 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 60 10, 85 20, 70 40 C 80 50, 60 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 40 10, 15 20, 30 40 C 20 50, 40 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="38" r="2" fill="#ffd700"/></svg>`
     ];
 
-    const createLily = () => {
-        const lily = document.createElement('div');
-        lily.classList.add('floating-lily');
-        lily.innerHTML = lilySVGs[Math.floor(Math.random() * lilySVGs.length)];
-        lily.style.left = Math.random() * 100 + 'vw';
-        lily.style.width = (Math.random() * 30 + 30) + 'px';
-        lily.style.height = lily.style.width;
-        lily.style.animationDuration = (Math.random() * 8 + 8) + 's';
-        document.body.appendChild(lily);
-        setTimeout(() => lily.remove(), 16000);
+    const sunflowerSVGs = [
+        `<svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>`
+    ];
+
+    const createFlower = (type) => {
+        const flower = document.createElement('div');
+        const svgs = type === 'sunflower' ? sunflowerSVGs : lilySVGs;
+        flower.classList.add(type === 'sunflower' ? 'floating-sunflower' : 'floating-lily');
+        flower.innerHTML = svgs[Math.floor(Math.random() * svgs.length)];
+        flower.style.left = Math.random() * 100 + 'vw';
+        flower.style.width = (Math.random() * 30 + 30) + 'px';
+        flower.style.height = flower.style.width;
+        flower.style.animationDuration = (Math.random() * 8 + 10) + 's';
+        document.body.appendChild(flower);
+        setTimeout(() => flower.remove(), 20000);
     };
-    setInterval(createLily, 2000);
+
+    setInterval(() => createFlower('lily'), 2500);
+    setInterval(() => createFlower('sunflower'), 4000);
 
     // 4. Proposal Modal
     window.showProposal = () => {
@@ -146,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const startConfetti = () => {
         for(let i=0; i<50; i++) {
             setTimeout(createHeart, i * 50);
-            if (i % 5 === 0) setTimeout(createLily, i * 60);
+            if (i % 6 === 0) setTimeout(() => createFlower('lily'), i * 60);
+            if (i % 8 === 0) setTimeout(() => createFlower('sunflower'), i * 70);
         }
     };
 });
