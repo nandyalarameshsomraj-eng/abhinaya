@@ -181,4 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (i % 8 === 0) setTimeout(() => createFlower('sunflower'), i * 70);
         }
     };
+
+    // 6. Interactive Envelope
+    window.toggleEnvelope = () => {
+        const envelope = document.getElementById('envelope');
+        envelope.classList.toggle('open');
+    };
 });

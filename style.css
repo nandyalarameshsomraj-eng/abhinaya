@@ -232,6 +232,130 @@ input {
   margin-top: 10px;
 }
 
+/* Envelope & Letter Styles */
+.envelope-wrapper {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  cursor: pointer;
+  margin-top: 20px;
+  perspective: 1000px;
+}
+
+.envelope {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fdf5e6; /* Old paper color */
+  border-radius: 0 0 16px 16px;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.envelope::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fdf5e6;
+  border: 1px solid rgba(0,0,0,0.05);
+  z-index: 1;
+}
+
+.envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #faebd7;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  z-index: 10;
+  transform-origin: top;
+  transition: transform 0.6s ease;
+}
+
+.envelope:hover .envelope-flap {
+  border-color: var(--primary);
+}
+
+.envelope.open .envelope-flap {
+  transform: rotateX(180deg);
+  z-index: 0;
+}
+
+.envelope-front {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  background: #faebd7;
+  clip-path: polygon(0 100%, 100% 100%, 50% 0);
+  z-index: 5;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.envelope-sides {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #faebd7;
+  clip-path: polygon(0 0, 20% 50%, 0 100%, 100% 100%, 80% 50%, 100% 0);
+  z-index: 4;
+}
+
+.letter-content {
+  position: absolute;
+  top: 10px;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 2;
+  transition: transform 0.8s ease, z-index 0.4s 0.2s;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.envelope.open .letter-content {
+  transform: translateY(-160px) scale(1.05);
+  z-index: 15;
+  height: auto;
+  min-height: 200px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+/* Blooming Doodles on Letter */
+.letter-content .lily-doodle,
+.letter-content .sunflower-doodle {
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.5s 0.6s, transform 0.5s 0.6s;
+  z-index: 16;
+}
+
+.envelope.open .letter-content .lily-doodle,
+.envelope.open .letter-content .sunflower-doodle {
+  opacity: 0.9;
+  transform: scale(0.8) rotate(var(--rot, 0deg));
+}
+
+@media (max-width: 600px) {
+  .envelope.open .letter-content {
+    transform: translateY(-130px) scale(1.1);
+    width: 100%;
+    left: 0;
+  }
+}
+
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
