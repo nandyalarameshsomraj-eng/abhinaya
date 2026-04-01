@@ -275,4 +275,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     scatterStickers();
+
+    // 9. Album Player Logic
+    window.toggleAudio = () => {
+        const audio = document.getElementById('bg-audio');
+        const pin = document.querySelector('.album-player-pin');
+        const statusText = pin.querySelector('.audio-status');
+        
+        if (audio.paused) {
+            audio.play();
+            pin.classList.add('playing');
+            statusText.textContent = "Playing: her.webm 💖";
+        } else {
+            audio.pause();
+            pin.classList.remove('playing');
+            statusText.textContent = "Tap to spark the magic ✨";
+        }
+    };
 });

@@ -678,3 +678,44 @@ input {
   90% { opacity: 0.6; }
   100% { transform: translateY(-20vh) rotate(180deg) scale(1); opacity: 0; }
 }
+
+/* Album Player Animation States */
+.album-player-pin:hover {
+  transform: translateY(-5px) scale(1.02) !important;
+}
+
+.album-player-pin.playing .spin-disc {
+  animation: recordSpin 3s linear infinite;
+}
+
+.album-player-pin.playing .tone-arm {
+  transform: rotate(23deg) !important;
+}
+
+.album-player-pin.playing .music-notes {
+  opacity: 1 !important;
+}
+
+.album-player-pin.playing .floating-note.note1 {
+  animation: floatNote1 2s ease-in-out infinite;
+}
+
+.album-player-pin.playing .floating-note.note2 {
+  animation: floatNote2 2.5s ease-in-out infinite reverse;
+}
+
+@keyframes recordSpin {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes floatNote1 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  50% { transform: translate(-10px, -20px) scale(1.2); opacity: 1; }
+  100% { transform: translate(-20px, -40px) scale(1); opacity: 0; }
+}
+
+@keyframes floatNote2 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  50% { transform: translate(10px, -20px) scale(1.2); opacity: 1; }
+  100% { transform: translate(20px, -40px) scale(1); opacity: 0; }
+}
