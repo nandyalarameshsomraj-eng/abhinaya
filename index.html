@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Dearest Abhinaya ❤️</title>
+    <meta name="description" content="A special, romantic surprise for the most beautiful soul.">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Ambient Elements -->
+    <div id="bg-overlay"></div>
+    <video id="bg-video" autoplay muted loop playsinline poster="image1.png">
+        <source src="bg.mp4" type="video/mp4">
+        <!-- Fallback if video is not present -->
+    </video>
+
+    <!-- INTRO SCREEN -->
+    <section id="intro" class="screen">
+        <div class="glass-card">
+            <h1>Hey Abhinaya 💖</h1>
+            <p>I crafted a little piece of my heart just for you. Something as special as the moments we share.</p>
+            <p style="font-style: italic; font-size: 0.9em; opacity: 0.8;">Click to reveal the surprise...</p>
+            <button onclick="goToLock()" id="start-btn">Begin Our Journey 🌹</button>
+        </div>
+    </section>
+
+    <!-- PASSWORD/LOCK SCREEN -->
+    <section id="lockScreen" class="screen hidden" style="display: none;">
+        <div class="glass-card">
+            <h2 style="font-family: 'Playfair Display'; margin-bottom: 20px;">Unlock My Heart 🔐</h2>
+            <p>Enter the secret code to proceed...</p>
+            <input type="password" id="password" placeholder="Enter Secret 🔐" autofocus>
+            <button onclick="checkPassword()">Unlock 💖</button>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT GALLERY -->
+    <section id="main" class="screen hidden" style="display: none;">
+        
+        <h1 style="color: white; margin-bottom: 40px;">Abhinaya 💕</h1>
+
+        <div class="box">
+            <h2 style="font-family: 'Playfair Display'; margin-bottom: 15px;">A Letter to My Wifey 💌</h2>
+            <p style="text-align: left; font-size: 1rem;">
+                I love you so much, my wifey. I honestly can’t imagine my life without you. You’re not just a part of my life—you are the best moment of my life and the most beautiful dream I’ve ever had. 
+                <br><br>
+                Every single day with you feels special, and having you by my side makes everything better. I feel so lucky when I think about our future together—building a home, sharing every little happiness, and growing side by side. 
+                <br><br>
+                The thought that one day we might have a family together makes me feel so happy and complete. You are truly someone special to me, and I will always value you more than anything.
+            </p>
+        </div>
+
+        <div class="box">
+            <h2 style="font-family: 'Playfair Display'; margin-bottom: 15px;">Our Everlasting Time ⏳</h2>
+            <div id="timer" class="timer-box"></div>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">Counting every precious moment since Feb 13, 2026</p>
+        </div>
+
+        <div class="box">
+            <h2 style="font-family: 'Playfair Display'; margin-bottom: 15px;">Cherished Memories 📸</h2>
+            <div class="gallery">
+                <div class="gallery-item">
+                    <img src="assets/memories/memory1.jpg" alt="Our Memory" id="memory1">
+                    <p style="font-size: 0.8em; margin-top: 5px;">A beautiful moment ✨</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/memories/memory2.jpg" alt="Our Memory" id="memory2">
+                    <p style="font-size: 0.8em; margin-top: 5px;">Holding hands 🤝</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/memories/memory3.jpg" alt="Our Memory" id="memory3">
+                    <p style="font-size: 0.8em; margin-top: 5px;">Sweet kiss 💋</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/memories/memory4.jpg" alt="Our Memory" id="memory4">
+                    <p style="font-size: 0.8em; margin-top: 5px;">Lifted in love 💍</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="box" style="margin-bottom: 100px;">
+            <h2 style="font-family: 'Playfair Display'; margin-bottom: 15px;">A Special Request 💍</h2>
+            <p>I have one question to ask you today...</p>
+            <button onclick="showProposal()">Click Me ❤️</button>
+        </div>
+
+    </section>
+
+    <!-- PROPOSAL MODAL -->
+    <div id="proposal-modal">
+        <div class="modal-content">
+            <h1 style="font-size: 2.2rem; margin-bottom: 20px;">Will you stay with me forever? 💍</h1>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="yesAnswer()" id="yes-btn">Yes 💖</button>
+                <button onclick="noAnswer()" id="no-btn">No 😢</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>
