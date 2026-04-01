@@ -61,6 +61,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${hours}h ${minutes}m ${seconds}s of Love
             </div>
         `;
+
+        // Calculate Upcoming Anniversaries
+        const startDay = startDate.getDate();
+        const startMonth = startDate.getMonth();
+        
+        let nextMonthDate = new Date(now.getFullYear(), now.getMonth(), startDay);
+        if (now > nextMonthDate) {
+            nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+        }
+        
+        let nextYearDate = new Date(now.getFullYear(), startMonth, startDay);
+        if (now > nextYearDate) {
+            nextYearDate.setFullYear(nextYearDate.getFullYear() + 1);
+        }
+
+        const formatOpts = { month: 'short', day: 'numeric', year: 'numeric' };
+        const monthEl = document.getElementById('next-month-anniversary');
+        const yearEl = document.getElementById('next-year-anniversary');
+        
+        if (monthEl) {
+            const daysLeft = Math.floor((nextMonthDate - now) / (1000 * 60 * 60 * 24));
+            monthEl.innerHTML = `${nextMonthDate.toLocaleDateString('en-US', formatOpts)} <span style="font-size:0.8em; opacity:0.7;">(in ${daysLeft}d)</span>`;
+        }
+        if (yearEl) {
+            const daysLeft = Math.floor((nextYearDate - now) / (1000 * 60 * 60 * 24));
+            yearEl.innerHTML = `${nextYearDate.toLocaleDateString('en-US', formatOpts)} <span style="font-size:0.8em; opacity:0.7;">(in ${daysLeft}d)</span>`;
+        }
     };
     setInterval(updateTimer, 1000);
     updateTimer();
