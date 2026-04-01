@@ -184,7 +184,7 @@ input {
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* Let tape and stickers hang off */
   break-inside: avoid;
 }
 
@@ -203,6 +203,20 @@ input {
 .pin-image-wrapper img {
   width: 100%;
   display: block;
+}
+
+/* Scrapbook Washi Tape */
+.washi-tape {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: clamp(80px, 50%, 130px);
+  height: 30px;
+  background: rgba(255, 183, 197, 0.7); /* translucent pastel pink */
+  z-index: 15;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  /* Make ends look slightly torn/jagged */
+  clip-path: polygon(2% 0, 98% 0, 100% 15%, 98% 30%, 100% 50%, 97% 70%, 100% 85%, 98% 100%, 2% 100%, 0 85%, 3% 70%, 0 50%, 2% 30%, 0 15%);
 }
 
 /* Custom Click-Heart Animation */

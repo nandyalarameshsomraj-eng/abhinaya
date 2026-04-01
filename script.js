@@ -256,8 +256,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const size = Math.random() * 30 + 20;
             const rot = Math.random() * 360;
-            const x = Math.random() * 110 - 5;
-            const y = Math.random() * 110 - 5;
+            
+            // Constrain placements exclusively to the outer edges/frame!
+            let x, y;
+            if (Math.random() > 0.5) {
+                // Top or Bottom borders
+                x = Math.random() * 110 - 5;
+                y = Math.random() > 0.5 ? (Math.random() * 10 - 5) : (Math.random() * 15 + 85);
+            } else {
+                // Left or Right borders
+                y = Math.random() * 110 - 5;
+                x = Math.random() > 0.5 ? (Math.random() * 10 - 5) : (Math.random() * 10 + 85);
+            }
+            
             const delay = Math.random() * 2;
             const scale = Math.random() * 0.5 + 0.8;
 
@@ -272,6 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const randomPin = pins[Math.floor(Math.random() * pins.length)];
             randomPin.appendChild(sticker);
         }
+
+        // Auto-inject Washi Tape to all picture frames
+        const imageWrappers = document.querySelectorAll('.pin-image-wrapper');
+        imageWrappers.forEach(wrapper => {
+            const tape = document.createElement('div');
+            tape.classList.add('washi-tape');
+            // Give each tape a slight natural rotation offset
+            tape.style.transform = `translateX(-50%) rotate(${Math.random() * 8 - 4}deg)`;
+            wrapper.appendChild(tape);
+        });
     };
 
     scatterStickers();
@@ -285,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (audio.paused) {
             audio.play();
             pin.classList.add('playing');
-            statusText.textContent = "Playing: her.webm 💖";
+            statusText.textContent = "Playing: Her. 💖";
         } else {
             audio.pause();
             pin.classList.remove('playing');
