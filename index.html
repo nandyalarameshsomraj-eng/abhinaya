@@ -13,6 +13,7 @@
 
     <!-- Ambient Elements -->
     <div id="bg-overlay"></div>
+    <canvas id="fireworks-canvas"></canvas>
     <div id="letter-overlay" onclick="toggleEnvelope()"></div>
     
     <!-- Global Letter Modal (True Full-Screen) -->
@@ -76,6 +77,43 @@
             <button class="close-letter-btn" onclick="toggleEnvelope()">Close Letter 💌</button>
         </div>
     </div>
+
+    <!-- Special Anniversary Letter Modal -->
+    <div id="anniversary-modal" class="letter-modal-container">
+        <div class="letter-modal-content anniversary-special">
+            <!-- Special Doodles for Anniversary -->
+            <div class="scribble-doodle doodle-anniversary-title" style="top: 10px; left: 50%; transform: translateX(-50%); font-size: 2rem; color: var(--primary);">April 13th, 2026 ❤️</div>
+            
+            <div class="lily-doodle" style="top: -20px; right: 20px; --rot: 45deg;">
+                <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
+            </div>
+
+            <!-- Memory Slideshow -->
+            <div class="special-slideshow-container" onclick="startAnniversarySlideshow()">
+                <img id="anniversary-slideshow-img" src="assets/memories/memory1.jpg" alt="Our Memories">
+                <div class="slideshow-overlay">▶️ Click to Play Our Memories</div>
+            </div>
+
+            <h3 style="margin-top: 25px; color: var(--primary);">Happy Anniversary, My Sweetheart! 💍</h3>
+            <div class="letter-text">
+                Oh how I adore you. It seems like I was made to love someone so much, yet it is incredible for me to realize how true it is. What makes me fall in love with you more each day is how you treat me and how you feel about me my sweet baby.
+                <br><br>
+                I solemnly swear to make your life full of joy and happiness because you are everything to me that I will want to be with you forever your best friend, lover, wife and soul mate.
+                <br><br>
+                It seems incredible for us to celebrate another two months together, but hey, it is only the beginning. We will live our life one day and create our home and family with two children and even a dog someday.
+                <br><br>
+                Although I may not always bring you happiness, but I can promise to always try my best to make you smile and be happy.
+                <br><br>
+                <span style="font-size: 1.8rem; display: block; text-align: right; margin-top: 20px;">Mwahhhh, Happy Anniversary, my wifey. I love you forever. ❤️</span>
+            </div>
+
+            <!-- More Doodles -->
+            <div class="scribble-doodle doodle-sparkle" style="bottom: 80px; left: 20px;">✨✨</div>
+            <div class="scribble-doodle doodle-hand-heart" style="bottom: 30px; right: 40px;">🫶🏼</div>
+
+            <button class="close-letter-btn" onclick="toggleAnniversaryModal()">Close 💖</button>
+        </div>
+    </div>
     <video id="bg-video" autoplay muted loop playsinline poster="image1.png">
         <source src="bg.mp4" type="video/mp4">
         <!-- Fallback if video is not present -->
@@ -113,6 +151,25 @@
         <h1 style="margin-bottom: 40px; text-align: center;">Our Forever Mood Board 💕</h1>
 
         <div class="pin-container">
+            
+            <!-- Pin: ANNIVERSARY SURPRISE (LOCKED) -->
+            <div class="pin" id="anniversary-pin">
+                <div class="locked-overlay">
+                    <div class="lock-icon">🔒</div>
+                    <div class="lock-timer">Unlocks at 12 AM</div>
+                </div>
+                <div class="envelope-wrapper" onclick="handleAnniversaryClick()">
+                    <div class="envelope anniversary-envelope" id="anniversary-envelope">
+                        <div class="envelope-flap"></div>
+                        <div class="envelope-front">
+                            <div class="wax-seal">❤️</div>
+                        </div>
+                        <div class="envelope-sides"></div>
+                    </div>
+                </div>
+                <h3 style="text-align: center; margin-top: 15px; font-size: 1.2rem; color: var(--primary);">Special Surprise 🎁</h3>
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">Wait for the magic to happen...</p>
+            </div>
             
             <!-- Pin: Letter (Interactive Envelope) -->
             <div class="pin" id="letter-pin">

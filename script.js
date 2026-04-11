@@ -31,9 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 lock.style.display = 'none';
                 main.style.display = 'flex';
                 setTimeout(() => main.classList.remove('hidden'), 50);
-                startConfetti();
+                
+                // RECURRING CELEBRATION: If it's the 13th, spark the magic!
+                const now = new Date();
+                if (now.getDate() === 13) {
+                    setTimeout(() => {
+                        startFireworks();
+                        startAmbientCelebration(); // Start all-day celebration
+                    }, 1000);
+                } else {
+                    startConfetti();
+                }
             }, 1000);
         } else {
+            // ... (rest of old logic)
             passwordInput.style.border = "2px solid #ff4d6d";
             passwordInput.value = "";
             passwordInput.placeholder = "Wrong Secret 💔";
@@ -43,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
         }
     };
+
 
     // 2. Timer Logic
     const startDate = new Date("2026-02-13T00:00:00");
@@ -339,5 +351,211 @@ document.addEventListener('DOMContentLoaded', () => {
             pin.classList.remove('playing');
             statusText.textContent = "Tap to spark the magic ✨";
         }
+    };
+
+    // 10. Anniversary Surprise Logic
+    const anniversaryDate = new Date("2026-04-13T00:00:00");
+    const anniversaryPin = document.getElementById('anniversary-pin');
+    const anniversaryModal = document.getElementById('anniversary-modal');
+    const anniversaryVideo = document.getElementById('anniversary-video');
+
+    const checkAnniversaryStatus = () => {
+        const now = new Date();
+        if (now >= anniversaryDate) {
+            anniversaryPin.classList.remove('locked');
+            anniversaryPin.classList.add('unlocked');
+            const timerText = anniversaryPin.querySelector('.lock-timer');
+            if (timerText) timerText.textContent = "It's time! 💖";
+        } else {
+            anniversaryPin.classList.add('locked');
+            anniversaryPin.classList.remove('unlocked');
+            
+            const diff = anniversaryDate - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+            const timerText = anniversaryPin.querySelector('.lock-timer');
+            if (timerText) timerText.textContent = `Unlocks in ${hours}h ${minutes}m`;
+        }
+    };
+
+    setInterval(checkAnniversaryStatus, 1000);
+    checkAnniversaryStatus();
+
+    window.handleAnniversaryClick = () => {
+        const now = new Date();
+        if (now < anniversaryDate) {
+            alert("Patience, my love... exactly at 12 AM on April 13th, I'll show you something special! ❤️");
+            return;
+        }
+
+        // Trigger Surprise immediately
+        const audio = document.getElementById('bg-audio');
+        if (audio.paused) {
+            audio.play().catch(e => console.log("Audio blocked"));
+            document.querySelector('.album-player-pin').classList.add('playing');
+        }
+        
+        startFireworks();
+        toggleAnniversaryModal();
+    };
+
+    window.toggleAnniversaryModal = () => {
+        const overlay = document.getElementById('letter-overlay');
+        const isOpen = anniversaryModal.classList.toggle('show');
+        
+        if (isOpen) {
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.classList.add('show'), 10);
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Stop slideshow if needed
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+                slideshowInterval = null;
+            }
+            document.querySelector('.special-slideshow-container').classList.remove('slideshow-playing');
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }, 500);
+        }
+    };
+
+    // 11. Slideshow Logic
+    let slideshowInterval = null;
+    window.startAnniversarySlideshow = () => {
+        const container = document.querySelector('.special-slideshow-container');
+        const img = document.getElementById('anniversary-slideshow-img');
+        if (slideshowInterval) return; // Already running
+
+        container.classList.add('slideshow-playing');
+        
+        const memories = [
+            'assets/memories/memory1.jpg',
+            'assets/memories/memory2.jpg',
+            'assets/memories/memory3.jpg',
+            'assets/memories/memory4.jpg',
+            'assets/memories/memory5.png',
+            'assets/memories/memory6.png',
+            'assets/memories/memory7.png'
+        ];
+        
+        let currentIndex = 0;
+        slideshowInterval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % memories.length;
+            
+            // Fade out
+            img.classList.add('fade-out');
+            
+            setTimeout(() => {
+                img.src = memories[currentIndex];
+                // Fade in
+                img.classList.remove('fade-out');
+            }, 1000); // Sync with CSS transition
+        }, 3000);
+    };
+
+    // 11. Fireworks Logic (Canvas)
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let fireworkActive = false;
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.velocity = {
+                x: (Math.random() - 0.5) * 8,
+                y: (Math.random() - 0.5) * 8
+            };
+            this.alpha = 1;
+            this.friction = 0.95;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        update() {
+            this.velocity.x *= this.friction;
+            this.velocity.y *= this.friction;
+            this.y += 0.1; // gravity
+            this.x += this.velocity.x;
+            this.y += this.velocity.y;
+            this.alpha -= 0.01;
+        }
+    }
+
+    window.startAmbientCelebration = () => {
+        console.log("Celebration Mode: ON 🎆");
+        if (!fireworkActive) {
+            fireworkActive = true;
+            animateFireworks();
+        }
+        
+        // Spawn a random firework every 15 seconds
+        setInterval(() => {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height * 0.5;
+            createFirework(x, y);
+        }, 15000);
+    };
+
+    window.startFireworks = () => {
+        if (!fireworkActive) {
+            fireworkActive = true;
+            animateFireworks();
+        }
+        let count = 0;
+        const interval = setInterval(() => {
+            createFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.5);
+            count++;
+            if (count > 25) clearInterval(interval);
+        }, 300);
+    };
+
+    const createFirework = (x, y) => {
+        const colors = ['#ff4d6d', '#ff8fab', '#ffb7c5', '#ffd700', '#ffffff'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Particle(x, y, color));
+        }
+    };
+
+    const animateFireworks = () => {
+        if (!fireworkActive && particles.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+        
+        requestAnimationFrame(animateFireworks);
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach((particle, index) => {
+            if (particle.alpha <= 0) {
+                particles.splice(index, 1);
+            } else {
+                particle.update();
+                particle.draw();
+            }
+        });
     };
 });
