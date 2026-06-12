@@ -1050,6 +1050,7 @@ input {
   text-align: center;
   box-shadow: 0 30px 80px rgba(255, 215, 0, 0.4), 0 0 0 8px rgba(255, 215, 0, 0.1);
   animation: proposalBounceIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+  position: relative;
 }
 
 .ring-confetti-text {
@@ -1110,6 +1111,35 @@ input {
   25% { transform: rotate(5deg) scale(1.05); }
   50% { transform: rotate(-3deg) scale(1.02); }
   75% { transform: rotate(3deg) scale(1.05); }
+}
+
+.ring-close-btn {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #E60023;
+  color: white;
+  border: 3px solid white;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  z-index: 10;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+}
+
+.ring-close-btn:hover {
+  transform: scale(1.15) rotate(90deg);
+  background: #ff4d6d;
 }
 
 /* ===== MARRIAGE CERTIFICATE MODAL ===== */

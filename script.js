@@ -315,6 +315,12 @@ document.addEventListener('DOMContentLoaded', () => {
         certModal.classList.remove('show');
     };
 
+    window.closeRingOverlay = () => {
+        const ringOverlay = document.getElementById('ring-overlay');
+        ringOverlay.classList.remove('show');
+        document.body.style.overflow = 'auto';
+    };
+
     // 7. Global Touch-Hearts Interaction
     document.addEventListener('pointerdown', (e) => {
         const clickHeart = document.createElement('div');
