@@ -877,3 +877,303 @@ input {
   50% { transform: rotate(180deg) scale(1.2); }
   100% { transform: rotate(360deg) scale(1); }
 }
+
+/* 4-Month Envelope Styling */
+.four-month-envelope {
+  background: #ffe5ec !important; /* Soft rose */
+}
+
+.four-month-envelope::before {
+  background: #ffe5ec !important;
+}
+
+.four-month-envelope .envelope-flap {
+  background: #ffc2d1 !important; /* Slightly darker soft rose */
+}
+
+.four-month-envelope .envelope-front {
+  background: #ffc2d1 !important;
+}
+
+.four-month-envelope .envelope-sides {
+  background: #ffb3c6 !important;
+}
+
+.four-month-envelope .wax-seal {
+  background: #ff4d6d !important;
+  border-color: #ff758f !important;
+  box-shadow: 0 4px 10px rgba(255, 77, 109, 0.4), inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* ===== MARRIAGE PROPOSAL OVERLAY ===== */
+.proposal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.proposal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.proposal-overlay-inner {
+  background: linear-gradient(145deg, #fff0f5, #ffe4ec);
+  border: 3px solid #ff4d6d;
+  border-radius: 40px;
+  padding: 50px 40px;
+  max-width: 550px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(255, 77, 109, 0.5), 0 0 0 8px rgba(255, 77, 109, 0.1);
+  animation: proposalBounceIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  position: relative;
+  overflow: hidden;
+}
+
+.proposal-overlay.show .proposal-overlay-inner {
+  animation: proposalBounceIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes proposalBounceIn {
+  0% { transform: scale(0.5) translateY(60px); opacity: 0; }
+  70% { transform: scale(1.05) translateY(-5px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.proposal-sparkles {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  animation: sparkleFloat 2s ease-in-out infinite;
+}
+
+@keyframes sparkleFloat {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+.proposal-title {
+  font-family: 'Gloria Hallelujah', cursive;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  color: var(--primary);
+  line-height: 1.5;
+  margin-bottom: 15px;
+  text-shadow: 1px 1px 3px rgba(230, 0, 35, 0.15);
+}
+
+.proposal-subtitle {
+  font-family: 'Annie Use Your Telescope', cursive;
+  font-size: 1.3rem;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.proposal-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.proposal-yes-btn {
+  background: linear-gradient(135deg, #ff4d6d, #E60023);
+  color: white;
+  border: none;
+  padding: 16px 35px;
+  font-size: 1.25rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-family: 'Gloria Hallelujah', cursive;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(230, 0, 35, 0.35);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 380px;
+  animation: btnPulse 2.5s ease-in-out infinite;
+}
+
+.proposal-yes-btn--alt {
+  background: linear-gradient(135deg, #ff758f, #ff4d6d);
+  animation-delay: 0.4s;
+  font-size: 1.05rem;
+}
+
+.proposal-yes-btn:hover {
+  transform: scale(1.06) translateY(-2px);
+  box-shadow: 0 10px 30px rgba(230, 0, 35, 0.5);
+}
+
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(230, 0, 35, 0.35); }
+  50% { box-shadow: 0 6px 30px rgba(230, 0, 35, 0.65); }
+}
+
+/* ===== RING OVERLAY (after Yes) ===== */
+.ring-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 3100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.ring-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ring-overlay-inner {
+  background: linear-gradient(145deg, #fff8e1, #ffe4ec);
+  border: 3px solid #ffd700;
+  border-radius: 40px;
+  padding: 50px 40px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(255, 215, 0, 0.4), 0 0 0 8px rgba(255, 215, 0, 0.1);
+  animation: proposalBounceIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+}
+
+.ring-confetti-text {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  animation: ringConfettiBounce 1s ease-in-out infinite alternate;
+  font-family: 'Gloria Hallelujah', cursive;
+  color: var(--primary);
+}
+
+@keyframes ringConfettiBounce {
+  0% { transform: scale(1) rotate(-3deg); }
+  100% { transform: scale(1.08) rotate(3deg); }
+}
+
+.ring-title {
+  font-family: 'Gloria Hallelujah', cursive;
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  color: #333;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.ring-subtitle {
+  font-family: 'Annie Use Your Telescope', cursive;
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.ring-emoji-btn {
+  font-size: 4rem;
+  background: none;
+  border: 3px dashed #ffd700;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+  transition: all 0.3s ease;
+  animation: ringWiggle 2s ease-in-out infinite;
+  padding: 0;
+  line-height: 1;
+}
+
+.ring-emoji-btn:hover {
+  transform: scale(1.15) rotate(10deg);
+  background: rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+}
+
+@keyframes ringWiggle {
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  25% { transform: rotate(5deg) scale(1.05); }
+  50% { transform: rotate(-3deg) scale(1.02); }
+  75% { transform: rotate(3deg) scale(1.05); }
+}
+
+/* ===== MARRIAGE CERTIFICATE MODAL ===== */
+.certificate-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.certificate-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.certificate-modal-inner {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: proposalBounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.certificate-img {
+  max-width: 100%;
+  max-height: 85vh;
+  border-radius: 20px;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8), 0 0 0 6px rgba(255, 215, 0, 0.4);
+  display: block;
+}
+
+.certificate-close-btn {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #E60023;
+  color: white;
+  border: 3px solid white;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  z-index: 10;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+}
+
+.certificate-close-btn:hover {
+  transform: scale(1.15) rotate(90deg);
+  background: #ff4d6d;
+}

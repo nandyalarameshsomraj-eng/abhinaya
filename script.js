@@ -247,6 +247,74 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // 6.5 Interactive 4-Month Envelope
+    window.toggleFourMonthEnvelope = () => {
+        const envelope = document.getElementById('four-month-envelope');
+        const overlay = document.getElementById('letter-overlay');
+        const modal = document.getElementById('four-month-modal');
+        const isOpen = envelope.classList.toggle('open');
+        
+        if (isOpen) {
+            overlay.style.display = 'block';
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                overlay.classList.add('show');
+                modal.classList.add('show');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+            // Spark fireworks when opening the 4-month anniversary card
+            startFireworks();
+        } else {
+            overlay.classList.remove('show');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                // Show the marriage proposal overlay after closing the letter!
+                showProposalOverlay();
+            }, 500);
+        }
+    };
+
+    // 6.6 Marriage Proposal Overlay
+    window.showProposalOverlay = () => {
+        const proposalOverlay = document.getElementById('proposal-overlay');
+        proposalOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.proposalYes = () => {
+        // Hide proposal overlay
+        const proposalOverlay = document.getElementById('proposal-overlay');
+        proposalOverlay.classList.remove('show');
+
+        // Start BIG fireworks celebration
+        startFireworks();
+        setTimeout(() => startFireworks(), 800);
+        setTimeout(() => startFireworks(), 1600);
+
+        // Show ring overlay after short delay
+        setTimeout(() => {
+            const ringOverlay = document.getElementById('ring-overlay');
+            ringOverlay.classList.add('show');
+        }, 600);
+    };
+
+    window.showMarriageCertificate = () => {
+        const certModal = document.getElementById('certificate-modal');
+        certModal.classList.add('show');
+        // Celebrate with fireworks when the certificate appears!
+        startFireworks();
+        setTimeout(() => startFireworks(), 700);
+        setTimeout(() => startFireworks(), 1400);
+    };
+
+    window.closeCertificate = () => {
+        const certModal = document.getElementById('certificate-modal');
+        certModal.classList.remove('show');
+    };
+
     // 7. Global Touch-Hearts Interaction
     document.addEventListener('pointerdown', (e) => {
         const clickHeart = document.createElement('div');

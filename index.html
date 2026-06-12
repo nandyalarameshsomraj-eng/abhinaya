@@ -1,78 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For My Dearest Abhinaya ❤️</title>
     <meta name="description" content="A special, romantic surprise for the most beautiful soul.">
-    
+
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Annie+Use+Your+Telescope&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Annie+Use+Your+Telescope&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
 
     <!-- Ambient Elements -->
     <div id="bg-overlay"></div>
     <canvas id="fireworks-canvas"></canvas>
     <div id="letter-overlay" onclick="toggleEnvelope()"></div>
-    
+
     <!-- Global Letter Modal (True Full-Screen) -->
     <div id="letter-modal" class="letter-modal-container">
         <div class="letter-modal-content">
             <div class="lily-doodle" style="top: -30px; right: -20px; --rot: 20deg;">
-                <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2" />
+                    <path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <circle cx="50" cy="35" r="3" fill="#ffd700" />
+                </svg>
             </div>
             <div class="sunflower-doodle" style="bottom: -20px; left: -20px; --rot: -15deg;">
-                <svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" />
+                    <g transform="translate(50, 60)">
+                        <circle cx="0" cy="0" r="8" fill="#5D4037" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(0)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(45)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(90)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(135)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(180)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(225)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(270)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(315)" />
+                    </g>
+                </svg>
             </div>
             <!-- Scribbled Doodles -->
             <div class="scribble-doodle scribble-xoxo" style="top: 20px; right: 40px;">XOXO</div>
             <div class="scribble-doodle scribble-heart" style="bottom: 80px; right: 30px;">
-                <svg viewBox="0 0 100 100" width="50" height="50"><path d="M50 80 C 20 50, 20 20, 50 40 C 80 20, 80 50, 50 80" fill="none" stroke="#E60023" stroke-width="3" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200" class="scribble-path"/></svg>
+                <svg viewBox="0 0 100 100" width="50" height="50">
+                    <path d="M50 80 C 20 50, 20 20, 50 40 C 80 20, 80 50, 50 80" fill="none" stroke="#E60023"
+                        stroke-width="3" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200"
+                        class="scribble-path" />
+                </svg>
             </div>
             <div class="scribble-doodle scribble-arrow" style="top: 100px; left: -20px; transform: rotate(-15deg);">
-                <svg viewBox="0 0 100 100" width="60" height="40"><path d="M10 20 Q 50 10, 80 30 M 70 15 L 85 35 L 60 40" fill="none" stroke="#767676" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200" class="scribble-path"/></svg>
+                <svg viewBox="0 0 100 100" width="60" height="40">
+                    <path d="M10 20 Q 50 10, 80 30 M 70 15 L 85 35 L 60 40" fill="none" stroke="#767676"
+                        stroke-width="2.5" stroke-linecap="round" stroke-dasharray="200" stroke-dashoffset="200"
+                        class="scribble-path" />
+                </svg>
             </div>
 
             <!-- Soft Aesthetic Stickers -->
             <div class="sticker-doodle" style="top: 15px; left: 15px; --rot: -8deg;">
                 <!-- Pastel Butterfly -->
                 <svg viewBox="0 0 100 100" width="50" height="50">
-                    <path d="M50 10 C 70 20, 90 20, 95 45 C 100 70, 70 55, 50 60" fill="#ffccd5"/>
-                    <path d="M50 10 C 30 20, 10 20, 5 45 C 0 70, 30 55, 50 60" fill="#ffccd5"/>
-                    <path d="M50 60 C 65 75, 80 95, 50 95 C 35 80, 50 70, 50 60" fill="#ffaab8"/>
-                    <path d="M50 60 C 35 75, 20 95, 50 95 C 65 80, 50 70, 50 60" fill="#ffaab8"/>
-                    <ellipse cx="50" cy="50" rx="4" ry="22" fill="#ff8fab"/>
-                    <path d="M48 30 Q 40 15, 35 20" stroke="#ff8fab" stroke-width="3" stroke-linecap="round" fill="none"/>
-                    <path d="M52 30 Q 60 15, 65 20" stroke="#ff8fab" stroke-width="3" stroke-linecap="round" fill="none"/>
+                    <path d="M50 10 C 70 20, 90 20, 95 45 C 100 70, 70 55, 50 60" fill="#ffccd5" />
+                    <path d="M50 10 C 30 20, 10 20, 5 45 C 0 70, 30 55, 50 60" fill="#ffccd5" />
+                    <path d="M50 60 C 65 75, 80 95, 50 95 C 35 80, 50 70, 50 60" fill="#ffaab8" />
+                    <path d="M50 60 C 35 75, 20 95, 50 95 C 65 80, 50 70, 50 60" fill="#ffaab8" />
+                    <ellipse cx="50" cy="50" rx="4" ry="22" fill="#ff8fab" />
+                    <path d="M48 30 Q 40 15, 35 20" stroke="#ff8fab" stroke-width="3" stroke-linecap="round"
+                        fill="none" />
+                    <path d="M52 30 Q 60 15, 65 20" stroke="#ff8fab" stroke-width="3" stroke-linecap="round"
+                        fill="none" />
                 </svg>
             </div>
             <div class="sticker-doodle" style="bottom: 85px; right: 10px; --rot: 12deg;">
                 <!-- Pastel Blue Bow -->
                 <svg viewBox="0 0 100 100" width="55" height="55">
-                    <path d="M50 50 C 25 25, 5 40, 15 65 C 25 90, 50 65, 50 50 Z" fill="#bde0fe"/>
-                    <path d="M50 50 C 75 25, 95 40, 85 65 C 75 90, 50 65, 50 50 Z" fill="#bde0fe"/>
-                    <circle cx="50" cy="50" r="10" fill="#a2d2ff"/>
-                    <path d="M42 58 Q 20 90, 10 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none"/>
-                    <path d="M58 58 Q 80 90, 90 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none"/>
+                    <path d="M50 50 C 25 25, 5 40, 15 65 C 25 90, 50 65, 50 50 Z" fill="#bde0fe" />
+                    <path d="M50 50 C 75 25, 95 40, 85 65 C 75 90, 50 65, 50 50 Z" fill="#bde0fe" />
+                    <circle cx="50" cy="50" r="10" fill="#a2d2ff" />
+                    <path d="M42 58 Q 20 90, 10 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round"
+                        fill="none" />
+                    <path d="M58 58 Q 80 90, 90 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round"
+                        fill="none" />
                 </svg>
             </div>
             <div class="sticker-doodle" style="top: 80px; right: 40px; --rot: 20deg;">
                 <!-- Little Star -->
                 <svg viewBox="0 0 100 100" width="35" height="35">
-                    <path d="M50 0 Q 50 40, 100 50 Q 50 60, 50 100 Q 50 60, 0 50 Q 50 40, 50 0 Z" fill="#ffecd1"/>
+                    <path d="M50 0 Q 50 40, 100 50 Q 50 60, 50 100 Q 50 60, 0 50 Q 50 40, 50 0 Z" fill="#ffecd1" />
                 </svg>
             </div>
-            
+
             <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 2rem;">Dear Abhinaya... 💖</h3>
             <div class="letter-text" style="font-size: 1.4rem;">
-                I love you so much, my wifey. I honestly can’t imagine my life without you. You’re not just a part of my life—you are the best moment of my life and the most beautiful dream I’ve ever had. 
+                I love you so much, my wifey. I honestly can’t imagine my life without you. You’re not just a part of my
+                life—you are the best moment of my life and the most beautiful dream I’ve ever had.
                 <br><br>
-                <span class="scribble-underline">Every single day with you feels special</span>, and having you by my side makes everything better. I feel so lucky when I think about our future together—building a home, sharing every little happiness, and growing side by side. 
+                <span class="scribble-underline">Every single day with you feels special</span>, and having you by my
+                side makes everything better. I feel so lucky when I think about our future together—building a home,
+                sharing every little happiness, and growing side by side.
                 <br><br>
-                The thought that one day we might have a family together makes me feel so happy and complete. You are truly someone special to me, and I will always value you more than anything.
+                The thought that one day we might have a family together makes me feel so happy and complete. You are
+                truly someone special to me, and I will always value you more than anything.
                 <br><br>
-                <span style="font-size: 1.8rem; display: block; text-align: right; margin-top: 20px;">Yours forever, Abhi ❤️</span>
+                <span style="font-size: 1.8rem; display: block; text-align: right; margin-top: 20px;">Yours forever,
+                    Abhi ❤️</span>
             </div>
             <button class="close-letter-btn" onclick="toggleEnvelope()">Close Letter 💌</button>
         </div>
@@ -82,10 +130,19 @@
     <div id="anniversary-modal" class="letter-modal-container">
         <div class="letter-modal-content anniversary-special">
             <!-- Special Doodles for Anniversary -->
-            <div class="scribble-doodle doodle-anniversary-title" style="top: 10px; left: 50%; transform: translateX(-50%); font-size: 2rem; color: var(--primary);">April 13th, 2026 ❤️</div>
-            
+            <div class="scribble-doodle doodle-anniversary-title"
+                style="top: 10px; left: 50%; transform: translateX(-50%); font-size: 2rem; color: var(--primary);">April
+                13th, 2026 ❤️</div>
+
             <div class="lily-doodle" style="top: -20px; right: 20px; --rot: 45deg;">
-                <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2" />
+                    <path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <circle cx="50" cy="35" r="3" fill="#ffd700" />
+                </svg>
             </div>
 
             <!-- Memory Slideshow -->
@@ -96,15 +153,21 @@
 
             <h3 style="margin-top: 25px; color: var(--primary);">Happy Anniversary, My Sweetheart! 💍</h3>
             <div class="letter-text">
-                Oh how I adore you. It seems like I was made to love someone so much, yet it is incredible for me to realize how true it is. What makes me fall in love with you more each day is how you treat me and how you feel about me my sweet baby.
+                Oh how I adore you. It seems like I was made to love someone so much, yet it is incredible for me to
+                realize how true it is. What makes me fall in love with you more each day is how you treat me and how
+                you feel about me my sweet baby.
                 <br><br>
-                I solemnly swear to make your life full of joy and happiness because you are everything to me that I will want to be with you forever your best friend, lover, wife and soul mate.
+                I solemnly swear to make your life full of joy and happiness because you are everything to me that I
+                will want to be with you forever your best friend, lover, wife and soul mate.
                 <br><br>
-                It seems incredible for us to celebrate another two months together, but hey, it is only the beginning. We will live our life one day and create our home and family with two children and even a dog someday.
+                It seems incredible for us to celebrate another two months together, but hey, it is only the beginning.
+                We will live our life one day and create our home and family with two children and even a dog someday.
                 <br><br>
-                Although I may not always bring you happiness, but I can promise to always try my best to make you smile and be happy.
+                Although I may not always bring you happiness, but I can promise to always try my best to make you smile
+                and be happy.
                 <br><br>
-                <span style="font-size: 1.8rem; display: block; text-align: right; margin-top: 20px;">Mwahhhh, Happy Anniversary, my wifey. I love you forever. ❤️</span>
+                <span style="font-size: 1.8rem; display: block; text-align: right; margin-top: 20px;">Mwahhhh, Happy
+                    Anniversary, my wifey. I love you forever. ❤️</span>
             </div>
 
             <!-- More Doodles -->
@@ -114,6 +177,117 @@
             <button class="close-letter-btn" onclick="toggleAnniversaryModal()">Close 💖</button>
         </div>
     </div>
+
+    <!-- 4-Month Anniversary Letter Modal -->
+    <div id="four-month-modal" class="letter-modal-container">
+        <div class="letter-modal-content anniversary-special">
+            <!-- Scribbled Doodles & Stickers -->
+            <div class="lily-doodle" style="top: -30px; right: -20px; --rot: 20deg;">
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2" />
+                    <path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <circle cx="50" cy="35" r="3" fill="#ffd700" />
+                </svg>
+            </div>
+            <div class="sunflower-doodle" style="bottom: -20px; left: -20px; --rot: -15deg;">
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" />
+                    <g transform="translate(50, 60)">
+                        <circle cx="0" cy="0" r="8" fill="#5D4037" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(0)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(45)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(90)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(135)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(180)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(225)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(270)" />
+                        <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5"
+                            transform="rotate(315)" />
+                    </g>
+                </svg>
+            </div>
+            <!-- Soft Aesthetic Stickers -->
+            <div class="sticker-doodle" style="top: 15px; left: 15px; --rot: -8deg;">
+                <svg viewBox="0 0 100 100" width="50" height="50">
+                    <path d="M50 10 C 70 20, 90 20, 95 45 C 100 70, 70 55, 50 60" fill="#ffccd5" />
+                    <path d="M50 10 C 30 20, 10 20, 5 45 C 0 70, 30 55, 50 60" fill="#ffccd5" />
+                    <path d="M50 60 C 65 75, 80 95, 50 95 C 35 80, 50 70, 50 60" fill="#ffaab8" />
+                    <path d="M50 60 C 35 75, 20 95, 50 95 C 65 80, 50 70, 50 60" fill="#ffaab8" />
+                    <ellipse cx="50" cy="50" rx="4" ry="22" fill="#ff8fab" />
+                    <path d="M48 30 Q 40 15, 35 20" stroke="#ff8fab" stroke-width="3" stroke-linecap="round" fill="none" />
+                    <path d="M52 30 Q 60 15, 65 20" stroke="#ff8fab" stroke-width="3" stroke-linecap="round" fill="none" />
+                </svg>
+            </div>
+            <div class="sticker-doodle" style="bottom: 85px; right: 10px; --rot: 12deg;">
+                <svg viewBox="0 0 100 100" width="55" height="55">
+                    <path d="M50 50 C 25 25, 5 40, 15 65 C 25 90, 50 65, 50 50 Z" fill="#bde0fe" />
+                    <path d="M50 50 C 75 25, 95 40, 85 65 C 75 90, 50 65, 50 50 Z" fill="#bde0fe" />
+                    <circle cx="50" cy="50" r="10" fill="#a2d2ff" />
+                    <path d="M42 58 Q 20 90, 10 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none" />
+                    <path d="M58 58 Q 80 90, 90 95" stroke="#bde0fe" stroke-width="12" stroke-linecap="round" fill="none" />
+                </svg>
+            </div>
+
+            <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 2.2rem; font-family: 'Gloria Hallelujah', cursive; text-align: center;">4 Months Alreadyyyyyyyy 💖</h3>
+            <div class="letter-text" style="font-size: 1.4rem;">
+                So so so happy for us my dear wifey. I love you a lot. To me, you’re really the most precious person. Every day you take care of me, you make me happy in ways I can't even explain. It feels so special to be loved by you and honestly these 4 months have been some of the best moments of my life.
+                <br><br>
+                I wish I could cuddle you all day long, but trust me one day we're going to have the life we dream about a beautiful house, a good car, a happy family, you, me, a dog, and our kids running around everywhere. I’ll probably be fighting over food while I’m cooking for you like I did at your house. <span class="scribble-underline">You’ll sit on the kitchen counter</span> and watch me cook while I keep stealing glances at you because you’re so pretty.
+                <br><br>
+                We will go on long drives at night, listen to music together, talk about random things and make the best memories. We will sleep together, we will cuddle up, wake up next to each other every day. Just thinking about it makes me so happy.
+                <br><br>
+                I know we fight sometimes, my prettiest baby. We have our ups and downs, misunderstandings, and emotional moments, but no matter what happens, trust me — <span class="scribble-underline">I’m never going to leave your hand</span>. I’ve already chosen in my heart that you are my wife, my person, my forever. These four months have taught me how true love is like. You make me feel secure, loved, valued, and happy. I am thankful for everything; your patience, love, support, and presence that made everything possible for me.
+                <br><br>
+                I pledge that I will try to give you more and more love each and every day so that you can smile even when you're having the worst days of your life, and help in creating a bright future for us both. One day we'll look at these messages and smile because we succeeded in fulfilling all our dreams together.
+                <br><br>
+                <span style="font-size: 1.8rem; display: block; text-align: right; margin-top: 20px; font-family: 'Gloria Hallelujah', cursive; color: var(--primary);">
+                    Happy 4-Month Anniversary, my wifey.<br>I love you endlessly. ❤️
+                </span>
+            </div>
+            <button class="close-letter-btn" onclick="toggleFourMonthEnvelope()">Close Letter 💌</button>
+        </div>
+    </div>
+    <!-- Marriage Proposal Overlay -->
+    <div id="proposal-overlay" class="proposal-overlay">
+        <div class="proposal-overlay-inner">
+            <div class="proposal-sparkles">✨ 💍 ✨</div>
+            <h2 class="proposal-title">Ms Abhinaya Adoni<br>will become my<br>Mrs Abhinaya Nandyala 💍</h2>
+            <p class="proposal-subtitle">So... what do you say, my love? 🌹</p>
+            <div class="proposal-buttons">
+                <button class="proposal-yes-btn" id="proposal-yes1" onclick="proposalYes()">Yes 💖</button>
+                <button class="proposal-yes-btn proposal-yes-btn--alt" id="proposal-yes2" onclick="proposalYes()">Yes, I don't have another option 😂💖</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ring / Hand Emoji Overlay (after saying yes) -->
+    <div id="ring-overlay" class="ring-overlay">
+        <div class="ring-overlay-inner">
+            <div class="ring-confetti-text">🎉 She said YES! 🎉</div>
+            <h2 class="ring-title">You're officially going to be<br>Mrs Abhinaya Nandyala 💕</h2>
+            <p class="ring-subtitle">Click the ring to see something special...</p>
+            <button class="ring-emoji-btn" id="ring-hand-btn" onclick="showMarriageCertificate()">💍🖐️</button>
+        </div>
+    </div>
+
+    <!-- Marriage Certificate Modal -->
+    <div id="certificate-modal" class="certificate-modal">
+        <div class="certificate-modal-inner">
+            <button class="certificate-close-btn" onclick="closeCertificate()">✕</button>
+            <img src="marraige certificate/marriage certificate.png" alt="Our Marriage Certificate" class="certificate-img" id="certificate-img">
+        </div>
+    </div>
+
     <video id="bg-video" autoplay muted loop playsinline poster="image1.png">
         <source src="bg.mp4" type="video/mp4">
         <!-- Fallback if video is not present -->
@@ -123,14 +297,28 @@
     <section id="intro" class="screen">
         <div class="glass-card">
             <div class="lily-doodle lily-pos-1">
-                <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2" />
+                    <path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <circle cx="50" cy="35" r="3" fill="#ffd700" />
+                </svg>
             </div>
             <h1>Hey Abhinaya 💖</h1>
             <p>I crafted a little piece of my heart just for you. Something as special as the moments we share.</p>
             <p style="font-style: italic; font-size: 0.9em; opacity: 0.8;">Click to reveal the surprise...</p>
             <button onclick="goToLock()" id="start-btn">Begin Our Journey 🌹</button>
             <div class="lily-doodle lily-pos-2">
-                <svg viewBox="0 0 100 100"><path d="M40 90 Q 40 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 60 10, 85 20, 70 40 C 80 50, 60 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 40 10, 15 20, 30 40 C 20 50, 40 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="38" r="2" fill="#ffd700"/></svg>
+                <svg viewBox="0 0 100 100">
+                    <path d="M40 90 Q 40 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2" />
+                    <path d="M50 40 C 60 10, 85 20, 70 40 C 80 50, 60 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <path d="M50 40 C 40 10, 15 20, 30 40 C 20 50, 40 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                        stroke-width="1" />
+                    <circle cx="50" cy="38" r="2" fill="#ffd700" />
+                </svg>
             </div>
         </div>
     </section>
@@ -147,11 +335,11 @@
 
     <!-- MAIN CONTENT GALLERY -->
     <section id="main" class="screen hidden" style="display: none;">
-        
+
         <h1 style="margin-bottom: 40px; text-align: center;">Our Forever Mood Board 💕</h1>
 
         <div class="pin-container">
-            
+
             <!-- Pin: ANNIVERSARY SURPRISE (LOCKED) -->
             <div class="pin" id="anniversary-pin">
                 <div class="locked-overlay">
@@ -167,10 +355,27 @@
                         <div class="envelope-sides"></div>
                     </div>
                 </div>
-                <h3 style="text-align: center; margin-top: 15px; font-size: 1.2rem; color: var(--primary);">Special Surprise 🎁</h3>
-                <p style="text-align: center; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">Wait for the magic to happen...</p>
+                <h3 style="text-align: center; margin-top: 15px; font-size: 1.2rem; color: var(--primary);">Special
+                    Surprise 🎁</h3>
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">Wait for
+                    the magic to happen...</p>
             </div>
-            
+
+            <!-- Pin: 4-Month Anniversary Letter (Interactive Envelope) -->
+            <div class="pin" id="four-month-pin">
+                <div class="envelope-wrapper" onclick="toggleFourMonthEnvelope()">
+                    <div class="envelope four-month-envelope" id="four-month-envelope">
+                        <div class="envelope-flap"></div>
+                        <div class="envelope-front">
+                            <div class="wax-seal">💖</div>
+                        </div>
+                        <div class="envelope-sides"></div>
+                    </div>
+                </div>
+                <h3 style="text-align: center; margin-top: 15px; font-size: 1.2rem; color: var(--primary);">4 Months Anniversary 💌</h3>
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">Tap to open our 4-month letter...</p>
+            </div>
+
             <!-- Pin: Letter (Interactive Envelope) -->
             <div class="pin" id="letter-pin">
                 <div class="envelope-wrapper" onclick="toggleEnvelope()">
@@ -181,70 +386,112 @@
                         <!-- Empty space for the visual opening -->
                     </div>
                 </div>
-                <p style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">Tap the envelope to open 💌</p>
+                <p
+                    style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-gray); font-style: italic;">
+                    Tap the envelope to open 💌</p>
             </div>
 
             <!-- Pin: The Scribbled Audio Player -->
-            <div class="pin album-player-pin" onclick="toggleAudio()" style="background: rgba(255,255,255,0.95); text-align: center; cursor: pointer; padding: 30px 15px; transition: transform 0.3s ease;">
+            <div class="pin album-player-pin" onclick="toggleAudio()"
+                style="background: rgba(255,255,255,0.95); text-align: center; cursor: pointer; padding: 30px 15px; transition: transform 0.3s ease;">
                 <div class="player-wrapper" style="position: relative;">
                     <!-- Audio Element -->
                     <audio id="bg-audio" src="her.webm" loop></audio>
-                    
+
                     <!-- Hand-drawn SVG Vinyl Record -->
-                    <svg class="vinyl-svg" viewBox="0 0 200 200" width="160" height="160" style="margin: 0 auto; display: block; overflow: visible;">
+                    <svg class="vinyl-svg" viewBox="0 0 200 200" width="160" height="160"
+                        style="margin: 0 auto; display: block; overflow: visible;">
                         <!-- Sketchy Record Grooves -->
                         <g class="spin-disc" style="transform-origin: 100px 100px;">
-                            <circle cx="100" cy="100" r="90" fill="none" stroke="#222" stroke-width="3" stroke-dasharray="15 6 30 5" stroke-linecap="round"/>
-                            <circle cx="100" cy="100" r="78" fill="none" stroke="#333" stroke-width="1.5" stroke-dasharray="8 4 15 3"/>
-                            <circle cx="100" cy="100" r="65" fill="none" stroke="#222" stroke-width="2" stroke-dasharray="5 5 20 4"/>
-                            <circle cx="100" cy="100" r="50" fill="none" stroke="#444" stroke-width="1.5" stroke-dasharray="12 4 4 4"/>
-                            
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="#222" stroke-width="3"
+                                stroke-dasharray="15 6 30 5" stroke-linecap="round" />
+                            <circle cx="100" cy="100" r="78" fill="none" stroke="#333" stroke-width="1.5"
+                                stroke-dasharray="8 4 15 3" />
+                            <circle cx="100" cy="100" r="65" fill="none" stroke="#222" stroke-width="2"
+                                stroke-dasharray="5 5 20 4" />
+                            <circle cx="100" cy="100" r="50" fill="none" stroke="#444" stroke-width="1.5"
+                                stroke-dasharray="12 4 4 4" />
+
                             <!-- Center Label -->
-                            <circle cx="100" cy="100" r="30" fill="#ffd1dc" stroke="#222" stroke-width="2"/>
-                            
+                            <circle cx="100" cy="100" r="30" fill="#ffd1dc" stroke="#222" stroke-width="2" />
+
                             <!-- Heart Doodle -->
-                            <path d="M 90 95 C 90 85, 100 85, 100 95 C 100 85, 110 85, 110 95 C 110 105, 100 115, 100 115 C 100 115, 90 105, 90 95 Z" fill="#ff4d6d"/>
+                            <path
+                                d="M 90 95 C 90 85, 100 85, 100 95 C 100 85, 110 85, 110 95 C 110 105, 100 115, 100 115 C 100 115, 90 105, 90 95 Z"
+                                fill="#ff4d6d" />
                         </g>
 
                         <!-- Center Hole -->
-                        <circle cx="100" cy="100" r="5" fill="#222"/>
-                        
+                        <circle cx="100" cy="100" r="5" fill="#222" />
+
                         <!-- Sketchy Tone Arm -->
-                        <g class="tone-arm" style="transform-origin: 160px 40px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);">
+                        <g class="tone-arm"
+                            style="transform-origin: 160px 40px; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);">
                             <!-- Pivot -->
-                            <circle cx="160" cy="40" r="10" fill="#ddd" border="2px solid #222" stroke="#222" stroke-width="2"/>
+                            <circle cx="160" cy="40" r="10" fill="#ddd" border="2px solid #222" stroke="#222"
+                                stroke-width="2" />
                             <!-- Arm -->
-                            <path d="M 160 40 Q 140 60, 115 100" fill="none" stroke="#444" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M 160 40 Q 140 60, 115 100" fill="none" stroke="#444" stroke-width="4"
+                                stroke-linecap="round" />
                             <!-- Needle Head -->
-                            <rect x="105" y="95" width="15" height="10" transform="rotate(-30 115 100)" fill="#777" stroke="#222" stroke-width="2" rx="2"/>
+                            <rect x="105" y="95" width="15" height="10" transform="rotate(-30 115 100)" fill="#777"
+                                stroke="#222" stroke-width="2" rx="2" />
                         </g>
 
                         <!-- Magical Music Notes (appear when playing) -->
                         <g class="music-notes" style="opacity: 0; transition: opacity 0.5s ease;">
-                            <path class="floating-note note1" d="M 20 50 Q 10 30, 20 10" fill="none" stroke="#ff4d6d" stroke-width="2" stroke-linecap="round"/>
-                            <circle class="floating-note note1" cx="20" cy="50" r="4" fill="#ff4d6d"/>
-                            
-                            <path class="floating-note note2" d="M 180 60 Q 190 40, 180 20" fill="none" stroke="#ff4d6d" stroke-width="2" stroke-linecap="round"/>
-                            <circle class="floating-note note2" cx="180" cy="60" r="4" fill="#ff4d6d"/>
+                            <path class="floating-note note1" d="M 20 50 Q 10 30, 20 10" fill="none" stroke="#ff4d6d"
+                                stroke-width="2" stroke-linecap="round" />
+                            <circle class="floating-note note1" cx="20" cy="50" r="4" fill="#ff4d6d" />
+
+                            <path class="floating-note note2" d="M 180 60 Q 190 40, 180 20" fill="none" stroke="#ff4d6d"
+                                stroke-width="2" stroke-linecap="round" />
+                            <circle class="floating-note note2" cx="180" cy="60" r="4" fill="#ff4d6d" />
                         </g>
                     </svg>
-                    
+
                     <h3 style="margin-top: 20px; font-size: 1.4rem; color: var(--primary);">Play Our Song 🎵</h3>
-                    <p class="audio-status" style="font-size: 0.8em; color: var(--text-gray); font-weight: bold;">Tap to spark the magic ✨</p>
+                    <p class="audio-status" style="font-size: 0.8em; color: var(--text-gray); font-weight: bold;">Tap to
+                        spark the magic ✨</p>
                 </div>
             </div>
 
             <!-- Pin: Timer -->
             <div class="pin">
                 <div class="sunflower-doodle sunflower-pos-1">
-                    <svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>
+                    <svg viewBox="0 0 100 100">
+                        <path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" />
+                        <g transform="translate(50, 60)">
+                            <circle cx="0" cy="0" r="8" fill="#5D4037" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(0)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(45)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(90)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(135)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(180)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(225)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(270)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(315)" />
+                        </g>
+                    </svg>
                 </div>
                 <h2 style="margin-bottom: 10px;">Our Time ⏳</h2>
                 <div id="timer" class="timer-box"></div>
-                <p style="margin-top: 10px; font-size: 0.8em; color: var(--text-gray);">Counting every precious moment since Feb 13, 2026</p>
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--pin-border); text-align: left;">
-                    <p style="font-size: 0.85em; margin-bottom: 5px;"><strong>Next Monthiversary:</strong> <span id="next-month-anniversary" style="color: var(--primary);"></span></p>
-                    <p style="font-size: 0.85em;"><strong>Next Anniversary:</strong> <span id="next-year-anniversary" style="color: var(--primary);"></span></p>
+                <p style="margin-top: 10px; font-size: 0.8em; color: var(--text-gray);">Counting every precious moment
+                    since Feb 13, 2026</p>
+                <div
+                    style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--pin-border); text-align: left;">
+                    <p style="font-size: 0.85em; margin-bottom: 5px;"><strong>Next Monthiversary:</strong> <span
+                            id="next-month-anniversary" style="color: var(--primary);"></span></p>
+                    <p style="font-size: 0.85em;"><strong>Next Anniversary:</strong> <span id="next-year-anniversary"
+                            style="color: var(--primary);"></span></p>
                 </div>
             </div>
 
@@ -275,10 +522,38 @@
             <!-- Pin: Proposal Section -->
             <div class="pin">
                 <div class="lily-doodle lily-pos-4">
-                    <svg viewBox="0 0 100 100"><path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2"/><path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d" stroke-width="1"/><circle cx="50" cy="35" r="3" fill="#ffd700"/></svg>
+                    <svg viewBox="0 0 100 100">
+                        <path d="M50 90 Q 50 60, 50 40" stroke="#4a4a4a" fill="none" stroke-width="2" />
+                        <path d="M50 40 C 30 10, 10 30, 30 40 C 20 60, 45 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                            stroke-width="1" />
+                        <path d="M50 40 C 70 10, 90 30, 70 40 C 80 60, 55 60, 50 40 Z" fill="#ffb7c5" stroke="#ff4d6d"
+                            stroke-width="1" />
+                        <circle cx="50" cy="35" r="3" fill="#ffd700" />
+                    </svg>
                 </div>
                 <div class="sunflower-doodle sunflower-pos-2">
-                    <svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>
+                    <svg viewBox="0 0 100 100">
+                        <path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" />
+                        <g transform="translate(50, 60)">
+                            <circle cx="0" cy="0" r="8" fill="#5D4037" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(0)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(45)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(90)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(135)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(180)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(225)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(270)" />
+                            <path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825"
+                                stroke-width="0.5" transform="rotate(315)" />
+                        </g>
+                    </svg>
                 </div>
                 <h2 style="margin-bottom: 15px;">A Special Request 💍</h2>
                 <p style="font-size: 0.9rem; color: var(--text-gray);">I have one question to ask you today...</p>
@@ -312,4 +587,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
