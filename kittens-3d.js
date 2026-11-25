@@ -434,7 +434,14 @@
         speechY: 0,
         hitCenter: { x: 0, y: 0, rx: 60, ry: 60 },
         badgeEl: null,
-        moodEl: null
+        moodEl: null,
+        // Natural fight physics
+        recoilX: 0,
+        recoilY: 0,
+        rollAngle: 0,
+        rollSpeed: 0,
+        dodgeX: 0,
+        circleAngle: 0
       };
     }
 
@@ -693,7 +700,14 @@
       actorIdx: 0,
       partnerIdx: 1,
       bapStep: 0,
-      pounced: false
+      pounced: false,
+      // fight sub-state
+      fightPhase: 'stalk',       // 'stalk' | 'circle' | 'clash' | 'tumble' | 'recover'
+      fightPhaseTime: 0,
+      nextBapAt: 0,              // when the next irregular bap fires
+      bapCount: 0,
+      lastHitSide: 1,
+      tumbleAngle: 0
     };
 
     function showKittenBubble(k, text, soundAction) {
@@ -703,6 +717,106 @@
       if (soundAction && audioCtx && audioCtx.state === 'running' && !soundMuted) {
         const d = playActionSound(k, soundAction);
         k.meowTimer = Math.min(0.65, d || 0.36);
+      }
+    }
+
+    // Spawn impact star-burst particles between two cats
+    function spawnFightParticles(a, b, symbol, count) {
+      const mx = (a.hitCenter.x + b.hitCenter.x) * 0.5;
+      const my = Math.min(a.hitCenter.y, b.hitCenter.y) - 14;
+      for (let i = 0; i < (count || 3); i++) {
+        floatingParticles.push({
+          x: mx + (Math.random() - 0.5) * 36,
+          y: my + (Math.random() - 0.5) * 18,
+          vx: (Math.random() - 0.5) * 60,
+          vy: -(28 + Math.random() * 32),
+          symbol: symbol || ['💥', '🐾', '✨', '⚡'][Math.floor(Math.random() * 4)],
+          size: 14 + Math.random() * 7,
+          life: 0,
+          maxLife: 0.65 + Math.random() * 0.4
+        });
+      }
+    }
+
+    function startFightPhase(phase, a, b, dir) {
+      social.fightPhase = phase;
+      social.fightPhaseTime = 0;
+      const scoot = Math.min(55, Math.abs(b.baseX - a.baseX) * 0.32);
+
+      if (phase === 'stalk') {
+        // Both cats crouch low, pupils huge, stare each other down
+        a.targetCrouch = 0.9;
+        b.targetCrouch = 0.6;
+        a.targetFaceDir = dir * 0.75;
+        b.targetFaceDir = -dir * 0.6;
+        a.targetEarFlatten = 0.55;
+        b.targetEarFlatten = 0.35;
+        a.socialMood = `Sizing up ${b.name}... 👀`;
+        b.socialMood = `Watching ${a.name}... 👀`;
+        // Tail lashing: handled via tailPhase offset
+        a.tailPhase = 0;
+        b.tailPhase = Math.PI * 0.4;
+
+      } else if (phase === 'circle') {
+        // Cats sidestep-circle each other — a slides one way, b the other
+        a.targetCrouch = 0.75;
+        b.targetCrouch = 0.75;
+        a.targetEarFlatten = 0.72;
+        b.targetEarFlatten = 0.72;
+        a.targetX = dir * scoot * 0.6;
+        b.targetX = -dir * scoot * 0.6;
+        a.circleAngle = 0;
+        b.circleAngle = Math.PI;
+        social.nextBapAt = 0.5 + Math.random() * 0.4;
+        social.bapCount = 0;
+
+      } else if (phase === 'clash') {
+        // The actual fight: lunge, bap, recoil, counter-bap
+        a.targetCrouch = 0.3;
+        b.targetCrouch = 0.3;
+        a.targetEarFlatten = 1.0;
+        b.targetEarFlatten = 1.0;
+        a.targetX = dir * Math.min(68, Math.abs(b.baseX - a.baseX) * 0.46);
+        b.targetX = -dir * Math.min(68, Math.abs(b.baseX - a.baseX) * 0.46);
+        a.targetFaceDir = dir * 0.9;
+        b.targetFaceDir = -dir * 0.9;
+        social.nextBapAt = 0.18 + Math.random() * 0.22;
+        social.bapCount = 0;
+        social.lastHitSide = 1;
+        showKittenBubble(a, '🐾 rawr!', 'play');
+
+      } else if (phase === 'tumble') {
+        // Wild rolling tangle — both hop, spin, pawing madly
+        a.targetCrouch = 0;
+        b.targetCrouch = 0;
+        a.hopY = 18;
+        b.hopY = 12;
+        social.tumbleAngle = 0;
+        spawnFightParticles(a, b, '💥', 5);
+        showKittenBubble(b, 'eep! 💥', 'play');
+        showKittenBubble(a, '😤 hisss!', 'play');
+
+      } else if (phase === 'recover') {
+        // Post-fight: shake off, lick paw, ruffle ears
+        a.targetCrouch = 0;
+        b.targetCrouch = 0;
+        a.targetEarFlatten = 0;
+        b.targetEarFlatten = 0;
+        a.recoilX = 0;
+        b.recoilX = 0;
+        a.pawSwipeL = 0;
+        a.pawSwipeR = 0;
+        b.pawSwipeL = 0;
+        b.pawSwipeR = 0;
+        a.targetFaceDir = -dir * 0.2;
+        b.targetFaceDir = dir * 0.2;
+        a.socialMood = 'Licking paw... 🐾';
+        b.socialMood = 'Ruffling fur~ ✨';
+        setTimeout(() => {
+          if (social.state === 'play_fight') {
+            showKittenBubble(Math.random() > 0.5 ? a : b, 'mrrp~ 🐾', 'meow');
+          }
+        }, 600);
       }
     }
 
@@ -733,18 +847,15 @@
       const scoot = Math.min(48, Math.abs(dx) * 0.28);
 
       const r = Math.random();
-      if (r < 0.36) {
+      if (r < 0.38) {
+        // ── NATURAL FIGHT: stalk → circle → clash → tumble → recover ──
         social.state = 'play_fight';
-        social.duration = 3.2;
-        a.targetX = dir * scoot;
-        b.targetX = -dir * scoot;
-        a.targetFaceDir = dir * 0.65;
-        b.targetFaceDir = -dir * 0.65;
-        a.targetEarFlatten = 0.78;
-        b.targetEarFlatten = 0.78;
-        a.socialMood = `Bapping ${b.name}! 🐾`;
-        b.socialMood = `Play-fighting ${a.name}! 🐾`;
-        showKittenBubble(a, 'rawr! 🐾', 'play');
+        // Total duration: stalk(1.4) + circle(1.8) + clash(2.8) + tumble(1.2) + recover(1.6) = ~8.8s
+        social.duration = 8.8 + Math.random() * 1.4;
+        a.socialMood = `Eyeing ${b.name}... 😤`;
+        b.socialMood = `${a.name} is coming for me! 👀`;
+        startFightPhase('stalk', a, b, dir);
+
       } else if (r < 0.64) {
         social.state = 'play_pounce';
         social.duration = 3.0;
@@ -1039,7 +1150,8 @@
 
     function drawCat2D(k, elapsed) {
       const sc = k.drawScale;
-      const cx = k.baseX + k.animX;
+      // recoilX gives a natural flinch-back when hit; dodgeX adds sideways dodge
+      const cx = k.baseX + k.animX + (k.recoilX || 0) + (k.dodgeX || 0);
       const cy = k.baseY + k.animY - k.hopY + k.crouchAmt * 6 * sc;
       const breath = Math.sin(elapsed * 2.5 + k.idx * 0.9);
       const purrVib = k.petLevel > 0.15 ? Math.sin(elapsed * 46) * 0.9 * k.petLevel : 0;
@@ -1053,11 +1165,15 @@
 
       ctx.save();
       ctx.translate(cx + purrVib, cy + breath * 1.1);
+      // rollAngle: body tilts during tumble phase of fight
+      if (k.rollAngle) ctx.rotate(k.rollAngle);
       // Apply realistic Disney-style squash & stretch!
       ctx.scale(sc * k.squashX, sc * k.squashY);
 
       const tailSide = k.idx % 2 === 0 ? -1 : 1;
-      const tailWag = Math.sin(elapsed * (2.5 + k.petLevel * 2.1 + (foodState.phase === 'excited_jump' ? 3 : 0)) + k.tailPhase) * 14;
+      // Tail wag speed cranks up during fight (nervous lashing)
+      const fightTailSpeed = (social.state === 'play_fight' && social.fightPhase !== 'recover') ? 5.5 : 0;
+      const tailWag = Math.sin(elapsed * (2.5 + k.petLevel * 2.1 + (foodState.phase === 'excited_jump' ? 3 : 0) + fightTailSpeed) + k.tailPhase) * 14;
       const tailLift = k.petLevel * 24 + (foodState.phase === 'excited_jump' ? 18 : 0);
 
       // 1. Fluffy Tail
@@ -1658,27 +1774,163 @@
           isCuddling = social.state === 'cuddle_nuzzle';
 
           if (a && b) {
-            if (social.state === 'play_fight') {
-              const bapPhase = Math.max(0, pt - 0.4);
-              const sw = Math.sin(bapPhase * 15);
-              a.pawSwipeL = Math.max(0, sw) * 0.9;
-              a.pawSwipeR = Math.max(0, -sw) * 0.9;
-              b.pawSwipeR = Math.max(0, Math.sin(bapPhase * 15 + 1.4)) * 0.9;
-              b.pawSwipeL = Math.max(0, -Math.sin(bapPhase * 15 + 1.4)) * 0.9;
-              a.hopY = Math.abs(Math.sin(bapPhase * 6.5)) * 8;
-              b.hopY = Math.abs(Math.sin(bapPhase * 6.5 + 1.1)) * 8;
+            const dir = b.baseX >= a.baseX ? 1 : -1;
 
-              if (pt > 0.55 && social.bapStep === 0) {
-                social.bapStep = 1;
-                showKittenBubble(b, 'bap bap! 🐾', 'play');
-                floatingParticles.push({
-                  x: (a.hitCenter.x + b.hitCenter.x) * 0.5,
-                  y: Math.min(a.hitCenter.y, b.hitCenter.y) - 18,
-                  vx: 0, vy: -26, symbol: '🐾', size: 15, life: 0, maxLife: 0.85
-                });
-              } else if (pt > 1.65 && social.bapStep === 1) {
-                social.bapStep = 2;
-                showKittenBubble(a, 'mew! 💥', 'play');
+            if (social.state === 'play_fight') {
+              social.fightPhaseTime += dt;
+              const fp = social.fightPhaseTime;
+              const phase = social.fightPhase;
+
+              // ── Phase transitions ──
+              if (phase === 'stalk' && fp >= 1.4) {
+                startFightPhase('circle', a, b, dir);
+              } else if (phase === 'circle' && fp >= 1.8) {
+                startFightPhase('clash', a, b, dir);
+              } else if (phase === 'clash' && fp >= 2.8) {
+                startFightPhase('tumble', a, b, dir);
+              } else if (phase === 'tumble' && fp >= 1.2) {
+                startFightPhase('recover', a, b, dir);
+              }
+
+              // ── Per-phase animation ──
+              if (phase === 'stalk') {
+                // Low crouched creep: slowly inch toward partner, tail lashes
+                const creepDist = fp * 10;
+                a.animX += (dir * creepDist - a.animX) * (1 - Math.exp(-2 * dt));
+                // Tail lash: fast, nervous
+                a.tailPhase += dt * 6.5;
+                b.tailPhase += dt * 4.5;
+                // Ear twitch randomly
+                if (Math.random() < 0.04) a.earTwitch = 1.0;
+                if (Math.random() < 0.02) b.earTwitch = 0.7;
+                // Deep squint / locked stare
+                a.socialSquint = Math.min(1.0, fp * 1.2);
+                b.socialSquint = Math.min(0.6, fp * 0.8);
+                // Subtle butt wiggle getting ready to pounce
+                if (fp > 0.7) a.buttWiggle = Math.sin(fp * 11) * 3.5;
+
+              } else if (phase === 'circle') {
+                // Cats sidestep in opposite arcs, never breaking eye contact
+                const cr = 32;
+                const speed = 1.2;
+                a.circleAngle = (a.circleAngle || 0) + dt * speed;
+                b.circleAngle = (b.circleAngle || Math.PI) + dt * speed;
+                a.animX += (Math.cos(a.circleAngle) * cr * dir - a.animX) * (1 - Math.exp(-3.5 * dt));
+                b.animX += (Math.cos(b.circleAngle) * cr * -dir - b.animX) * (1 - Math.exp(-3.5 * dt));
+                // Always face each other
+                a.targetFaceDir = dir * (0.6 + Math.sin(a.circleAngle) * 0.3);
+                b.targetFaceDir = -dir * (0.6 + Math.sin(b.circleAngle) * 0.3);
+                // Growing intensity — ears flatten, crouch deepens
+                a.targetEarFlatten = Math.min(1.0, fp * 0.6);
+                b.targetEarFlatten = Math.min(0.9, fp * 0.55);
+                a.targetCrouch = Math.min(0.9, fp * 0.52);
+                b.targetCrouch = Math.min(0.8, fp * 0.48);
+                // Occasional hiss
+                if (social.nextBapAt > 0) {
+                  social.nextBapAt -= dt;
+                  if (social.nextBapAt <= 0) {
+                    social.bapCount++;
+                    if (social.bapCount % 2 === 0) {
+                      showKittenBubble(a, '😤 hsss!', 'play');
+                    } else {
+                      showKittenBubble(b, '😤 mrrr!', 'play');
+                    }
+                    social.nextBapAt = 0.55 + Math.random() * 0.5;
+                  }
+                }
+
+              } else if (phase === 'clash') {
+                // Irregular bap volleys — attacker alternates, recoil on hit
+                social.nextBapAt -= dt;
+                if (social.nextBapAt <= 0) {
+                  social.bapCount++;
+                  const hitA = social.bapCount % 2 === 1; // A attacks odd rounds, B attacks even
+                  const attacker = hitA ? a : b;
+                  const defender = hitA ? b : a;
+                  social.lastHitSide = hitA ? 1 : -1;
+
+                  // Attacker lunges and swipes
+                  if (hitA) {
+                    attacker.pawSwipeR = 1.0;
+                    attacker.recoilX = -dir * 6; // lunge-forward micro-push
+                    setTimeout(() => { attacker.pawSwipeR *= 0.3; }, 180);
+                  } else {
+                    attacker.pawSwipeL = 1.0;
+                    attacker.recoilX = dir * 6;
+                    setTimeout(() => { attacker.pawSwipeL *= 0.3; }, 180);
+                  }
+
+                  // Defender recoils / flinches backward
+                  defender.recoilX = hitA ? dir * 14 : -dir * 14;
+                  defender.hopY = 6 + Math.random() * 8;
+
+                  // Irregular interval: fast then slow then fast (like real cats)
+                  const irregular = [0.14, 0.28, 0.12, 0.42, 0.16, 0.35][social.bapCount % 6];
+                  social.nextBapAt = irregular + Math.random() * 0.14;
+
+                  // Bubble + particles on clash
+                  const clashWords = ['bap! 🐾', 'whap!', '😤 got u!', 'mew! 🐾', '💥 nope!'];
+                  showKittenBubble(attacker, clashWords[social.bapCount % clashWords.length], 'play');
+                  spawnFightParticles(a, b, social.bapCount % 3 === 0 ? '💥' : '🐾', 2);
+
+                  // Body lean into the swipe
+                  attacker.targetFaceDir = dir * (hitA ? 1.1 : -1.1);
+                  defender.targetFaceDir = dir * (hitA ? 0.3 : -0.3);
+                }
+
+                // Smooth recoil decay
+                a.recoilX *= Math.exp(-9 * dt);
+                b.recoilX *= Math.exp(-9 * dt);
+                a.hopY *= Math.exp(-8 * dt);
+                b.hopY *= Math.exp(-8 * dt);
+
+                // Occasional counter-dodge sidestep
+                if (Math.random() < 0.012) {
+                  b.dodgeX = (b.dodgeX || 0) + dir * (Math.random() > 0.5 ? 12 : -12);
+                }
+                if (b.dodgeX) b.dodgeX *= Math.exp(-6 * dt);
+
+              } else if (phase === 'tumble') {
+                // Wild rolling tangle — both spin, paw at air, hop chaotically
+                social.tumbleAngle += dt * 9;
+                const ta = social.tumbleAngle;
+                // Alternating body rolls
+                a.rollAngle = Math.sin(ta) * 0.6;
+                b.rollAngle = Math.sin(ta + Math.PI * 0.7) * 0.5;
+                // Chaotic paw flailing
+                a.pawSwipeL = Math.max(0,  Math.sin(ta * 2.1)) * 0.95;
+                a.pawSwipeR = Math.max(0, -Math.sin(ta * 2.1 + 0.8)) * 0.95;
+                b.pawSwipeR = Math.max(0,  Math.sin(ta * 1.9 + 1.0)) * 0.95;
+                b.pawSwipeL = Math.max(0, -Math.sin(ta * 1.9 + 2.4)) * 0.95;
+                // Both bouncing unpredictably
+                a.hopY = Math.abs(Math.sin(ta * 3.1)) * 22 + Math.random() * 4;
+                b.hopY = Math.abs(Math.sin(ta * 2.7 + 1.3)) * 18 + Math.random() * 4;
+                // Rapid ear flatten and face direction swaps
+                a.targetEarFlatten = 1.0;
+                b.targetEarFlatten = 1.0;
+                a.targetFaceDir = Math.sin(ta * 1.6) * 0.9;
+                b.targetFaceDir = -Math.sin(ta * 1.6 + 0.9) * 0.9;
+                // Impact particles while tumbling
+                if (Math.random() < 0.08) spawnFightParticles(a, b, Math.random() > 0.5 ? '🌀' : '💫', 1);
+
+              } else if (phase === 'recover') {
+                // Shake off — big ear flap, lick paw, turn away slightly
+                const rp = fp;
+                // Exaggerated body shake via butt wiggle that decays
+                if (rp < 0.5) {
+                  a.buttWiggle = Math.sin(rp * 28) * 5 * Math.max(0, 1 - rp * 2);
+                  b.buttWiggle = Math.sin(rp * 22 + 1) * 4 * Math.max(0, 1 - rp * 2);
+                }
+                // Ear flap: flattened then spring back past neutral
+                a.targetEarFlatten = rp < 0.3 ? 0.8 : Math.max(0, 0.8 - (rp - 0.3) * 2.4);
+                b.targetEarFlatten = rp < 0.4 ? 0.6 : Math.max(0, 0.6 - (rp - 0.4) * 2);
+                // Gradually calm down
+                a.targetCrouch = Math.max(0, 0.4 - rp * 0.5);
+                b.targetCrouch = Math.max(0, 0.3 - rp * 0.4);
+                a.rollAngle *= Math.exp(-6 * dt);
+                b.rollAngle *= Math.exp(-6 * dt);
+                a.hopY *= Math.exp(-8 * dt);
+                b.hopY *= Math.exp(-8 * dt);
               }
             } else if (social.state === 'play_pounce') {
               const dir = b.baseX >= a.baseX ? 1 : -1;
