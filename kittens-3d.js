@@ -1,6 +1,10 @@
 /**
- * Our Kitty Lounge — Neo, Husky & 8 Uniquely Colored Animated 2D Cats
- * Responsive across Mobile, Tablet, Laptop & Desktop + Tactile Petting + Real Kitten Meows + Play/Fight
+ * Our Kitty Lounge — Neo, Husky & 8 Uniquely Colored Lifelike Animated Cats
+ * Features:
+ * - Action-matched real cat audio: sweet meows (petting), real purring (rub/cuddle), playful meows (play/fight), hungry/excited meows (food/jumping)
+ * - Food Bowl & Treat Feeding sequence -> Excited Zoomies & Jumping with Squash-and-Stretch physics
+ * - Interactive Yarn Ball Toy + Autonomous Play-Fighting, Stalking Pounce, Cuddling, Tail Batting & Stretching
+ * - Smooth 120Hz delta-time animation across Mobile, Tablet, Laptop & Desktop
  */
 (function () {
   'use strict';
@@ -8,6 +12,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('kittens-3d-canvas');
     const card = document.getElementById('kittens-corner');
+    const feedBtn = document.getElementById('kittens-feed-btn');
+    const playBtn = document.getElementById('kittens-play-btn');
     const modeBtn = document.getElementById('kittens-mode-btn');
     const soundBtn = document.getElementById('kittens-sound-btn');
     const badgesWrap = document.getElementById('kittens-badges');
@@ -17,45 +23,74 @@
     if (!ctx) return;
 
     // ---------------------------------------------------------------------
-    // 1. Real Uploaded Kitten Meow Audio Slicer + Soft Purr Controller
+    // 1. Multi-Action Real Cat Audio Engine (Meow / Play / Food / Real Purr)
     // ---------------------------------------------------------------------
     let audioCtx = null;
     let soundMuted = false;
-    let purrNodes = null;
-    let purrActive = false;
 
-    const FALLBACK_MEOW_SLICES = [
-      { start: 0.05, dur: 0.85 }, { start: 2.00, dur: 0.90 }, { start: 5.00, dur: 0.90 },
-      { start: 6.08, dur: 0.90 }, { start: 8.05, dur: 0.90 }, { start: 10.10, dur: 0.95 },
-      { start: 13.20, dur: 0.95 }, { start: 16.15, dur: 0.95 }, { start: 18.00, dur: 0.90 },
-      { start: 22.10, dur: 0.95 }, { start: 24.20, dur: 0.95 }, { start: 27.10, dur: 0.95 },
-      { start: 30.20, dur: 0.95 }, { start: 33.20, dur: 1.00 }, { start: 36.85, dur: 0.95 },
-      { start: 42.20, dur: 0.95 }, { start: 48.00, dur: 1.00 }, { start: 53.00, dur: 1.00 }
-    ];
+    const SOUND_BANKS = {
+      meow: {
+        url: 'assets/kitten-meows.mp3',
+        rawBytes: null,
+        buffer: null,
+        decoding: false,
+        lastIdx: -1,
+        slices: [
+          { start: 0.05, dur: 0.85 }, { start: 2.00, dur: 0.90 }, { start: 5.00, dur: 0.90 },
+          { start: 6.08, dur: 0.90 }, { start: 8.05, dur: 0.90 }, { start: 10.10, dur: 0.95 },
+          { start: 13.20, dur: 0.95 }, { start: 16.15, dur: 0.95 }, { start: 22.10, dur: 0.95 },
+          { start: 27.10, dur: 0.95 }, { start: 33.20, dur: 1.00 }, { start: 48.00, dur: 1.00 }
+        ],
+        fallback: new Audio('assets/kitten-meows.mp3'),
+        stopTimer: null
+      },
+      play: {
+        url: 'assets/kitten-play.mp3',
+        rawBytes: null,
+        buffer: null,
+        decoding: false,
+        lastIdx: -1,
+        slices: [
+          { start: 0.05, dur: 0.85 }, { start: 1.15, dur: 0.85 }, { start: 2.20, dur: 0.90 },
+          { start: 4.10, dur: 0.95 }, { start: 6.20, dur: 0.95 }
+        ],
+        fallback: new Audio('assets/kitten-play.mp3'),
+        stopTimer: null
+      },
+      food: {
+        url: 'assets/kitten-food.mp3',
+        rawBytes: null,
+        buffer: null,
+        decoding: false,
+        lastIdx: -1,
+        slices: [
+          { start: 0.05, dur: 0.90 }, { start: 1.25, dur: 0.85 }, { start: 2.80, dur: 0.90 },
+          { start: 4.50, dur: 0.95 }, { start: 6.20, dur: 0.95 }, { start: 8.20, dur: 0.95 }
+        ],
+        fallback: new Audio('assets/kitten-food.mp3'),
+        stopTimer: null
+      }
+    };
 
-    let rawMeowBytes = null;
-    let decodedMeowBuffer = null;
-    let meowSlices = FALLBACK_MEOW_SLICES;
-    let decodingStarted = false;
-    let lastSliceIdx = -1;
+    Object.values(SOUND_BANKS).forEach((bank) => {
+      bank.fallback.preload = 'auto';
+    });
 
-    const fallbackAudio = new Audio('assets/kitten-meows.mp3');
-    fallbackAudio.preload = 'auto';
-    let fallbackStopTimer = null;
+    // Real Purr Loop Bank
+    const purrBank = {
+      url: 'assets/kitten-purr.mp3',
+      rawBytes: null,
+      buffer: null,
+      decoding: false,
+      srcNode: null,
+      gainNode: null,
+      active: false,
+      fallback: new Audio('assets/kitten-purr.mp3')
+    };
+    purrBank.fallback.preload = 'auto';
+    purrBank.fallback.loop = true;
 
-    if (window.location.protocol !== 'file:' && typeof fetch === 'function') {
-      fetch('assets/kitten-meows.mp3')
-        .then((res) => (res.ok ? res.arrayBuffer() : null))
-        .then((buf) => {
-          if (buf) {
-            rawMeowBytes = buf;
-            if (audioCtx && !decodingStarted) decodeMeowAudio();
-          }
-        })
-        .catch(() => {});
-    }
-
-    function extractMeowSlices(audioBuf) {
+    function extractSlicesFromBuffer(audioBuf) {
       const data = audioBuf.getChannelData(0);
       const sr = audioBuf.sampleRate;
       const winSize = Math.floor(sr * 0.015);
@@ -71,46 +106,72 @@
         if (rms > maxRms) maxRms = rms;
       }
 
-      const threshold = Math.max(0.015, maxRms * 0.14);
+      const threshold = Math.max(0.014, maxRms * 0.14);
       const rawRegions = [];
-      let inMeow = false;
+      let inVoice = false;
       let startWin = 0;
-      const minGapWins = Math.ceil(0.16 / 0.015);
+      const minGapWins = Math.ceil(0.15 / 0.015);
       let silentWins = 0;
 
       for (let w = 0; w < rmsValues.length; w++) {
         if (rmsValues[w] > threshold) {
-          if (!inMeow) { inMeow = true; startWin = w; }
+          if (!inVoice) { inVoice = true; startWin = w; }
           silentWins = 0;
-        } else if (inMeow) {
+        } else if (inVoice) {
           silentWins++;
           if (silentWins >= minGapWins) {
             rawRegions.push([startWin, w - silentWins]);
-            inMeow = false;
+            inVoice = false;
           }
         }
       }
-      if (inMeow) rawRegions.push([startWin, rmsValues.length - 1]);
+      if (inVoice) rawRegions.push([startWin, rmsValues.length - 1]);
 
       const detected = [];
       for (let i = 0; i < rawRegions.length; i++) {
         const sTime = Math.max(0, rawRegions[i][0] * 0.015 - 0.04);
         const eTime = Math.min(audioBuf.duration, rawRegions[i][1] * 0.015 + 0.10);
         const dur = eTime - sTime;
-        if (dur >= 0.22 && dur <= 1.75) detected.push({ start: sTime, dur });
+        if (dur >= 0.22 && dur <= 1.85) detected.push({ start: sTime, dur });
       }
-      if (detected.length >= 4) meowSlices = detected;
+      return detected;
     }
 
-    function decodeMeowAudio() {
-      if (!audioCtx || !rawMeowBytes || decodingStarted) return;
-      decodingStarted = true;
-      audioCtx.decodeAudioData(rawMeowBytes.slice(0))
+    function decodeBank(bank, isPurr) {
+      if (!audioCtx || !bank.rawBytes || bank.decoding) return;
+      bank.decoding = true;
+      audioCtx.decodeAudioData(bank.rawBytes.slice(0))
         .then((buf) => {
-          decodedMeowBuffer = buf;
-          extractMeowSlices(buf);
+          bank.buffer = buf;
+          if (!isPurr) {
+            const slices = extractSlicesFromBuffer(buf);
+            if (slices.length >= 2) bank.slices = slices;
+          }
         })
-        .catch(() => { decodingStarted = false; });
+        .catch(() => { bank.decoding = false; });
+    }
+
+    if (window.location.protocol !== 'file:' && typeof fetch === 'function') {
+      Object.values(SOUND_BANKS).forEach((bank) => {
+        fetch(bank.url)
+          .then((r) => (r.ok ? r.arrayBuffer() : null))
+          .then((buf) => {
+            if (buf) {
+              bank.rawBytes = buf;
+              if (audioCtx && !bank.decoding) decodeBank(bank, false);
+            }
+          })
+          .catch(() => {});
+      });
+      fetch(purrBank.url)
+        .then((r) => (r.ok ? r.arrayBuffer() : null))
+        .then((buf) => {
+          if (buf) {
+            purrBank.rawBytes = buf;
+            if (audioCtx && !purrBank.decoding) decodeBank(purrBank, true);
+          }
+        })
+        .catch(() => {});
     }
 
     function ensureAudio() {
@@ -119,31 +180,32 @@
       if (!AudioCtx) return null;
       if (!audioCtx) audioCtx = new AudioCtx();
       if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-      if (rawMeowBytes && !decodedMeowBuffer && !decodingStarted) decodeMeowAudio();
+      Object.values(SOUND_BANKS).forEach((b) => {
+        if (b.rawBytes && !b.buffer && !b.decoding) decodeBank(b, false);
+      });
+      if (purrBank.rawBytes && !purrBank.buffer && !purrBank.decoding) decodeBank(purrBank, true);
       return audioCtx;
     }
 
-    function pickMeowSlice() {
-      const len = meowSlices.length;
-      let idx = Math.floor(Math.random() * len);
-      if (len > 1 && idx === lastSliceIdx) {
-        idx = (idx + 1 + Math.floor(Math.random() * (len - 1))) % len;
-      }
-      lastSliceIdx = idx;
-      return meowSlices[idx];
-    }
-
-    function playKittenMeow(cat) {
+    function playActionSound(cat, actionType) {
       if (soundMuted) return 0.4;
       const ac = ensureAudio();
+      const bank = SOUND_BANKS[actionType] || SOUND_BANKS.meow;
       const rate = cat.voiceRate || 1.0;
-      const slice = pickMeowSlice();
+
+      const len = bank.slices.length;
+      let idx = Math.floor(Math.random() * len);
+      if (len > 1 && idx === bank.lastIdx) {
+        idx = (idx + 1 + Math.floor(Math.random() * (len - 1))) % len;
+      }
+      bank.lastIdx = idx;
+      const slice = bank.slices[idx];
       const playDur = slice.dur / rate;
 
-      if (ac && decodedMeowBuffer) {
+      if (ac && bank.buffer) {
         const now = ac.currentTime;
         const src = ac.createBufferSource();
-        src.buffer = decodedMeowBuffer;
+        src.buffer = bank.buffer;
         src.playbackRate.value = rate;
 
         const gain = ac.createGain();
@@ -158,69 +220,62 @@
         return playDur;
       }
 
+      // HTMLAudioElement fallback (for file:// or while decoding)
       try {
-        if (fallbackStopTimer) { clearTimeout(fallbackStopTimer); fallbackStopTimer = null; }
-        fallbackAudio.pause();
-        fallbackAudio.currentTime = Math.min(slice.start, Math.max(0, (fallbackAudio.duration || 55) - 1));
-        fallbackAudio.playbackRate = rate;
-        fallbackAudio.volume = 0.88;
-        const p = fallbackAudio.play();
+        if (bank.stopTimer) { clearTimeout(bank.stopTimer); bank.stopTimer = null; }
+        bank.fallback.pause();
+        bank.fallback.currentTime = Math.min(slice.start, Math.max(0, (bank.fallback.duration || 8) - 0.8));
+        bank.fallback.playbackRate = rate;
+        bank.fallback.volume = 0.88;
+        const p = bank.fallback.play();
         if (p && typeof p.catch === 'function') p.catch(() => {});
-        fallbackStopTimer = setTimeout(() => fallbackAudio.pause(), playDur * 1000);
+        bank.stopTimer = setTimeout(() => bank.fallback.pause(), playDur * 1000);
       } catch (_e) {}
       return playDur;
     }
 
     function setPurrIntensity(intensity) {
-      if (soundMuted || intensity <= 0.05) {
-        if (purrNodes && purrActive) {
-          purrActive = false;
-          const now = audioCtx.currentTime;
-          purrNodes.master.gain.cancelScheduledValues(now);
-          purrNodes.master.gain.setTargetAtTime(0.0001, now, 0.08);
+      if (soundMuted || intensity <= 0.06) {
+        if (purrBank.active) {
+          purrBank.active = false;
+          if (purrBank.gainNode && audioCtx) {
+            const now = audioCtx.currentTime;
+            purrBank.gainNode.gain.cancelScheduledValues(now);
+            purrBank.gainNode.gain.setTargetAtTime(0.0001, now, 0.12);
+          }
+          if (!purrBank.fallback.paused) purrBank.fallback.pause();
         }
         return;
       }
+
       const ac = ensureAudio();
-      if (!ac) return;
-      if (!purrNodes) {
-        const oscA = ac.createOscillator();
-        const oscB = ac.createOscillator();
-        oscA.type = 'triangle';
-        oscB.type = 'sine';
-        oscA.frequency.value = 78;
-        oscB.frequency.value = 156;
+      const targetVol = Math.min(0.65, intensity * 0.65);
 
-        const lfo = ac.createOscillator();
-        const lfoGain = ac.createGain();
-        lfo.frequency.value = 26;
-        lfoGain.gain.value = 0.45;
-        const modGain = ac.createGain();
-        modGain.gain.value = 0.55;
-        lfo.connect(lfoGain);
-        lfoGain.connect(modGain.gain);
-
-        const lp = ac.createBiquadFilter();
-        lp.type = 'lowpass';
-        lp.frequency.value = 260;
-
-        const master = ac.createGain();
-        master.gain.value = 0.0001;
-        oscA.connect(modGain);
-        oscB.connect(modGain);
-        modGain.connect(lp);
-        lp.connect(master);
-        master.connect(ac.destination);
-
-        oscA.start();
-        oscB.start();
-        lfo.start();
-        purrNodes = { master };
+      if (ac && purrBank.buffer) {
+        if (!purrBank.srcNode) {
+          const src = ac.createBufferSource();
+          src.buffer = purrBank.buffer;
+          src.loop = true;
+          const gain = ac.createGain();
+          gain.gain.value = 0.0001;
+          src.connect(gain);
+          gain.connect(ac.destination);
+          src.start();
+          purrBank.srcNode = src;
+          purrBank.gainNode = gain;
+        }
+        purrBank.active = true;
+        const now = ac.currentTime;
+        purrBank.gainNode.gain.cancelScheduledValues(now);
+        purrBank.gainNode.gain.setTargetAtTime(targetVol, now, 0.10);
+      } else if (audioCtx && audioCtx.state === 'running') {
+        purrBank.active = true;
+        purrBank.fallback.volume = targetVol;
+        if (purrBank.fallback.paused) {
+          const p = purrBank.fallback.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
       }
-      purrActive = true;
-      const now = ac.currentTime;
-      purrNodes.master.gain.cancelScheduledValues(now);
-      purrNodes.master.gain.setTargetAtTime(0.045 * Math.min(1, intensity), now, 0.09);
     }
 
     if (soundBtn) {
@@ -230,7 +285,8 @@
         soundBtn.textContent = soundMuted ? '🔇 Sound Off' : '🔊 Sound On';
         if (soundMuted) {
           setPurrIntensity(0);
-          fallbackAudio.pause();
+          Object.values(SOUND_BANKS).forEach((b) => b.fallback.pause());
+          purrBank.fallback.pause();
         } else {
           ensureAudio();
         }
@@ -238,7 +294,7 @@
     }
 
     // ---------------------------------------------------------------------
-    // 2. 10 Uniquely Colored Cats (Neo, Husky + 8 Colorful Friends!)
+    // 2. 10 Uniquely Colored Cats (Neo, Husky + 8 Friends)
     // ---------------------------------------------------------------------
     const CAT_SPECS = [
       {
@@ -303,7 +359,7 @@
         coat: ['#FFFFFF', '#F7F9FC', '#DFE7F0'], belly: '#FFFFFF', paws: '#FFFFFF',
         earIn: '#FFB5C8', nose: '#F79FB3',
         eyeCols: ['#78C8FF', '#3B95DB', '#1B558E'],
-        eyeColsR: ['#F5C451', '#C98A18', '#6B4608'], // cute odd-eyed snow kitty!
+        eyeColsR: ['#F5C451', '#C98A18', '#6B4608'],
         pattern: 'solid_plush',
         scale: 0.92, persian: true, baby: false
       },
@@ -342,17 +398,26 @@
         meowTimer: 0,
         lastMeowAt: 0,
         rubEnergy: 0,
-        blinkTimer: 1.0 + Math.random() * 2.8,
+        blinkTimer: 0.8 + Math.random() * 2.5,
         blinkAmt: 0,
-        earTwitchTimer: 1.8 + Math.random() * 3.5,
+        earTwitchTimer: 1.5 + Math.random() * 3.5,
         earTwitch: 0,
+        noseTwitchPhase: Math.random() * Math.PI * 2,
         kneadPhase: Math.random() * Math.PI * 2,
         tailPhase: Math.random() * Math.PI * 2,
+        // Lifelike physics (position, squash & stretch, eating, excited jumping)
         animX: 0,
         animY: 0,
         targetX: 0,
         targetY: 0,
         hopY: 0,
+        prevHopY: 0,
+        squashX: 1,
+        squashY: 1,
+        eatDip: 0,
+        targetEatDip: 0,
+        jumpPhase: idx * 0.48,
+        jumpSpeed: 7.4 + (idx % 3) * 0.65,
         crouchAmt: 0,
         targetCrouch: 0,
         earFlatten: 0,
@@ -376,7 +441,6 @@
     const cats = CAT_SPECS.map((s, idx) => createKittenState(s, idx));
     const floatingParticles = [];
 
-    // Build responsive Cat Roster Badges for ALL 10 cats (visible on every device!)
     function buildBadges() {
       if (!badgesWrap) return;
       badgesWrap.innerHTML = '';
@@ -394,8 +458,10 @@
         `;
         btn.addEventListener('click', () => {
           ensureAudio();
-          triggerKittenMeow(cat, 'sweet');
-          cat.hopY = 14;
+          triggerKittenMeow(cat, 'meow', undefined, undefined);
+          cat.hopY = 16;
+          cat.squashX = 0.90;
+          cat.squashY = 1.12;
         });
         cat.badgeEl = btn;
         cat.moodEl = btn.querySelector('.kitten-mood');
@@ -405,12 +471,34 @@
     buildBadges();
 
     // ---------------------------------------------------------------------
-    // 3. Responsive Layout (Adapts Cleanly to Mobile, Tablet, Laptop & Desktop)
+    // 3. Responsive Multi-Device Layout + Food Bowls + Yarn Ball Toy
     // ---------------------------------------------------------------------
-    let viewMode = 'all'; // 'all' (all 10 cats) | 'pair' (Neo & Husky close-up)
+    let viewMode = 'all';
     let W = 780;
     let H = 430;
     let cushionRows = [];
+
+    // Food & Yarn Toy State
+    const foodState = {
+      phase: 'none', // 'none' | 'calling' | 'eating' | 'excited_jump'
+      timer: 0,
+      bowls: [],     // { x, y, fill: 1..0, alpha: 0..1 }
+      soundTick: 0,
+      jumpChirpIdx: 0
+    };
+
+    const yarnBall = {
+      active: false,
+      timer: 0,
+      x: 340,
+      y: 200,
+      vx: 0,
+      vy: 0,
+      rot: 0,
+      r: 14,
+      targetCatIdx: 0,
+      batCooldown: 0
+    };
 
     function updateLayout() {
       const vw = window.innerWidth;
@@ -419,23 +507,22 @@
 
       if (viewMode === 'pair') {
         W = isMobile ? 420 : 680;
-        H = isMobile ? 265 : 310;
-        const scaleMul = isMobile ? 0.80 : 1.0;
+        H = isMobile ? 270 : 320;
+        const scaleMul = isMobile ? 0.82 : 1.0;
         cats[0].baseX = W * 0.31;
         cats[0].baseY = H * 0.74;
         cats[0].drawScale = cats[0].scale * scaleMul;
         cats[1].baseX = W * 0.69;
         cats[1].baseY = H * 0.74;
         cats[1].drawScale = cats[1].scale * scaleMul;
-        cushionRows = [{ x: W * 0.5, y: H * 0.77, rx: W * 0.38, ry: isMobile ? 28 : 34 }];
+        cushionRows = [{ x: W * 0.5, y: H * 0.77, rx: W * 0.39, ry: isMobile ? 28 : 34 }];
       } else if (isMobile) {
-        // Mobile All-10: 3 + 4 + 3 cozy tiered cushions so every cat is thumb-rubbable!
         W = 420;
-        H = 470;
+        H = 480;
         const rowDefs = [
-          { count: 3, y: 122, span: 280 },
-          { count: 4, y: 274, span: 320 },
-          { count: 3, y: 424, span: 280 }
+          { count: 3, y: 126, span: 280 },
+          { count: 4, y: 280, span: 320 },
+          { count: 3, y: 432, span: 280 }
         ];
         let ci = 0;
         cushionRows = [];
@@ -450,12 +537,11 @@
           }
         });
       } else {
-        // Tablet, Laptop & Desktop All-10: 2 rows x 5 cats
         W = 780;
-        H = 425;
+        H = 435;
         const rowDefs = [
-          { count: 5, y: 175, span: 610 },
-          { count: 5, y: 365, span: 620 }
+          { count: 5, y: 180, span: 610 },
+          { count: 5, y: 372, span: 620 }
         ];
         let ci = 0;
         cushionRows = [];
@@ -493,25 +579,17 @@
         modeBtn.textContent = viewMode === 'all' ? 'All 10 Cats 🐾' : 'Neo & Husky 💕';
         social.state = 'idle';
         social.timer = 1.6;
+        foodState.phase = 'none';
+        foodState.bowls = [];
+        yarnBall.active = false;
         resetSocialTargets();
         updateLayout();
       });
     }
 
     // ---------------------------------------------------------------------
-    // 4. Autonomous Play, Fight & Cuddle Behavior Across Active Cats
+    // 4. Feeding (Food Button -> Eat -> Excited Jumping!) & Yarn Play
     // ---------------------------------------------------------------------
-    const social = {
-      state: 'idle',
-      timer: 1.6,
-      duration: 0,
-      phaseTime: 0,
-      actorIdx: 0,
-      partnerIdx: 1,
-      bapStep: 0,
-      pounced: false
-    };
-
     function getActiveCats() {
       return viewMode === 'pair' ? [cats[0], cats[1]] : cats;
     }
@@ -521,6 +599,7 @@
         k.targetX = 0;
         k.targetY = 0;
         k.targetCrouch = 0;
+        k.targetEatDip = 0;
         k.targetEarFlatten = 0;
         k.socialSquint = 0;
         k.targetFaceDir = k.idx % 2 === 0 ? 0.1 : -0.1;
@@ -528,31 +607,117 @@
       });
     }
 
-    function showKittenBubble(k, text, withMeow) {
+    function startFeedingRoutine() {
+      ensureAudio();
+      social.state = 'idle';
+      yarnBall.active = false;
+      if (playBtn) playBtn.classList.remove('is-active');
+      if (feedBtn) feedBtn.classList.add('is-active');
+
+      const pool = getActiveCats();
+      foodState.phase = 'calling';
+      foodState.timer = 0;
+      foodState.soundTick = 0;
+      foodState.jumpChirpIdx = 0;
+      foodState.bowls = cushionRows.map((c) => ({
+        x: c.x,
+        y: c.y + 8,
+        fill: 1.0,
+        alpha: 0
+      }));
+
+      // Cats look eagerly toward the food bowls and meow hungrily!
+      pool.forEach((k, i) => {
+        k.targetCrouch = 0.25;
+        k.targetEatDip = 0;
+        k.socialSquint = 0;
+        k.socialMood = 'Ooh, yummy treats! 🍖';
+        if (i === 0 || i === 1 || i === 5) {
+          setTimeout(() => {
+            if (foodState.phase === 'calling') {
+              showKittenBubble(k, i % 2 === 0 ? 'mew! 🍖' : 'treats! 🐟', 'food');
+            }
+          }, i * 180);
+        }
+      });
+    }
+
+    function startYarnPlay() {
+      ensureAudio();
+      if (foodState.phase !== 'none') return;
+      if (playBtn) playBtn.classList.add('is-active');
+
+      const row = cushionRows[cushionRows.length - 1] || { x: W * 0.5, y: H * 0.72 };
+      yarnBall.active = true;
+      yarnBall.timer = 9.0;
+      yarnBall.x = row.x - 90;
+      yarnBall.y = row.y - 50;
+      yarnBall.vx = 180;
+      yarnBall.vy = -120;
+      yarnBall.r = W < 500 ? 11 : 14;
+      yarnBall.batCooldown = 0;
+
+      const pool = getActiveCats();
+      const first = pool[Math.floor(Math.random() * pool.length)];
+      showKittenBubble(first, 'yarn!! 🧶', 'play');
+      social.state = 'play_fight';
+      social.duration = 3.2;
+      social.phaseTime = 0;
+      social.actorIdx = 0;
+      social.partnerIdx = Math.min(1, pool.length - 1);
+      social.bapStep = 0;
+      if (pool[0] && pool[1]) {
+        const dx = pool[1].baseX - pool[0].baseX;
+        const dir = dx >= 0 ? 1 : -1;
+        const scoot = Math.min(44, Math.abs(dx) * 0.26);
+        pool[0].targetX = dir * scoot;
+        pool[1].targetX = -dir * scoot;
+        pool[0].targetFaceDir = dir * 0.65;
+        pool[1].targetFaceDir = -dir * 0.65;
+        pool[0].socialMood = 'Chasing yarn ball! 🧶';
+        pool[1].socialMood = 'Playing together! 🐾';
+      }
+    }
+
+    if (feedBtn) feedBtn.addEventListener('click', startFeedingRoutine);
+    if (playBtn) playBtn.addEventListener('click', startYarnPlay);
+
+    // ---------------------------------------------------------------------
+    // 5. Autonomous Play, Fight, Cuddle & Action-Matched Sounds
+    // ---------------------------------------------------------------------
+    const social = {
+      state: 'idle',
+      timer: 1.5,
+      duration: 0,
+      phaseTime: 0,
+      actorIdx: 0,
+      partnerIdx: 1,
+      bapStep: 0,
+      pounced: false
+    };
+
+    function showKittenBubble(k, text, soundAction) {
       k.speechText = text;
       k.speechAlpha = 1.0;
       k.speechY = 0;
-      if (withMeow && audioCtx && audioCtx.state === 'running' && !soundMuted) {
-        const d = playKittenMeow(k);
+      if (soundAction && audioCtx && audioCtx.state === 'running' && !soundMuted) {
+        const d = playActionSound(k, soundAction);
         k.meowTimer = Math.min(0.65, d || 0.36);
       }
     }
 
     function startNextSocialBehavior() {
+      if (foodState.phase !== 'none') return;
       const pool = getActiveCats();
       if (pool.length < 2) return;
 
-      // Pick two neighboring cats on the same row so play/fight stays neat!
       const idxA = Math.floor(Math.random() * pool.length);
       let bestPartner = (idxA + 1) % pool.length;
       let bestDist = Infinity;
       for (let i = 0; i < pool.length; i++) {
         if (i === idxA) continue;
         const d = Math.hypot(pool[i].baseX - pool[idxA].baseX, (pool[i].baseY - pool[idxA].baseY) * 2.2);
-        if (d < bestDist) {
-          bestDist = d;
-          bestPartner = i;
-        }
+        if (d < bestDist) { bestDist = d; bestPartner = i; }
       }
 
       social.actorIdx = idxA;
@@ -579,7 +744,7 @@
         b.targetEarFlatten = 0.78;
         a.socialMood = `Bapping ${b.name}! 🐾`;
         b.socialMood = `Play-fighting ${a.name}! 🐾`;
-        showKittenBubble(a, 'rawr! 🐾', true);
+        showKittenBubble(a, 'rawr! 🐾', 'play');
       } else if (r < 0.64) {
         social.state = 'play_pounce';
         social.duration = 3.0;
@@ -600,7 +765,7 @@
         b.socialSquint = 1.0;
         a.socialMood = `Cuddling ${b.name} 💕`;
         b.socialMood = `Nuzzling ${a.name} 💕`;
-        showKittenBubble(a, 'mrr~ 💕', true);
+        showKittenBubble(a, 'prrr~ 💕', 'meow');
       } else {
         social.state = 'stretch_play';
         social.duration = 2.5;
@@ -610,18 +775,18 @@
       }
     }
 
-    function triggerKittenMeow(k, style, px, py) {
-      if (social.state !== 'idle') {
+    function triggerKittenMeow(k, soundAction, px, py) {
+      if (social.state !== 'idle' && foodState.phase === 'none') {
         social.state = 'idle';
-        social.timer = 3.4 + Math.random() * 2.5;
+        social.timer = 3.2 + Math.random() * 2.5;
         resetSocialTargets();
       }
       const nowMs = performance.now();
-      if (nowMs - k.lastMeowAt < 600) return;
+      if (nowMs - k.lastMeowAt < 580) return;
       k.lastMeowAt = nowMs;
 
-      k.petLevel = Math.min(1, k.petLevel + 0.50);
-      k.speechText = style === 'chirp' ? 'mew! 💕' : style === 'trill' ? 'mrr-ow~ ✨' : 'mee-ow~ 💖';
+      k.petLevel = Math.min(1, k.petLevel + 0.52);
+      k.speechText = soundAction === 'food' ? 'yum! 🍖' : soundAction === 'play' ? 'mew! 🐾' : 'mee-ow~ 💖';
       k.speechAlpha = 1.0;
       k.speechY = 0;
 
@@ -629,11 +794,11 @@
         k.badgeEl.classList.add('is-meowing');
         setTimeout(() => k.badgeEl && k.badgeEl.classList.remove('is-meowing'), 550);
       }
-      if (k.moodEl) {
+      if (k.moodEl && foodState.phase === 'none') {
         k.moodEl.textContent = 'Purring & meowing! 💕';
       }
 
-      const meowDur = playKittenMeow(k);
+      const meowDur = playActionSound(k, soundAction || 'meow');
       k.meowTimer = Math.min(0.65, meowDur || 0.44);
 
       const sx = px !== undefined ? px : k.hitCenter.x;
@@ -653,17 +818,17 @@
     }
 
     function applyPetRub(k, moveDist, px, py, dxNorm, dyNorm) {
-      if (social.state !== 'idle') {
+      if (social.state !== 'idle' && foodState.phase === 'none') {
         social.state = 'idle';
-        social.timer = 3.4 + Math.random() * 2.5;
+        social.timer = 3.2 + Math.random() * 2.5;
         resetSocialTargets();
       }
-      k.petLevel = Math.min(1, k.petLevel + 0.16 + moveDist * 0.008);
+      k.petLevel = Math.min(1, k.petLevel + 0.17 + moveDist * 0.008);
       k.leanX = Math.max(-1, Math.min(1, dxNorm));
       k.leanY = Math.max(-1, Math.min(1, dyNorm));
       k.rubEnergy += moveDist;
 
-      if (k.moodEl && k.petLevel > 0.35 && k.speechAlpha < 0.2) {
+      if (k.moodEl && k.petLevel > 0.35 && k.speechAlpha < 0.2 && foodState.phase === 'none') {
         k.moodEl.textContent = 'Purrrr~ 💕';
       }
 
@@ -680,14 +845,14 @@
         });
       }
 
-      if (k.rubEnergy > 38) {
+      if (k.rubEnergy > 44) {
         k.rubEnergy = 0;
-        triggerKittenMeow(k, 'trill', px, py);
+        triggerKittenMeow(k, 'meow', px, py);
       }
     }
 
     // ---------------------------------------------------------------------
-    // 5. Unified Photo-Matched 2D Cat Renderer (10 Distinct Coats & Breeds!)
+    // 6. Lifelike 2D Cushions, Bowls, Yarn Ball & Cat Drawing
     // ---------------------------------------------------------------------
     function drawCushions() {
       cushionRows.forEach((c) => {
@@ -723,6 +888,101 @@
       });
     }
 
+    function drawFoodBowls() {
+      if (foodState.bowls.length === 0) return;
+      const bowlScale = W < 500 ? 0.78 : 1.0;
+      foodState.bowls.forEach((b) => {
+        if (b.alpha <= 0.02) return;
+        ctx.save();
+        ctx.globalAlpha = b.alpha;
+        ctx.translate(b.x, b.y);
+        ctx.scale(bowlScale, bowlScale);
+
+        // Bowl shadow
+        ctx.fillStyle = 'rgba(110, 45, 70, 0.18)';
+        ctx.beginPath();
+        ctx.ellipse(0, 12, 34, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ceramic bowl body
+        const bg = ctx.createLinearGradient(-28, -4, 28, 12);
+        bg.addColorStop(0, '#FFB6C8');
+        bg.addColorStop(0.5, '#FFE0E9');
+        bg.addColorStop(1, '#E88DA6');
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.moveTo(-30, 0);
+        ctx.quadraticCurveTo(-28, 14, 0, 14);
+        ctx.quadraticCurveTo(28, 14, 30, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bowl top rim
+        ctx.fillStyle = '#FFF5F8';
+        ctx.strokeStyle = '#E89EB2';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 30, 9.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner bowl depth
+        ctx.fillStyle = '#D9B8C2';
+        ctx.beginPath();
+        ctx.ellipse(0, 0.5, 25, 7.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crunchy kibbles & salmon treats (shrink as eaten!)
+        if (b.fill > 0.04) {
+          const count = Math.ceil(b.fill * 11);
+          const spots = [
+            [-12, 0], [0, -2], [11, 0], [-6, 2], [6, 2], [-15, 2],
+            [15, 1], [-2, 1], [3, -1], [-8, -1], [8, -1]
+          ];
+          for (let i = 0; i < count; i++) {
+            const [kx, ky] = spots[i];
+            ctx.fillStyle = i % 3 === 0 ? '#E88858' : i % 2 === 0 ? '#B56B3E' : '#8F4E29';
+            ctx.beginPath();
+            ctx.ellipse(kx, ky - b.fill * 2.5, 4.5, 3.0, i * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      });
+    }
+
+    function drawYarnBall() {
+      if (!yarnBall.active) return;
+      const { x, y, r, rot } = yarnBall;
+      ctx.save();
+      // Shadow
+      ctx.fillStyle = 'rgba(130, 50, 80, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(x, Math.min(H - 18, y + r + 4), r * 0.9, r * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      const yg = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 2, 0, 0, r);
+      yg.addColorStop(0, '#FFBED3');
+      yg.addColorStop(0.65, '#FF759F');
+      yg.addColorStop(1, '#CC4570');
+      ctx.fillStyle = yg;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Yarn wraps
+      ctx.strokeStyle = 'rgba(255, 240, 246, 0.72)';
+      ctx.lineWidth = 1.6;
+      [-0.5, 0.2, 0.9].forEach((ang) => {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 0.92, r * 0.42, ang, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
     function drawCatEye(ex, ey, r, k, cols) {
       if (k.happySquint > 0.45) {
         ctx.strokeStyle = '#3B1E12';
@@ -753,7 +1013,8 @@
       ctx.arc(k.lookX * 1.4, k.lookY * 1.1, r * 0.96, 0, Math.PI * 2);
       ctx.fill();
 
-      const pupR = r * (k.baby ? 0.70 : 0.56) * (1 + k.petLevel * 0.08);
+      const excitedDilate = foodState.phase !== 'none' ? 0.12 : 0;
+      const pupR = r * (k.baby ? 0.70 : 0.56) * (1 + k.petLevel * 0.08 + excitedDilate);
       ctx.fillStyle = '#0B0605';
       ctx.beginPath();
       ctx.arc(k.lookX * 1.9, k.lookY * 1.4, pupR, 0, Math.PI * 2);
@@ -783,8 +1044,8 @@
       const breath = Math.sin(elapsed * 2.5 + k.idx * 0.9);
       const purrVib = k.petLevel > 0.15 ? Math.sin(elapsed * 46) * 0.9 * k.petLevel : 0;
 
-      // Ground shadow
-      const shS = Math.max(0.6, 1 - k.hopY * 0.008);
+      // Ground shadow shrinks smoothly during jumps!
+      const shS = Math.max(0.45, 1 - k.hopY * 0.01);
       ctx.fillStyle = `rgba(140, 70, 90, ${0.20 * shS})`;
       ctx.beginPath();
       ctx.ellipse(cx, k.baseY + 10 * sc, (k.persian ? 58 : 44) * sc * shS, 10 * sc * shS, 0, 0, Math.PI * 2);
@@ -792,11 +1053,12 @@
 
       ctx.save();
       ctx.translate(cx + purrVib, cy + breath * 1.1);
-      ctx.scale(sc, sc);
+      // Apply realistic Disney-style squash & stretch!
+      ctx.scale(sc * k.squashX, sc * k.squashY);
 
       const tailSide = k.idx % 2 === 0 ? -1 : 1;
-      const tailWag = Math.sin(elapsed * (2.4 + k.petLevel * 1.9) + k.tailPhase) * 13;
-      const tailLift = k.petLevel * 24;
+      const tailWag = Math.sin(elapsed * (2.5 + k.petLevel * 2.1 + (foodState.phase === 'excited_jump' ? 3 : 0)) + k.tailPhase) * 14;
+      const tailLift = k.petLevel * 24 + (foodState.phase === 'excited_jump' ? 18 : 0);
 
       // 1. Fluffy Tail
       ctx.save();
@@ -828,7 +1090,6 @@
       ctx.ellipse(wig * 0.4, -26 - k.crouchAmt * 4, bodyW + breath * 1.2, bodyH - k.crouchAmt * 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pattern overlays on torso
       if (k.stripe) {
         ctx.strokeStyle = k.stripe;
         ctx.lineWidth = 3.0;
@@ -871,10 +1132,11 @@
         ctx.fill();
       }
 
-      // 3. Front Paws (kneading or play-bapping!)
+      // 3. Front Paws (kneading, bapping, or waving excitedly while jumping!)
+      const jumpWave = foodState.phase === 'excited_jump' ? Math.max(0, k.hopY * 0.42) : 0;
       const kneadAmt = k.petLevel * 6;
-      const liftL = Math.max(0, Math.sin(k.kneadPhase)) * kneadAmt + k.pawSwipeL * 26;
-      const liftR = Math.max(0, Math.sin(k.kneadPhase + Math.PI)) * kneadAmt + k.pawSwipeR * 26;
+      const liftL = Math.max(0, Math.sin(k.kneadPhase)) * kneadAmt + k.pawSwipeL * 26 + jumpWave;
+      const liftR = Math.max(0, Math.sin(k.kneadPhase + Math.PI)) * kneadAmt + k.pawSwipeR * 26 + jumpWave;
       [
         { px: k.persian ? -26 : -21, lift: liftL, tilt: 0.14 },
         { px: k.persian ? 24 : 21, lift: liftR, tilt: -0.14 }
@@ -915,11 +1177,12 @@
         ctx.restore();
       });
 
-      // 4. Head
+      // 4. Head (dips down smoothly when eating from bowl!)
       ctx.save();
+      const munchBob = k.eatDip > 0.4 ? Math.sin(elapsed * 22 + k.idx) * 3.5 : 0;
       const hx = k.leanX * 7 + k.faceDir * 5;
-      const hy = (k.persian ? -72 : -74) + k.leanY * 4 + k.crouchAmt * 7 - k.petLevel * 2;
-      const hRot = k.leanX * 0.15 + Math.sin(elapsed * 1.7 + k.idx) * 0.03 + k.earFlatten * 0.08;
+      const hy = (k.persian ? -72 : -74) + k.leanY * 4 + k.crouchAmt * 7 - k.petLevel * 2 + k.eatDip * 30 + munchBob;
+      const hRot = k.leanX * 0.15 + Math.sin(elapsed * 1.7 + k.idx) * 0.03 + k.earFlatten * 0.08 + k.eatDip * 0.16 * (k.idx % 2 === 0 ? 1 : -1);
       ctx.translate(hx, hy);
       ctx.rotate(hRot);
 
@@ -979,7 +1242,6 @@
       const fx = k.lookX * 2.2 + k.faceDir * 3;
       const fy = k.lookY * 1.6;
 
-      // Face Pattern Markings
       if (k.stripe) {
         ctx.strokeStyle = k.stripe;
         ctx.lineWidth = 2.5;
@@ -1003,7 +1265,6 @@
           ctx.fill();
           ctx.restore();
         });
-        // White center forehead blaze
         ctx.fillStyle = k.belly;
         ctx.beginPath();
         ctx.moveTo(fx - 8, -26);
@@ -1019,7 +1280,6 @@
         ctx.fill();
       }
 
-      // Muzzle puffs
       if (k.pattern !== 'siamese') {
         ctx.fillStyle = k.pattern === 'solid_plush' ? k.coat[0] : k.belly;
         ctx.beginPath();
@@ -1029,8 +1289,7 @@
         ctx.fill();
       }
 
-      // Rosy blush
-      const blushA = 0.18 + k.petLevel * 0.45;
+      const blushA = 0.18 + k.petLevel * 0.45 + (foodState.phase === 'excited_jump' ? 0.32 : 0);
       [-23, 23].forEach((bx) => {
         const bg = ctx.createRadialGradient(bx + fx * 0.5, 11, 1, bx + fx * 0.5, 11, 10);
         bg.addColorStop(0, `rgba(255, 120, 155, ${blushA})`);
@@ -1041,29 +1300,30 @@
         ctx.fill();
       });
 
-      // Eyes (supports heterochromia on Cloud!)
       const eyeR = k.baby ? 10.2 : 9.2;
       drawCatEye(-15.5 + fx, -1.5 + fy, eyeR, k, k.eyeCols);
       drawCatEye(15.5 + fx, -1.5 + fy, eyeR, k, k.eyeColsR || k.eyeCols);
 
-      // Rosy / matching nose
+      // Subtle lifelike nose twitch when sniffing!
+      const nTw = Math.sin(k.noseTwitchPhase) * 0.7;
       ctx.fillStyle = k.nose;
       ctx.beginPath();
-      ctx.moveTo(fx - 4.8, 8 + fy * 0.5);
-      ctx.lineTo(fx + 4.8, 8 + fy * 0.5);
-      ctx.quadraticCurveTo(fx, 14 + fy * 0.5, fx - 4.8, 8 + fy * 0.5);
+      ctx.moveTo(fx - 4.8, 8 + fy * 0.5 + nTw);
+      ctx.lineTo(fx + 4.8, 8 + fy * 0.5 + nTw);
+      ctx.quadraticCurveTo(fx, 14 + fy * 0.5 + nTw, fx - 4.8, 8 + fy * 0.5 + nTw);
       ctx.fill();
 
-      // Mouth
-      if (k.mouthOpen > 0.08) {
-        const mo = k.mouthOpen;
+      // Animated Mouth (eating munching OR meow opening!)
+      const eatChomp = k.eatDip > 0.45 ? (Math.sin(elapsed * 24 + k.idx) * 0.5 + 0.5) * 0.65 : 0;
+      const mouthAmt = Math.max(k.mouthOpen, eatChomp);
+      if (mouthAmt > 0.08) {
         ctx.fillStyle = '#9E2B4E';
         ctx.beginPath();
-        ctx.ellipse(fx, 17 + fy * 0.5, 4.5, 2.2 + mo * 4.8, 0, 0, Math.PI * 2);
+        ctx.ellipse(fx, 17 + fy * 0.5, 4.5, 2.2 + mouthAmt * 4.8, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#FF90AB';
         ctx.beginPath();
-        ctx.ellipse(fx, 18.5 + mo * 2 + fy * 0.5, 2.8, 1.6 + mo * 1.6, 0, 0, Math.PI * 2);
+        ctx.ellipse(fx, 18.5 + mouthAmt * 2 + fy * 0.5, 2.8, 1.6 + mouthAmt * 1.6, 0, 0, Math.PI * 2);
         ctx.fill();
       } else {
         ctx.strokeStyle = k.pattern === 'siamese' || k.pattern === 'tuxedo' ? '#2A181A' : '#6E3840';
@@ -1078,7 +1338,6 @@
         ctx.stroke();
       }
 
-      // Whiskers
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
       ctx.lineWidth = 1.15;
       [-1, 1].forEach((side) => {
@@ -1124,7 +1383,7 @@
     }
 
     // ---------------------------------------------------------------------
-    // 6. Pointer / Touch Rubbing & Hover Handlers (Works Across All 10 Cats)
+    // 7. Pointer / Touch Rubbing & Yarn Ball Interaction
     // ---------------------------------------------------------------------
     let isPointerDown = false;
     let lastPX = 0;
@@ -1165,9 +1424,16 @@
       lastPY = pt.y;
       ensureAudio();
 
+      // Allow batting the yarn ball directly with cursor/finger!
+      if (yarnBall.active && Math.hypot(pt.x - yarnBall.x, pt.y - yarnBall.y) <= yarnBall.r + 22) {
+        yarnBall.vx = (yarnBall.x - pt.x) * 8 + (Math.random() - 0.5) * 180;
+        yarnBall.vy = -160;
+        return;
+      }
+
       const hit = hitTestKitten(pt.x, pt.y);
       if (hit) {
-        triggerKittenMeow(hit.kitten, 'chirp', pt.x, pt.y);
+        triggerKittenMeow(hit.kitten, foodState.phase === 'excited_jump' ? 'food' : 'meow', pt.x, pt.y);
         applyPetRub(hit.kitten, 20, pt.x, pt.y, hit.dx, hit.dy);
       }
     });
@@ -1202,7 +1468,7 @@
     });
 
     // ---------------------------------------------------------------------
-    // 7. Smooth 120Hz Animation Loop
+    // 8. Smooth 120Hz Animation Loop
     // ---------------------------------------------------------------------
     let isInView = true;
     let rafId = null;
@@ -1241,9 +1507,142 @@
       elapsed += dt;
 
       const pool = getActiveCats();
-      const isBeingPetted = pool.some((k) => k.petLevel > 0.18);
 
-      if (!isBeingPetted) {
+      // Update Food Choreography ('calling' -> 'eating' -> 'excited_jump' -> 'none')
+      if (foodState.phase !== 'none') {
+        foodState.timer += dt;
+        const ft = foodState.timer;
+
+        if (foodState.phase === 'calling') {
+          foodState.bowls.forEach((b) => { b.alpha = Math.min(1, ft * 2.5); });
+          if (ft >= 1.1) {
+            foodState.phase = 'eating';
+            foodState.timer = 0;
+            pool.forEach((k) => {
+              k.targetCrouch = 0.55;
+              k.targetEatDip = 1.0;
+              k.socialMood = 'Nom nom nom~ 🐟';
+            });
+          }
+        } else if (foodState.phase === 'eating') {
+          const eatProg = Math.min(1, ft / 2.6);
+          foodState.bowls.forEach((b) => { b.fill = Math.max(0, 1 - eatProg); });
+          if (Math.random() < 0.14) {
+            const rk = pool[Math.floor(Math.random() * pool.length)];
+            floatingParticles.push({
+              x: rk.hitCenter.x + (Math.random() - 0.5) * 20,
+              y: rk.hitCenter.y + 10,
+              vx: (Math.random() - 0.5) * 18,
+              vy: -24,
+              symbol: Math.random() > 0.5 ? '✨' : '💕',
+              size: 12,
+              life: 0,
+              maxLife: 0.75
+            });
+          }
+          if (ft >= 2.65) {
+            foodState.phase = 'excited_jump';
+            foodState.timer = 0;
+            foodState.bowls.forEach((b) => { b.fill = 0; });
+            pool.forEach((k, idx) => {
+              k.targetEatDip = 0;
+              k.targetCrouch = 0;
+              k.socialSquint = 1.0;
+              k.socialMood = 'So excited!! Zoomies! 🎉';
+              if (idx % 3 === 0) {
+                showKittenBubble(k, idx === 0 ? 'YAY!! 🎉' : 'SO GOOD! 💖', 'food');
+              }
+            });
+          }
+        } else if (foodState.phase === 'excited_jump') {
+          foodState.bowls.forEach((b) => { b.alpha = Math.max(0, 1 - ft * 1.4); });
+          foodState.soundTick += dt;
+
+          // Excited bouncing jumps across ALL active cats with squash & stretch!
+          pool.forEach((k, idx) => {
+            const jVal = Math.sin(ft * k.jumpSpeed + k.jumpPhase);
+            k.hopY = Math.max(0, jVal) * (24 + (idx % 3) * 8);
+            k.pawSwipeL = Math.max(0, jVal) * 0.45;
+            k.pawSwipeR = Math.max(0, jVal) * 0.45;
+          });
+
+          if (foodState.soundTick >= 1.15 && foodState.jumpChirpIdx < 3) {
+            foodState.soundTick = 0;
+            foodState.jumpChirpIdx++;
+            const jumper = pool[(foodState.jumpChirpIdx * 3) % pool.length];
+            showKittenBubble(jumper, ['WHEEE! 🐾', 'YUMMY!! 💕', 'ZOOMIES! ✨'][foodState.jumpChirpIdx % 3], 'play');
+          }
+
+          if (Math.random() < 0.25) {
+            const rk = pool[Math.floor(Math.random() * pool.length)];
+            floatingParticles.push({
+              x: rk.hitCenter.x + (Math.random() - 0.5) * 32,
+              y: rk.hitCenter.y - 16,
+              vx: (Math.random() - 0.5) * 28,
+              vy: -(32 + Math.random() * 24),
+              symbol: ['✨', '💖', '🎉', '🐾'][Math.floor(Math.random() * 4)],
+              size: 13,
+              life: 0,
+              maxLife: 0.9
+            });
+          }
+
+          if (ft >= 4.4) {
+            foodState.phase = 'none';
+            foodState.bowls = [];
+            if (feedBtn) feedBtn.classList.remove('is-active');
+            resetSocialTargets();
+            pool.forEach((k) => { k.hopY = 0; k.pawSwipeL = 0; k.pawSwipeR = 0; });
+            social.timer = 2.0;
+          }
+        }
+      }
+
+      // Update Yarn Ball Toy Physics
+      if (yarnBall.active) {
+        yarnBall.timer -= dt;
+        yarnBall.batCooldown = Math.max(0, yarnBall.batCooldown - dt);
+        yarnBall.vy += 380 * dt;
+        yarnBall.x += yarnBall.vx * dt;
+        yarnBall.y += yarnBall.vy * dt;
+        yarnBall.rot += yarnBall.vx * dt * 0.05;
+
+        const floorY = (cushionRows[cushionRows.length - 1] ? cushionRows[cushionRows.length - 1].y : H * 0.78) - 6;
+        if (yarnBall.y > floorY) {
+          yarnBall.y = floorY;
+          yarnBall.vy = -Math.abs(yarnBall.vy) * 0.68;
+          yarnBall.vx *= 0.88;
+        }
+        if (yarnBall.x < 40) { yarnBall.x = 40; yarnBall.vx = Math.abs(yarnBall.vx) * 0.85; }
+        if (yarnBall.x > W - 40) { yarnBall.x = W - 40; yarnBall.vx = -Math.abs(yarnBall.vx) * 0.85; }
+
+        // Nearest cat bats yarn ball playfully!
+        if (yarnBall.batCooldown <= 0 && Math.abs(yarnBall.vx) < 95 && yarnBall.y > floorY - 26) {
+          let nearest = pool[0];
+          let minD = Infinity;
+          pool.forEach((k) => {
+            const d = Math.hypot(k.hitCenter.x - yarnBall.x, k.hitCenter.y - yarnBall.y);
+            if (d < minD) { minD = d; nearest = k; }
+          });
+          if (nearest) {
+            nearest.pawSwipeR = 0.95;
+            yarnBall.vx = (nearest.hitCenter.x < W * 0.5 ? 1 : -1) * (150 + Math.random() * 140);
+            yarnBall.vy = -(130 + Math.random() * 90);
+            yarnBall.batCooldown = 1.1;
+            showKittenBubble(nearest, 'bap! 🧶', 'play');
+          }
+        }
+
+        if (yarnBall.timer <= 0) {
+          yarnBall.active = false;
+          if (playBtn) playBtn.classList.remove('is-active');
+        }
+      }
+
+      // Autonomous social behavior (when not eating or being petted)
+      const isBeingPetted = pool.some((k) => k.petLevel > 0.18);
+      let isCuddling = false;
+      if (foodState.phase === 'none' && !isBeingPetted) {
         if (social.state === 'idle') {
           social.timer -= dt;
           if (social.timer <= 0) startNextSocialBehavior();
@@ -1252,6 +1651,7 @@
           const pt = social.phaseTime;
           const a = pool[social.actorIdx];
           const b = pool[social.partnerIdx];
+          isCuddling = social.state === 'cuddle_nuzzle';
 
           if (a && b) {
             if (social.state === 'play_fight') {
@@ -1266,7 +1666,7 @@
 
               if (pt > 0.55 && social.bapStep === 0) {
                 social.bapStep = 1;
-                showKittenBubble(b, 'bap bap! 🐾', true);
+                showKittenBubble(b, 'bap bap! 🐾', 'play');
                 floatingParticles.push({
                   x: (a.hitCenter.x + b.hitCenter.x) * 0.5,
                   y: Math.min(a.hitCenter.y, b.hitCenter.y) - 18,
@@ -1274,7 +1674,7 @@
                 });
               } else if (pt > 1.65 && social.bapStep === 1) {
                 social.bapStep = 2;
-                showKittenBubble(a, 'mew! 💥', true);
+                showKittenBubble(a, 'mew! 💥', 'play');
               }
             } else if (social.state === 'play_pounce') {
               const dir = b.baseX >= a.baseX ? 1 : -1;
@@ -1292,12 +1692,10 @@
                   social.pounced = true;
                   b.targetX = dir * 14;
                   b.hopY = 14;
-                  showKittenBubble(a, 'gotcha! ✨', true);
-                  showKittenBubble(b, 'eep! 🐾', true);
+                  showKittenBubble(a, 'gotcha! ✨', 'play');
+                  showKittenBubble(b, 'eep! 🐾', 'play');
                 }
-                if (pProg > 0.55) {
-                  b.hopY = Math.sin(((pProg - 0.55) / 0.45) * Math.PI) * 15;
-                }
+                if (pProg > 0.55) b.hopY = Math.sin(((pProg - 0.55) / 0.45) * Math.PI) * 15;
               } else {
                 a.hopY = 0; b.hopY = 0;
               }
@@ -1319,32 +1717,56 @@
             social.timer = 2.4 + Math.random() * 2.6;
             resetSocialTargets();
             pool.forEach((k) => { k.hopY = 0; k.pawSwipeL = 0; k.pawSwipeR = 0; k.buttWiggle = 0; });
+            if (playBtn && !yarnBall.active) playBtn.classList.remove('is-active');
           }
         }
       }
 
-      let maxPetLevel = 0;
+      let maxPetLevel = isCuddling ? 0.45 : 0;
       pool.forEach((k) => {
         const posDamp = 1 - Math.exp(-5.8 * dt);
         k.animX += (k.targetX - k.animX) * posDamp;
         k.animY += (k.targetY - k.animY) * posDamp;
         k.faceDir += (k.targetFaceDir - k.faceDir) * posDamp;
         k.crouchAmt += (k.targetCrouch - k.crouchAmt) * (1 - Math.exp(-7.5 * dt));
+        k.eatDip += (k.targetEatDip - k.eatDip) * (1 - Math.exp(-8.5 * dt));
         k.earFlatten += (k.targetEarFlatten - k.earFlatten) * (1 - Math.exp(-8 * dt));
-        if (social.state === 'idle' || isBeingPetted) {
+        if ((social.state === 'idle' && foodState.phase !== 'excited_jump') || isBeingPetted) {
           k.hopY *= Math.exp(-10 * dt);
-          k.pawSwipeL *= Math.exp(-10 * dt);
-          k.pawSwipeR *= Math.exp(-10 * dt);
+          if (!yarnBall.active) {
+            k.pawSwipeL *= Math.exp(-10 * dt);
+            k.pawSwipeR *= Math.exp(-10 * dt);
+          } else {
+            k.pawSwipeL *= Math.exp(-6 * dt);
+            k.pawSwipeR *= Math.exp(-6 * dt);
+          }
           k.buttWiggle *= Math.exp(-10 * dt);
         }
 
-        const targetLookX = Math.max(-1, Math.min(1, (pointerNormX * (W * 0.5) - (k.baseX + k.animX - W * 0.5)) / 240));
-        const targetLookY = Math.max(-1, Math.min(1, pointerNormY));
-        const lookDamp = 1 - Math.exp(-7 * dt);
-        k.lookX += (targetLookX - k.lookX) * lookDamp;
-        k.lookY += (targetLookY - k.lookY) * lookDamp;
+        // Squash & stretch physics derived from vertical hop velocity!
+        const hopVel = (k.hopY - k.prevHopY) / dt;
+        k.prevHopY = k.hopY;
+        const targetSquashY = Math.max(0.86, Math.min(1.16, 1.0 + hopVel * 0.0011 - (k.hopY < 1.5 && k.crouchAmt > 0.2 ? 0.06 : 0)));
+        const targetSquashX = 1.0 / Math.sqrt(targetSquashY);
+        const sqDamp = 1 - Math.exp(-14 * dt);
+        k.squashX += (targetSquashX - k.squashX) * sqDamp;
+        k.squashY += (targetSquashY - k.squashY) * sqDamp;
 
-        k.petLevel *= Math.exp(-1.2 * dt);
+        // Eye tracking: watches yarn ball if active, or food bowls, or cursor!
+        let targetLookX = (pointerNormX * (W * 0.5) - (k.baseX + k.animX - W * 0.5)) / 240;
+        let targetLookY = pointerNormY;
+        if (yarnBall.active) {
+          targetLookX = (yarnBall.x - k.hitCenter.x) / 140;
+          targetLookY = (yarnBall.y - k.hitCenter.y) / 120;
+        } else if (foodState.phase === 'calling' || foodState.phase === 'eating') {
+          targetLookX = 0;
+          targetLookY = 0.85;
+        }
+        const lookDamp = 1 - Math.exp(-7.5 * dt);
+        k.lookX += (Math.max(-1, Math.min(1, targetLookX)) - k.lookX) * lookDamp;
+        k.lookY += (Math.max(-1, Math.min(1, targetLookY)) - k.lookY) * lookDamp;
+
+        k.petLevel *= Math.exp(-1.15 * dt);
         k.leanX *= Math.exp(-5 * dt);
         k.leanY *= Math.exp(-5 * dt);
         if (k.moodEl && k.petLevel < 0.08 && k.speechAlpha < 0.05) {
@@ -1356,6 +1778,7 @@
         const squintTarget = Math.max(k.socialSquint, k.petLevel > 0.25 ? Math.min(1, k.petLevel * 1.2) : 0);
         k.happySquint += (squintTarget - k.happySquint) * (1 - Math.exp(-8 * dt));
         k.kneadPhase += dt * (2.2 + k.petLevel * 6.5);
+        k.noseTwitchPhase += dt * (foodState.phase === 'calling' ? 16 : 3.2);
 
         if (k.meowTimer > 0) {
           k.meowTimer = Math.max(0, k.meowTimer - dt);
@@ -1376,7 +1799,7 @@
             k.blinkAmt = Math.sin(((-k.blinkTimer) / 0.16) * Math.PI);
           } else {
             k.blinkAmt = 0;
-            k.blinkTimer = 2.6 + Math.random() * 3.2;
+            k.blinkTimer = 2.4 + Math.random() * 3.2;
           }
         }
 
@@ -1386,7 +1809,7 @@
             k.earTwitch = Math.sin(((-k.earTwitchTimer) / 0.18) * Math.PI * 2);
           } else {
             k.earTwitch = 0;
-            k.earTwitchTimer = 3 + Math.random() * 4;
+            k.earTwitchTimer = 2.8 + Math.random() * 4;
           }
         }
       });
@@ -1395,10 +1818,11 @@
 
       ctx.clearRect(0, 0, W, H);
       drawCushions();
+      drawFoodBowls();
 
-      // Sort back-to-front by Y so lower rows overlap upper rows naturally
       const ordered = pool.slice().sort((a, b) => (a.baseY + a.animY) - (b.baseY + b.animY));
       for (let i = 0; i < ordered.length; i++) drawCat2D(ordered[i], elapsed);
+      drawYarnBall();
       for (let i = 0; i < ordered.length; i++) drawSpeechBubble(ordered[i]);
 
       for (let i = floatingParticles.length - 1; i >= 0; i--) {

@@ -43,6 +43,8 @@
   flex-wrap: wrap;
 }
 
+.kittens-feed-btn,
+.kittens-play-btn,
 .kittens-mode-btn,
 .kittens-sound-btn {
   margin: 0;
@@ -56,19 +58,35 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(89, 28, 50, 0.08);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
+}
+
+.kittens-feed-btn {
+  background: linear-gradient(135deg, #ffe5cc 0%, #ffc8a2 100%);
+  border-color: rgba(244, 174, 128, 0.85);
+}
+
+.kittens-play-btn {
+  background: linear-gradient(135deg, #f5e1ff 0%, #ffcce3 100%);
+  border-color: rgba(235, 165, 210, 0.85);
 }
 
 .kittens-mode-btn {
   background: linear-gradient(135deg, #ffe5ee 0%, #ffd1e0 100%);
 }
 
+.kittens-feed-btn:hover,
+.kittens-play-btn:hover,
 .kittens-mode-btn:hover,
 .kittens-sound-btn:hover {
   transform: scale(1.05);
-  background: #ffe0ec;
   box-shadow: 0 5px 14px rgba(255, 143, 171, 0.3);
+}
+
+.kittens-feed-btn.is-active,
+.kittens-play-btn.is-active {
+  box-shadow: 0 0 0 3px rgba(255, 143, 171, 0.35), 0 6px 16px rgba(255, 143, 171, 0.35);
 }
 
 .kittens-sound-btn.is-muted {
