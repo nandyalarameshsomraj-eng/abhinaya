@@ -550,21 +550,93 @@
 }
 
 /* --------------------------------------------------------------------------
-   6. ILLUSTRATED PASTEL BIRTHDAY CAKE & CANDLE ANIMATIONS
+   6. INTERACTIVE 3D PASTEL CAKE, CUTTING & RING REVEAL STAGE
    -------------------------------------------------------------------------- */
 .bday-cake-stage {
   position: relative;
-  width: min(100%, 300px);
-  margin: 10px auto 18px;
+  width: min(100%, 400px);
+  margin: 4px auto 10px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
-.bday-cake-svg {
+.bday-cake-canvas {
   width: 100%;
-  height: auto;
-  overflow: visible;
+  aspect-ratio: 420 / 350;
+  display: block;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bday-cake-canvas:active {
+  cursor: grabbing;
+}
+
+.bday-cake-card.is-celebrated:not(.is-cut) .bday-cake-canvas {
+  cursor: pointer;
+  touch-action: none;
+}
+
+.bday-cake-hint {
+  margin: 2px 0 0;
+  font-family: var(--bday-font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(143, 71, 96, 0.85);
+  letter-spacing: 0.01em;
+  min-height: 18px;
+  transition: opacity 0.3s ease;
+}
+
+/* Ring Reveal Banner */
+.bday-ring-reveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0 12px;
+  text-align: center;
+  transform: translate3d(0, 10px, 0) scale(0.96);
+  transition: max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), margin 0.4s ease;
+}
+
+.bday-cake-card.is-ring-out .bday-ring-reveal {
+  max-height: 170px;
+  opacity: 1;
+  margin: 4px 0 12px;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.bday-ring-eyebrow {
+  margin: 0 0 2px;
+  font-family: var(--bday-font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #b45a78;
+}
+
+.bday-ring-title {
+  margin: 0 0 4px;
+  font-family: var(--bday-font-serif);
+  font-size: clamp(1.15rem, 3.2vw, 1.45rem);
+  font-weight: 700;
+  color: var(--bday-berry);
+  line-height: 1.25;
+}
+
+.bday-ring-subtitle {
+  margin: 0;
+  font-family: var(--bday-font-script);
+  font-size: 1.28rem;
+  color: var(--bday-berry-soft);
+  line-height: 1.25;
 }
 
 /* Candle Flame & Shrink Animations */
@@ -731,6 +803,48 @@
   line-height: 1.4;
 }
 
+.bday-cut-btn,
+.bday-take-ring-btn,
+.bday-cert-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  margin: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  font-family: var(--bday-font-sans);
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+}
+
+.bday-cut-btn {
+  background: linear-gradient(135deg, #ffc2d1 0%, #ff8fab 55%, #e8bfb8 100%);
+  color: var(--bday-berry);
+  box-shadow: 0 12px 28px rgba(255, 143, 171, 0.45), inset 0 2px 6px rgba(255, 255, 255, 0.85);
+}
+
+.bday-take-ring-btn {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffd6a5 48%, #ffb6c1 100%);
+  color: #591c32;
+  box-shadow: 0 12px 28px rgba(245, 190, 150, 0.5), inset 0 2px 6px rgba(255, 255, 255, 0.9);
+}
+
+.bday-cert-btn {
+  background: linear-gradient(135deg, #ffe5ec 0%, #ffb6c1 60%, #f5d0a9 100%);
+  color: var(--bday-berry);
+  box-shadow: 0 10px 24px rgba(255, 143, 171, 0.4), inset 0 2px 6px rgba(255, 255, 255, 0.88);
+}
+
+.bday-cut-btn:hover,
+.bday-take-ring-btn:hover,
+.bday-cert-btn:hover {
+  transform: translate3d(0, -2px, 0) scale(1.04);
+}
+
 .bday-relight-btn {
   display: none;
   background: rgba(255, 255, 255, 0.65);
@@ -756,6 +870,21 @@
 .bday-cake-card.is-celebrated .bday-mic-btn,
 .bday-cake-card.is-celebrated .bday-mic-status {
   display: none;
+}
+
+.bday-cake-card.is-celebrated:not(.is-cut) .bday-cut-btn {
+  display: inline-flex;
+  animation: bdayPopIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bday-cake-card.is-ring-out:not(.is-ring-taken) .bday-take-ring-btn {
+  display: inline-flex;
+  animation: bdayPopIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bday-cake-card.is-ring-taken .bday-cert-btn {
+  display: inline-flex;
+  animation: bdayPopIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .bday-cake-card.is-celebrated .bday-relight-btn {

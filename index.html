@@ -678,169 +678,26 @@
                             </p>
                         </div>
 
-                        <!-- Layered Pastel-Pink SVG Birthday Cake with 5 Lit Candles -->
+                        <!-- Interactive 3D Pastel-Pink Birthday Cake, Cutting & Ring Reveal Stage -->
                         <div class="bday-cake-stage">
-                            <svg id="bday-cake-svg" class="bday-cake-svg" viewBox="0 0 320 290" aria-label="Pastel pink birthday cake with lit candles">
-                                <defs>
-                                    <linearGradient id="bdayStandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#D7B2AA" />
-                                        <stop offset="50%" stop-color="#F3DCD6" />
-                                        <stop offset="100%" stop-color="#CFA49B" />
-                                    </linearGradient>
-                                    <linearGradient id="bdayTierBottom" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#FFD1DC" />
-                                        <stop offset="100%" stop-color="#FFB6C1" />
-                                    </linearGradient>
-                                    <linearGradient id="bdayTierTop" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#FFE6EE" />
-                                        <stop offset="100%" stop-color="#FFC6D3" />
-                                    </linearGradient>
-                                    <linearGradient id="bdayGlaze" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#FFF8FA" />
-                                        <stop offset="100%" stop-color="#FFDCE6" />
-                                    </linearGradient>
-                                    <radialGradient id="bdayFlameGlow" cx="50%" cy="50%" r="50%">
-                                        <stop offset="0%" stop-color="#FFE89C" stop-opacity="0.95" />
-                                        <stop offset="55%" stop-color="#FFB6C1" stop-opacity="0.45" />
-                                        <stop offset="100%" stop-color="#FFB6C1" stop-opacity="0" />
-                                    </radialGradient>
-                                    <linearGradient id="bdayFlameInner" x1="0%" y1="0%" x2="0%" y2="100%">
-                                        <stop offset="0%" stop-color="#FFFCE6" />
-                                        <stop offset="55%" stop-color="#FFD166" />
-                                        <stop offset="100%" stop-color="#FF8FAB" />
-                                    </linearGradient>
-                                </defs>
+                            <canvas id="bday-cake-canvas" class="bday-cake-canvas" aria-label="Interactive 3D pastel pink birthday cake with lit candles"></canvas>
+                            <p id="bday-cake-hint" class="bday-cake-hint">Move your cursor or finger to tilt in 3D ✨</p>
+                        </div>
 
-                                <!-- Soft Table Shadow -->
-                                <ellipse cx="160" cy="268" rx="112" ry="12" fill="rgba(89, 28, 50, 0.1)" />
-
-                                <!-- Rose-Gold Cake Stand -->
-                                <path d="M136 238 L184 238 L176 262 L144 262 Z" fill="url(#bdayStandGrad)" />
-                                <ellipse cx="160" cy="264" rx="54" ry="8" fill="url(#bdayStandGrad)" />
-                                <ellipse cx="160" cy="236" rx="118" ry="15" fill="#F5E1DC" stroke="#E0BFB8" stroke-width="2" />
-                                <ellipse cx="160" cy="233" rx="110" ry="11" fill="#FFF7F9" />
-
-                                <!-- Bottom Cake Tier -->
-                                <rect x="64" y="164" width="192" height="68" rx="18" fill="url(#bdayTierBottom)" stroke="#F4A0B1" stroke-width="1.5" />
-                                <!-- Bottom Frosting Drips -->
-                                <path d="M64 176 Q76 196 88 178 Q100 202 112 180 Q124 198 136 178 Q148 206 160 182 Q172 200 184 178 Q196 202 208 180 Q220 198 232 178 Q244 195 256 176 L256 168 Q160 158 64 168 Z" fill="url(#bdayGlaze)" />
-                                <!-- Pearl Piping Base -->
-                                <g fill="#FFF9FB" stroke="#E0BFB8" stroke-width="0.8">
-                                    <circle cx="74" cy="230" r="5" /><circle cx="88" cy="232" r="5" /><circle cx="102" cy="233" r="5" />
-                                    <circle cx="116" cy="234" r="5" /><circle cx="130" cy="235" r="5" /><circle cx="145" cy="235" r="5" />
-                                    <circle cx="160" cy="235" r="5" /><circle cx="175" cy="235" r="5" /><circle cx="190" cy="235" r="5" />
-                                    <circle cx="204" cy="234" r="5" /><circle cx="218" cy="233" r="5" /><circle cx="232" cy="232" r="5" />
-                                    <circle cx="246" cy="230" r="5" />
-                                </g>
-
-                                <!-- Top Cake Tier -->
-                                <rect x="92" y="106" width="136" height="62" rx="16" fill="url(#bdayTierTop)" stroke="#F6B2C2" stroke-width="1.5" />
-                                <ellipse cx="160" cy="108" rx="68" ry="12" fill="#FFF3F7" stroke="#F6C3D0" stroke-width="1.2" />
-                                <!-- Top Frosting Drips -->
-                                <path d="M92 114 Q103 136 114 118 Q125 142 136 120 Q148 138 160 120 Q172 142 184 120 Q195 138 206 118 Q217 134 228 114 L228 108 Q160 118 92 108 Z" fill="url(#bdayGlaze)" />
-
-                                <!-- Pastel Sprinkles & Pearls -->
-                                <g stroke-linecap="round" stroke-width="3">
-                                    <line x1="112" y1="146" x2="119" y2="150" stroke="#E0BFB8" />
-                                    <line x1="138" y1="154" x2="145" y2="150" stroke="#FF8FAB" />
-                                    <line x1="184" y1="148" x2="191" y2="153" stroke="#E0BFB8" />
-                                    <line x1="205" y1="138" x2="210" y2="144" stroke="#F5D0A9" />
-                                    <line x1="88" y1="210" x2="95" y2="214" stroke="#FFF9FB" />
-                                    <line x1="130" y1="216" x2="137" y2="212" stroke="#E0BFB8" />
-                                    <line x1="190" y1="212" x2="197" y2="216" stroke="#FFF9FB" />
-                                    <line x1="224" y1="206" x2="230" y2="211" stroke="#F5D0A9" />
-                                </g>
-
-                                <!-- Cute Coquette Bow on Front Tier -->
-                                <g transform="translate(160, 208)">
-                                    <path d="M0 0 C-16 -14, -28 -6, -22 6 C-16 16, -4 6, 0 0 Z" fill="#FF8FAB" stroke="#FFF0F5" stroke-width="1.2" />
-                                    <path d="M0 0 C16 -14, 28 -6, 22 6 C16 16, 4 6, 0 0 Z" fill="#FF8FAB" stroke="#FFF0F5" stroke-width="1.2" />
-                                    <path d="M-3 3 Q-10 16, -15 21" fill="none" stroke="#FF8FAB" stroke-width="3.5" stroke-linecap="round" />
-                                    <path d="M3 3 Q10 16, 15 21" fill="none" stroke="#FF8FAB" stroke-width="3.5" stroke-linecap="round" />
-                                    <circle cx="0" cy="0" r="4.5" fill="#FFF0F5" stroke="#E0BFB8" stroke-width="1.2" />
-                                </g>
-
-                                <!-- 5 Lit Candles -->
-                                <g class="bday-candles">
-                                    <!-- Candle 1 -->
-                                    <g class="bday-candle" transform="translate(114, 66)">
-                                        <circle class="bday-flame-halo" cx="5" cy="-4" r="16" fill="url(#bdayFlameGlow)" />
-                                        <g class="bday-smoke-wrap">
-                                            <path class="bday-smoke bday-smoke--1" d="M5 4 Q0 -6 6 -15 Q11 -23 4 -32" fill="none" stroke="rgba(180,145,158,0.65)" stroke-width="2" stroke-linecap="round" />
-                                            <path class="bday-smoke bday-smoke--2" d="M5 4 Q10 -5 4 -14 Q-1 -22 6 -30" fill="none" stroke="rgba(224,191,184,0.55)" stroke-width="1.6" stroke-linecap="round" />
-                                        </g>
-                                        <g class="bday-candle-body">
-                                            <rect x="1" y="10" width="8" height="32" rx="3.5" fill="#FFF5F8" stroke="#E0BFB8" stroke-width="1" />
-                                            <path d="M1 19 L9 15 M1 29 L9 25 M1 38 L9 34" stroke="#FFB6C1" stroke-width="2.2" />
-                                            <line x1="5" y1="5" x2="5" y2="10" stroke="#591C32" stroke-width="1.4" stroke-linecap="round" />
-                                        </g>
-                                        <path class="bday-flame" d="M5 -10 C9 -3, 10 3, 5 5 C0 3, 1 -3, 5 -10 Z" fill="url(#bdayFlameInner)" />
-                                    </g>
-                                    <!-- Candle 2 -->
-                                    <g class="bday-candle" transform="translate(136, 58)">
-                                        <circle class="bday-flame-halo" cx="5" cy="-4" r="16" fill="url(#bdayFlameGlow)" />
-                                        <g class="bday-smoke-wrap">
-                                            <path class="bday-smoke bday-smoke--1" d="M5 4 Q0 -6 6 -15 Q11 -23 4 -32" fill="none" stroke="rgba(180,145,158,0.65)" stroke-width="2" stroke-linecap="round" />
-                                            <path class="bday-smoke bday-smoke--2" d="M5 4 Q10 -5 4 -14 Q-1 -22 6 -30" fill="none" stroke="rgba(224,191,184,0.55)" stroke-width="1.6" stroke-linecap="round" />
-                                        </g>
-                                        <g class="bday-candle-body">
-                                            <rect x="1" y="10" width="8" height="36" rx="3.5" fill="#FFD1DC" stroke="#E0BFB8" stroke-width="1" />
-                                            <path d="M1 20 L9 16 M1 30 L9 26 M1 40 L9 36" stroke="#FFF0F5" stroke-width="2.2" />
-                                            <line x1="5" y1="5" x2="5" y2="10" stroke="#591C32" stroke-width="1.4" stroke-linecap="round" />
-                                        </g>
-                                        <path class="bday-flame" d="M5 -10 C9 -3, 10 3, 5 5 C0 3, 1 -3, 5 -10 Z" fill="url(#bdayFlameInner)" />
-                                    </g>
-                                    <!-- Candle 3 (Center) -->
-                                    <g class="bday-candle" transform="translate(155, 52)">
-                                        <circle class="bday-flame-halo" cx="5" cy="-4" r="18" fill="url(#bdayFlameGlow)" />
-                                        <g class="bday-smoke-wrap">
-                                            <path class="bday-smoke bday-smoke--1" d="M5 4 Q0 -6 6 -15 Q11 -23 4 -32" fill="none" stroke="rgba(180,145,158,0.65)" stroke-width="2" stroke-linecap="round" />
-                                            <path class="bday-smoke bday-smoke--2" d="M5 4 Q10 -5 4 -14 Q-1 -22 6 -30" fill="none" stroke="rgba(224,191,184,0.55)" stroke-width="1.6" stroke-linecap="round" />
-                                        </g>
-                                        <g class="bday-candle-body">
-                                            <rect x="1" y="10" width="8" height="40" rx="3.5" fill="#F5E1DC" stroke="#E0BFB8" stroke-width="1" />
-                                            <path d="M1 20 L9 16 M1 30 L9 26 M1 40 L9 36" stroke="#FF8FAB" stroke-width="2.2" />
-                                            <line x1="5" y1="5" x2="5" y2="10" stroke="#591C32" stroke-width="1.4" stroke-linecap="round" />
-                                        </g>
-                                        <path class="bday-flame" d="M5 -10 C9 -3, 10 3, 5 5 C0 3, 1 -3, 5 -10 Z" fill="url(#bdayFlameInner)" />
-                                    </g>
-                                    <!-- Candle 4 -->
-                                    <g class="bday-candle" transform="translate(174, 58)">
-                                        <circle class="bday-flame-halo" cx="5" cy="-4" r="16" fill="url(#bdayFlameGlow)" />
-                                        <g class="bday-smoke-wrap">
-                                            <path class="bday-smoke bday-smoke--1" d="M5 4 Q0 -6 6 -15 Q11 -23 4 -32" fill="none" stroke="rgba(180,145,158,0.65)" stroke-width="2" stroke-linecap="round" />
-                                            <path class="bday-smoke bday-smoke--2" d="M5 4 Q10 -5 4 -14 Q-1 -22 6 -30" fill="none" stroke="rgba(224,191,184,0.55)" stroke-width="1.6" stroke-linecap="round" />
-                                        </g>
-                                        <g class="bday-candle-body">
-                                            <rect x="1" y="10" width="8" height="36" rx="3.5" fill="#FFD1DC" stroke="#E0BFB8" stroke-width="1" />
-                                            <path d="M1 20 L9 16 M1 30 L9 26 M1 40 L9 36" stroke="#FFF0F5" stroke-width="2.2" />
-                                            <line x1="5" y1="5" x2="5" y2="10" stroke="#591C32" stroke-width="1.4" stroke-linecap="round" />
-                                        </g>
-                                        <path class="bday-flame" d="M5 -10 C9 -3, 10 3, 5 5 C0 3, 1 -3, 5 -10 Z" fill="url(#bdayFlameInner)" />
-                                    </g>
-                                    <!-- Candle 5 -->
-                                    <g class="bday-candle" transform="translate(196, 66)">
-                                        <circle class="bday-flame-halo" cx="5" cy="-4" r="16" fill="url(#bdayFlameGlow)" />
-                                        <g class="bday-smoke-wrap">
-                                            <path class="bday-smoke bday-smoke--1" d="M5 4 Q0 -6 6 -15 Q11 -23 4 -32" fill="none" stroke="rgba(180,145,158,0.65)" stroke-width="2" stroke-linecap="round" />
-                                            <path class="bday-smoke bday-smoke--2" d="M5 4 Q10 -5 4 -14 Q-1 -22 6 -30" fill="none" stroke="rgba(224,191,184,0.55)" stroke-width="1.6" stroke-linecap="round" />
-                                        </g>
-                                        <g class="bday-candle-body">
-                                            <rect x="1" y="10" width="8" height="32" rx="3.5" fill="#FFF5F8" stroke="#E0BFB8" stroke-width="1" />
-                                            <path d="M1 19 L9 15 M1 29 L9 25 M1 38 L9 34" stroke="#FFB6C1" stroke-width="2.2" />
-                                            <line x1="5" y1="5" x2="5" y2="10" stroke="#591C32" stroke-width="1.4" stroke-linecap="round" />
-                                        </g>
-                                        <path class="bday-flame" d="M5 -10 C9 -3, 10 3, 5 5 C0 3, 1 -3, 5 -10 Z" fill="url(#bdayFlameInner)" />
-                                    </g>
-                                </g>
-                            </svg>
+                        <div id="bday-ring-reveal" class="bday-ring-reveal" aria-live="polite">
+                            <p class="bday-ring-eyebrow">Hidden Inside Your Slice</p>
+                            <h3 class="bday-ring-title">A Forever Promise For You, Wifey 💍✨</h3>
+                            <p class="bday-ring-subtitle">Look at what was sparkling inside the cake piece...</p>
                         </div>
 
                         <div class="bday-cake-controls">
                             <button type="button" id="bday-blow-btn" class="bday-blow-btn">Blow the Candles 🌬️✨</button>
                             <button type="button" id="bday-mic-btn" class="bday-mic-btn">🎤 Or blow into your mic</button>
                             <p id="bday-mic-status" class="bday-mic-status" aria-live="polite"></p>
-                            <button type="button" id="bday-relight-btn" class="bday-relight-btn">Relight Candles ✨</button>
+                            <button type="button" id="bday-cut-btn" class="bday-cut-btn">Cut the Cake 🍰✨</button>
+                            <button type="button" id="bday-take-ring-btn" class="bday-take-ring-btn">Take the Ring 💍💖</button>
+                            <button type="button" id="bday-cert-btn" class="bday-cert-btn">See Our Marriage Certificate 📜💍</button>
+                            <button type="button" id="bday-relight-btn" class="bday-relight-btn">Relight &amp; Replay ✨</button>
                         </div>
                     </div>
 
