@@ -359,31 +359,19 @@
         <!-- ===== INTERACTIVE 2D KITTENS: NEO & HUSKY ===== -->
         <section id="kittens-corner" class="kittens-corner-card" aria-label="Interactive kittens Neo and Husky">
             <div class="kittens-header">
-                <h2 class="kittens-title">Meet Neo &amp; Husky 🐾💕</h2>
-                <button type="button" id="kittens-sound-btn" class="kittens-sound-btn" aria-label="Toggle kitten meow sound">🔊 Sound On</button>
+                <h2 class="kittens-title">Our Kitty Lounge 🐾💕</h2>
+                <div class="kittens-toolbar">
+                    <button type="button" id="kittens-mode-btn" class="kittens-mode-btn" aria-label="Switch between all 10 cats and Neo and Husky pair">All 10 Cats 🐾</button>
+                    <button type="button" id="kittens-sound-btn" class="kittens-sound-btn" aria-label="Toggle kitten meow sound">🔊 Sound On</button>
+                </div>
             </div>
-            <p class="kittens-subtitle">Touch or rub gently on Neo &amp; Husky to pet them &amp; hear them meow!</p>
+            <p class="kittens-subtitle">Touch or rub any kitty to pet them &amp; hear them meow — watch them play &amp; fight!</p>
 
             <div class="kittens-stage">
-                <canvas id="kittens-3d-canvas" class="kittens-3d-canvas" aria-label="Animated ginger kitten Neo and fluffy white and caramel Persian kitten Husky"></canvas>
+                <canvas id="kittens-3d-canvas" class="kittens-3d-canvas" aria-label="Interactive animated kittens in 10 unique colors"></canvas>
             </div>
 
-            <div class="kittens-badges">
-                <button type="button" id="kitten-badge-neo" class="kitten-badge">
-                    <span class="kitten-avatar-dot kitten-avatar-dot--neo" aria-hidden="true">🧡</span>
-                    <span class="kitten-badge-text">
-                        <span class="kitten-name">Neo</span>
-                        <span id="kitten-mood-neo" class="kitten-mood">Ginger Kitten · Rub to pet</span>
-                    </span>
-                </button>
-                <button type="button" id="kitten-badge-husky" class="kitten-badge">
-                    <span class="kitten-avatar-dot kitten-avatar-dot--husky" aria-hidden="true">🤎</span>
-                    <span class="kitten-badge-text">
-                        <span class="kitten-name">Husky</span>
-                        <span id="kitten-mood-husky" class="kitten-mood">Chubby Persian · Rub to pet</span>
-                    </span>
-                </button>
-            </div>
+            <div id="kittens-badges" class="kittens-badges" aria-label="Cat roster"></div>
         </section>
 
         <div class="pin-container">

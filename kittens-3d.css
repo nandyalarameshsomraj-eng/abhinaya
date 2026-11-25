@@ -1,12 +1,12 @@
 /* ==========================================================================
-   Neo & Husky — Interactive 3D Animated Kittens Corner
+   Our Kitty Lounge — Neo, Husky & 8 Uniquely Colored Cats (All Devices)
    ========================================================================== */
 
 .kittens-corner-card {
   width: 100%;
-  max-width: 760px;
+  max-width: 840px;
   margin: 0 auto 30px;
-  padding: clamp(18px, 4vw, 28px) clamp(14px, 4vw, 26px) 22px;
+  padding: clamp(16px, 3.6vw, 26px) clamp(12px, 3.6vw, 24px) 20px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 182, 193, 0.55);
   border-radius: 32px;
@@ -22,38 +22,34 @@
 .kittens-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 4px;
-  padding: 0 42px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .kittens-title {
   font-family: 'Gloria Hallelujah', cursive;
-  font-size: clamp(1.35rem, 4.4vw, 1.95rem);
+  font-size: clamp(1.3rem, 4.2vw, 1.9rem);
   color: var(--primary, #E60023);
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
-.kittens-subtitle {
-  font-family: 'Annie Use Your Telescope', cursive;
-  font-size: clamp(0.98rem, 3.2vw, 1.18rem);
-  color: #765c66;
-  margin: 0 0 10px;
-  line-height: 1.4;
+.kittens-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
+.kittens-mode-btn,
 .kittens-sound-btn {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
   margin: 0;
-  padding: 6px 12px;
+  padding: 7px 13px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 182, 193, 0.75);
-  background: rgba(255, 240, 245, 0.92);
+  border: 1px solid rgba(255, 182, 193, 0.78);
+  background: rgba(255, 240, 245, 0.94);
   color: #591c32;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 0.76rem;
@@ -61,11 +57,17 @@
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(89, 28, 50, 0.08);
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
+  white-space: nowrap;
 }
 
+.kittens-mode-btn {
+  background: linear-gradient(135deg, #ffe5ee 0%, #ffd1e0 100%);
+}
+
+.kittens-mode-btn:hover,
 .kittens-sound-btn:hover {
-  transform: translateY(-50%) scale(1.06);
-  background: #ffe6ef;
+  transform: scale(1.05);
+  background: #ffe0ec;
   box-shadow: 0 5px 14px rgba(255, 143, 171, 0.3);
 }
 
@@ -74,20 +76,28 @@
   background: rgba(245, 240, 242, 0.9);
 }
 
+.kittens-subtitle {
+  font-family: 'Annie Use Your Telescope', cursive;
+  font-size: clamp(0.95rem, 3.1vw, 1.15rem);
+  color: #765c66;
+  margin: 0 0 10px;
+  line-height: 1.38;
+  text-align: left;
+}
+
 .kittens-stage {
   position: relative;
   width: 100%;
-  max-width: 680px;
-  margin: 0 auto 12px;
+  margin: 0 auto 14px;
   border-radius: 24px;
-  background: radial-gradient(circle at 50% 42%, rgba(255, 246, 249, 0.95) 0%, rgba(255, 232, 240, 0.65) 100%);
-  border: 1px solid rgba(255, 182, 193, 0.35);
+  background: radial-gradient(circle at 50% 42%, rgba(255, 248, 250, 0.98) 0%, rgba(255, 232, 240, 0.68) 100%);
+  border: 1px solid rgba(255, 182, 193, 0.38);
   overflow: hidden;
 }
 
 .kittens-3d-canvas {
   width: 100%;
-  aspect-ratio: 680 / 310;
+  height: auto;
   display: block;
   cursor: grab;
   touch-action: none;
@@ -99,65 +109,63 @@
   cursor: grabbing;
 }
 
+/* Responsive Cat Roster Grid (visible & tappable on every device) */
 .kittens-badges {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  max-width: 560px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
   margin: 0 auto;
+}
+
+.kittens-badges.is-pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 540px;
 }
 
 .kitten-badge {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 8px 10px;
   margin: 0;
-  border-radius: 20px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 182, 193, 0.55);
-  background: rgba(255, 247, 250, 0.9);
+  background: rgba(255, 247, 250, 0.92);
   color: #591c32;
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(89, 28, 50, 0.06);
+  box-shadow: 0 3px 10px rgba(89, 28, 50, 0.05);
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, background 0.2s ease;
+  min-width: 0;
 }
 
 .kitten-badge:hover {
   transform: translate3d(0, -2px, 0) scale(1.02);
-  background: #fff2f6;
-  box-shadow: 0 8px 18px rgba(255, 143, 171, 0.22);
+  background: #fff1f6;
+  box-shadow: 0 7px 16px rgba(255, 143, 171, 0.22);
 }
 
 .kitten-badge:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .kitten-badge.is-meowing {
-  border-color: #ff8fab;
-  box-shadow: 0 8px 22px rgba(255, 143, 171, 0.38);
+  border-color: #ff7597;
+  box-shadow: 0 6px 18px rgba(255, 143, 171, 0.42);
 }
 
 .kitten-avatar-dot {
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.05rem;
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.12);
-}
-
-.kitten-avatar-dot--neo {
-  background: linear-gradient(135deg, #ffb673 0%, #e4782e 100%);
-  border: 2px solid #fff5eb;
-}
-
-.kitten-avatar-dot--husky {
-  background: linear-gradient(135deg, #ffffff 0%, #f5ece6 48%, #7a4b31 100%);
-  border: 2px solid #ffe4ec;
+  font-size: 0.85rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(89, 28, 50, 0.14);
 }
 
 .kitten-badge-text {
@@ -168,15 +176,18 @@
 
 .kitten-name {
   font-family: 'Gloria Hallelujah', cursive;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.15;
   color: #591c32;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kitten-mood {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 0.74rem;
+  font-size: 0.66rem;
   font-weight: 600;
   color: #9e526b;
   white-space: nowrap;
@@ -184,42 +195,42 @@
   text-overflow: ellipsis;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 820px) {
+  .kittens-badges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
   .kittens-header {
-    padding: 0;
-    flex-direction: column;
-    gap: 6px;
+    justify-content: center;
   }
 
-  .kittens-sound-btn {
-    position: static;
-    transform: none;
-  }
-
-  .kittens-sound-btn:hover {
-    transform: scale(1.05);
+  .kittens-subtitle {
+    text-align: center;
   }
 
   .kittens-badges {
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
   }
 
   .kitten-badge {
-    padding: 8px 10px;
-    gap: 8px;
+    padding: 7px 8px;
+    gap: 7px;
   }
 
   .kitten-avatar-dot {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
   }
 
   .kitten-name {
-    font-size: 0.95rem;
+    font-size: 0.86rem;
   }
 
   .kitten-mood {
-    font-size: 0.68rem;
+    font-size: 0.63rem;
   }
 }
