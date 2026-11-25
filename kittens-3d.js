@@ -1419,6 +1419,7 @@
     canvas.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
       isPointerDown = true;
+      canvas.classList.add('is-petting');
       const pt = getCanvasCoords(e);
       lastPX = pt.x;
       lastPY = pt.y;
@@ -1448,21 +1449,24 @@
       lastPY = pt.y;
 
       const hit = hitTestKitten(pt.x, pt.y);
-      if (hit) {
-        canvas.style.cursor = 'pointer';
-        if (isPointerDown || (e.pointerType === 'mouse' && moveDist > 1.5)) {
-          applyPetRub(hit.kitten, moveDist, pt.x, pt.y, hit.dx, hit.dy);
-        }
-      } else {
-        canvas.style.cursor = isPointerDown ? 'grabbing' : 'grab';
+      const overYarn = yarnBall.active && Math.hypot(pt.x - yarnBall.x, pt.y - yarnBall.y) <= yarnBall.r + 22;
+      canvas.classList.toggle('is-hovering-cat', !!(hit || overYarn));
+      canvas.classList.toggle('is-petting', isPointerDown);
+
+      if (hit && (isPointerDown || (e.pointerType === 'mouse' && moveDist > 1.5))) {
+        applyPetRub(hit.kitten, moveDist, pt.x, pt.y, hit.dx, hit.dy);
       }
     });
 
-    const endRub = () => { isPointerDown = false; };
+    const endRub = () => {
+      isPointerDown = false;
+      canvas.classList.remove('is-petting');
+    };
     canvas.addEventListener('pointerup', endRub);
     canvas.addEventListener('pointercancel', endRub);
     canvas.addEventListener('pointerleave', () => {
       isPointerDown = false;
+      canvas.classList.remove('is-petting', 'is-hovering-cat');
       pointerNormX = 0;
       pointerNormY = 0;
     });
