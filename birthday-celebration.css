@@ -1,0 +1,1101 @@
+/* ==========================================================================
+   Pastel-Pink Coquette / Y2K Birthday Celebration Module
+   Modular stylesheet — drop into any page alongside birthday-celebration.js
+   All selectors are scoped with `.bday-` to avoid colliding with site styles.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bday-blush: #FFF0F5;
+  --bday-pink: #FFB6C1;
+  --bday-pink-deep: #FF8FAB;
+  --bday-rose-gold: #E0BFB8;
+  --bday-gold: #F5D0A9;
+  --bday-berry: #591C32;
+  --bday-berry-soft: rgba(89, 28, 50, 0.78);
+  --bday-glass-bg: rgba(255, 255, 255, 0.45);
+  --bday-glass-border: rgba(255, 182, 193, 0.6);
+  --bday-font-serif: 'Playfair Display', Georgia, serif;
+  --bday-font-script: 'Dancing Script', cursive;
+  --bday-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   1. TRIGGER BUTTON ("Tap for a Surprise 🎂")
+   -------------------------------------------------------------------------- */
+.bday-trigger-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 34px;
+  padding: 6px;
+  position: relative;
+  z-index: 5;
+}
+
+.bday-trigger-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 34px;
+  margin: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 182, 193, 0.85);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 240, 245, 0.88) 0%,
+    rgba(255, 182, 193, 0.62) 55%,
+    rgba(224, 191, 184, 0.72) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--bday-berry);
+  font-family: var(--bday-font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  overflow: visible;
+  box-shadow:
+    0 10px 30px rgba(255, 143, 171, 0.35),
+    0 0 22px rgba(255, 182, 193, 0.55),
+    inset 0 2px 6px rgba(255, 255, 255, 0.85);
+  animation: bdayBtnFloat 3.6s ease-in-out infinite;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+/* Glossy top highlight */
+.bday-trigger-btn::before {
+  content: "";
+  position: absolute;
+  inset: 2px 6px auto 6px;
+  height: 46%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.bday-trigger-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 245, 248, 0.95) 0%,
+    rgba(255, 182, 193, 0.78) 55%,
+    rgba(224, 191, 184, 0.82) 100%
+  );
+  transform: translateY(-4px) scale(1.04);
+  box-shadow:
+    0 16px 38px rgba(255, 143, 171, 0.48),
+    0 0 32px rgba(255, 182, 193, 0.75),
+    inset 0 2px 8px rgba(255, 255, 255, 0.95);
+}
+
+.bday-trigger-btn:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Sparkle micro-interactions on hover */
+.bday-btn-sparkle {
+  position: absolute;
+  pointer-events: none;
+  font-size: 0.9rem;
+  color: #e09f96;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transform: scale(0.4) rotate(0deg);
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.bday-btn-sparkle--1 { top: -10px; left: 14px; }
+.bday-btn-sparkle--2 { top: -12px; right: 18px; transition-delay: 0.06s; }
+.bday-btn-sparkle--3 { bottom: -10px; left: 28px; transition-delay: 0.1s; }
+.bday-btn-sparkle--4 { bottom: -9px; right: 16px; transition-delay: 0.14s; }
+
+.bday-trigger-btn:hover .bday-btn-sparkle {
+  opacity: 1;
+  transform: scale(1.15) rotate(18deg);
+  animation: bdaySparkleTwinkle 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes bdayBtnFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes bdaySparkleTwinkle {
+  0% { transform: scale(0.9) rotate(-10deg); opacity: 0.75; }
+  100% { transform: scale(1.25) rotate(20deg); opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   2. FULL-SCREEN CELEBRATION OVERLAY & AMBIENT BACKDROP
+   -------------------------------------------------------------------------- */
+.bday-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 28px 16px 48px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 182, 193, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 82% 18%, rgba(224, 191, 184, 0.42) 0%, transparent 42%),
+    radial-gradient(circle at 50% 85%, rgba(255, 182, 193, 0.38) 0%, transparent 50%),
+    linear-gradient(155deg, rgba(255, 240, 245, 0.94) 0%, rgba(255, 228, 238, 0.93) 50%, rgba(250, 235, 238, 0.96) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  font-family: var(--bday-font-sans);
+  color: var(--bday-berry);
+  box-sizing: border-box;
+}
+
+.bday-overlay *,
+.bday-overlay *::before,
+.bday-overlay *::after {
+  box-sizing: border-box;
+}
+
+.bday-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.bday-ambient-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bday-confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.bday-flower-splash-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 6000;
+}
+
+.bday-ambient-heart {
+  position: absolute;
+  bottom: -40px;
+  color: var(--bday-pink);
+  opacity: 0;
+  user-select: none;
+  filter: drop-shadow(0 2px 6px rgba(255, 182, 193, 0.5));
+  animation: bdayAmbientFloat linear forwards;
+}
+
+.bday-ambient-sparkle {
+  position: absolute;
+  color: var(--bday-rose-gold);
+  opacity: 0;
+  user-select: none;
+  animation: bdayAmbientSparkle ease-in-out infinite;
+}
+
+@keyframes bdayAmbientFloat {
+  0% { transform: translateY(0) translateX(0) scale(0.7) rotate(-8deg); opacity: 0; }
+  12% { opacity: 0.65; }
+  85% { opacity: 0.55; }
+  100% { transform: translateY(-110vh) translateX(var(--drift, 20px)) scale(1.15) rotate(14deg); opacity: 0; }
+}
+
+@keyframes bdayAmbientSparkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.75) rotate(0deg); }
+  50% { opacity: 0.85; transform: scale(1.2) rotate(25deg); }
+}
+
+/* Close button & Surprise music toggle */
+.bday-music-toggle {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 30;
+  height: 42px;
+  margin: 0;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--bday-glass-border);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--bday-berry);
+  font-family: var(--bday-font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(89, 28, 50, 0.1);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.bday-music-toggle:hover {
+  background: rgba(255, 240, 245, 0.95);
+  transform: scale(1.05);
+  box-shadow: 0 8px 22px rgba(255, 182, 193, 0.45);
+}
+
+.bday-music-toggle.is-paused {
+  opacity: 0.78;
+}
+
+.bday-close-btn {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 30;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--bday-glass-border);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--bday-berry);
+  font-family: var(--bday-font-sans);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(89, 28, 50, 0.1);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.bday-close-btn:hover {
+  background: rgba(255, 240, 245, 0.95);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 8px 22px rgba(255, 182, 193, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   3. STEP CONTAINER & FROSTED GLASS CARDS
+   -------------------------------------------------------------------------- */
+.bday-stage {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1120px;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bday-step {
+  width: 100%;
+  display: none;
+  opacity: 0;
+  transform: translateY(16px) scale(0.97);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bday-step.is-active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bday-step.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.bday-glass-card {
+  background: var(--bday-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--bday-glass-border);
+  border-radius: 32px;
+  box-shadow:
+    0 24px 60px rgba(89, 28, 50, 0.08),
+    0 8px 24px rgba(255, 182, 193, 0.28),
+    inset 0 1px 1px rgba(255, 255, 255, 0.75);
+}
+
+/* --------------------------------------------------------------------------
+   4. STEP 1: "YES / NO" PROMPT CARD
+   -------------------------------------------------------------------------- */
+.bday-prompt-card {
+  position: relative;
+  width: min(92vw, 480px);
+  min-height: 350px;
+  padding: 46px 32px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bday-bow-badge {
+  width: 66px;
+  height: 44px;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 4px 10px rgba(255, 182, 193, 0.45));
+  animation: bdayBtnFloat 3s ease-in-out infinite;
+}
+
+.bday-eyebrow {
+  font-family: var(--bday-font-sans);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9e526b;
+  margin: 0 0 10px;
+}
+
+.bday-prompt-title {
+  font-family: var(--bday-font-serif);
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.22;
+  color: var(--bday-berry);
+  margin: 0 0 10px;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.7);
+}
+
+.bday-prompt-subtitle {
+  font-family: var(--bday-font-script);
+  font-size: 1.45rem;
+  color: var(--bday-berry-soft);
+  margin: 0 0 30px;
+  line-height: 1.3;
+}
+
+.bday-prompt-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 54px;
+}
+
+.bday-btn-yes,
+.bday-btn-no {
+  font-family: var(--bday-font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 13px 30px;
+  margin: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.bday-btn-yes {
+  background: linear-gradient(135deg, #ff9ebb 0%, #ffb6c1 50%, #e0BFB8 100%);
+  color: var(--bday-berry);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 10px 24px rgba(255, 143, 171, 0.38),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  z-index: 2;
+}
+
+.bday-btn-yes:hover {
+  background: linear-gradient(135deg, #ff8fab 0%, #ffb6c1 55%, #e8c7c0 100%);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 14px 30px rgba(255, 143, 171, 0.5);
+}
+
+.bday-btn-no {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--bday-berry-soft);
+  border: 1px solid rgba(224, 191, 184, 0.8);
+  box-shadow: 0 6px 16px rgba(89, 28, 50, 0.08);
+  transition: left 0.24s cubic-bezier(0.22, 1, 0.36, 1), top 0.24s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s ease, background 0.2s ease;
+  z-index: 3;
+  white-space: nowrap;
+}
+
+.bday-btn-no:hover {
+  background: rgba(255, 240, 245, 0.85);
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(89, 28, 50, 0.12);
+}
+
+.bday-btn-no.is-dodging {
+  position: absolute;
+}
+
+/* --------------------------------------------------------------------------
+   5. STEP 2 & 3: CELEBRATION STAGE (CAKE + FLOATING POLAROIDS)
+   -------------------------------------------------------------------------- */
+.bday-celebration-layout {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 245px minmax(300px, 470px) 245px;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.bday-polaroid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-items: center;
+}
+
+.bday-cake-card {
+  position: relative;
+  padding: 34px 28px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Happy Birthday Reveal Banner */
+.bday-wish-header {
+  margin-bottom: 10px;
+}
+
+.bday-wish-pre {
+  font-family: var(--bday-font-script);
+  font-size: 1.5rem;
+  color: #a4516d;
+  margin: 0 0 4px;
+}
+
+.bday-wish-title {
+  font-family: var(--bday-font-serif);
+  font-size: clamp(1.7rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  color: var(--bday-berry);
+  margin: 0;
+  line-height: 1.2;
+  transition: text-shadow 0.6s ease, transform 0.6s ease;
+}
+
+.bday-cake-card.is-celebrated .bday-wish-title {
+  filter: drop-shadow(0 0 18px rgba(255, 182, 193, 0.85));
+  animation: bdayPopIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.bday-cake-card.is-celebrated .bday-wish-title-text {
+  background: linear-gradient(120deg, #591C32 0%, #b84a70 45%, #c99a90 70%, #591C32 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bdayTitleShimmer 3.5s linear infinite;
+}
+
+.bday-wish-message {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  font-family: var(--bday-font-sans);
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: var(--bday-berry-soft);
+  transition: max-height 0.7s ease, opacity 0.7s ease 0.15s, margin 0.5s ease;
+}
+
+.bday-cake-card.is-celebrated .bday-wish-message {
+  max-height: 500px;
+  opacity: 1;
+  margin: 12px 0 8px;
+}
+
+@keyframes bdayTitleShimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes bdayPopIn {
+  0% { transform: scale(0.88); }
+  65% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* --------------------------------------------------------------------------
+   6. ILLUSTRATED PASTEL BIRTHDAY CAKE & CANDLE ANIMATIONS
+   -------------------------------------------------------------------------- */
+.bday-cake-stage {
+  position: relative;
+  width: min(100%, 300px);
+  margin: 10px auto 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bday-cake-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 16px 26px rgba(89, 28, 50, 0.12));
+}
+
+/* Candle Flame & Shrink Animations */
+.bday-candle-body {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.14s;
+}
+
+.bday-smoke-wrap {
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.14s;
+}
+
+.bday-flame {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: bdayFlameFlicker 1.15s ease-in-out infinite alternate;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.bday-candle:nth-child(2) .bday-flame { animation-delay: 0.18s; }
+.bday-candle:nth-child(3) .bday-flame { animation-delay: 0.36s; }
+.bday-candle:nth-child(4) .bday-flame { animation-delay: 0.12s; }
+.bday-candle:nth-child(5) .bday-flame { animation-delay: 0.44s; }
+
+.bday-flame-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bdayHaloPulse 1.4s ease-in-out infinite alternate;
+  transition: opacity 0.35s ease;
+}
+
+/* Extinguished & shrunk candle state */
+.bday-candle.is-blown .bday-flame {
+  animation: bdayFlameBlowOut 0.42s ease-out forwards;
+}
+
+.bday-candle.is-blown .bday-flame-halo {
+  opacity: 0;
+  animation: none;
+}
+
+.bday-candle.is-blown .bday-candle-body {
+  transform: scaleY(0.25) scaleX(1.1);
+}
+
+.bday-candle.is-blown .bday-smoke-wrap {
+  transform: translateY(24px);
+}
+
+/* Rising Smoke Wisps */
+.bday-smoke {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.bday-candle.is-blown .bday-smoke {
+  animation: bdaySmokeRise 1.9s ease-out forwards;
+}
+
+.bday-candle.is-blown .bday-smoke--2 {
+  animation-delay: 0.22s;
+}
+
+@keyframes bdayFlameFlicker {
+  0%   { transform: scale(1, 1) skewX(-2deg); }
+  35%  { transform: scale(0.95, 1.07) skewX(2.5deg); }
+  70%  { transform: scale(1.04, 0.96) skewX(-1.5deg); }
+  100% { transform: scale(0.98, 1.05) skewX(2deg); }
+}
+
+@keyframes bdayHaloPulse {
+  0%   { transform: scale(0.92); opacity: 0.45; }
+  100% { transform: scale(1.14); opacity: 0.78; }
+}
+
+@keyframes bdayFlameBlowOut {
+  0%   { transform: scale(1) skewX(0deg); opacity: 1; }
+  35%  { transform: scale(1.25, 0.7) skewX(26deg) translateX(4px); opacity: 0.85; }
+  100% { transform: scale(0.1, 0.1) skewX(40deg) translateX(8px); opacity: 0; }
+}
+
+@keyframes bdaySmokeRise {
+  0%   { opacity: 0; transform: translateY(0) translateX(0) scale(0.6); }
+  20%  { opacity: 0.65; }
+  65%  { opacity: 0.38; transform: translateY(-22px) translateX(4px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-42px) translateX(-4px) scale(1.55); }
+}
+
+/* Cake Controls */
+.bday-cake-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.bday-blow-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 30px;
+  margin: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  background: linear-gradient(135deg, #ffb6c1 0%, #ff9ab2 55%, #e0bfb8 100%);
+  color: var(--bday-berry);
+  font-family: var(--bday-font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 12px 28px rgba(255, 143, 171, 0.42),
+    inset 0 2px 6px rgba(255, 255, 255, 0.85);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.3s ease;
+}
+
+.bday-blow-btn:hover {
+  background: linear-gradient(135deg, #ffa3b8 0%, #ff8aa6 55%, #e0bfb8 100%);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 16px 34px rgba(255, 143, 171, 0.55);
+}
+
+.bday-mic-btn {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 182, 193, 0.75);
+  color: var(--bday-berry-soft);
+  padding: 8px 18px;
+  margin: 0;
+  border-radius: 999px;
+  font-family: var(--bday-font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(89, 28, 50, 0.06);
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.bday-mic-btn:hover {
+  background: rgba(255, 240, 245, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 182, 193, 0.35);
+}
+
+.bday-mic-btn.is-listening {
+  background: rgba(255, 182, 193, 0.45);
+  border-color: #ff8fab;
+  color: var(--bday-berry);
+  animation: bdayMicPulse 1.2s ease-in-out infinite;
+}
+
+.bday-mic-status {
+  min-height: 18px;
+  margin: 0;
+  font-family: var(--bday-font-sans);
+  font-size: 0.8rem;
+  color: #8f4760;
+  line-height: 1.4;
+}
+
+.bday-relight-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--bday-glass-border);
+  color: var(--bday-berry);
+  padding: 10px 22px;
+  margin: 4px 0 0;
+  border-radius: 999px;
+  font-family: var(--bday-font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 182, 193, 0.28);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.bday-relight-btn:hover {
+  background: rgba(255, 240, 245, 0.95);
+  transform: scale(1.04);
+}
+
+.bday-cake-card.is-celebrated .bday-blow-btn,
+.bday-cake-card.is-celebrated .bday-mic-btn,
+.bday-cake-card.is-celebrated .bday-mic-status {
+  display: none;
+}
+
+.bday-cake-card.is-celebrated .bday-relight-btn {
+  display: inline-flex;
+}
+
+@keyframes bdayMicPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 143, 171, 0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 143, 171, 0); }
+}
+
+/* --------------------------------------------------------------------------
+   7. FLOATING Y2K DIGITAL CAMERA STICKER PHOTO FRAMES
+   -------------------------------------------------------------------------- */
+.bday-polaroid {
+  position: relative;
+  width: 240px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: rotate(var(--tilt, -3deg));
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+  animation: bdayPolaroidBob 4.8s ease-in-out infinite;
+  animation-delay: var(--bob-delay, 0s);
+  cursor: pointer;
+}
+
+.bday-polaroid:hover {
+  animation: none;
+  transform: rotate(0deg) scale(1.06) translateY(-4px);
+  z-index: 6;
+}
+
+.bday-camera-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 371 / 246;
+  filter: drop-shadow(0 12px 22px rgba(89, 28, 50, 0.18));
+  transition: filter 0.35s ease;
+}
+
+.bday-polaroid:hover .bday-camera-frame {
+  filter: drop-shadow(0 18px 30px rgba(89, 28, 50, 0.25));
+}
+
+.bday-photo-img {
+  position: absolute;
+  left: 9.2%;
+  top: 31.8%;
+  width: 45.8%;
+  height: 51.2%;
+  object-fit: cover;
+  border-radius: 4px;
+  z-index: 1;
+  display: block;
+}
+
+.bday-camera-overlay {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bday-polaroid-caption {
+  margin: 8px 4px 0;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 245, 249, 0.85);
+  border: 1px solid rgba(255, 182, 193, 0.6);
+  box-shadow: 0 4px 12px rgba(89, 28, 50, 0.08);
+  font-family: var(--bday-font-script);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--bday-berry);
+  text-align: center;
+  line-height: 1.25;
+}
+
+@keyframes bdayPolaroidBob {
+  0%, 100% { transform: rotate(var(--tilt, -4deg)) translateY(0px); }
+  50% { transform: rotate(var(--tilt, -4deg)) translateY(-8px); }
+}
+
+/* --------------------------------------------------------------------------
+   7B. SURPRISE MEMORY WALL & PHOTO LIGHTBOX
+   -------------------------------------------------------------------------- */
+.bday-memory-gallery-section {
+  width: 100%;
+  max-width: 1020px;
+  margin: 34px auto 12px;
+  padding: 28px 22px 34px;
+  background: rgba(255, 255, 255, 0.36);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 182, 193, 0.55);
+  border-radius: 28px;
+  box-shadow:
+    0 16px 40px rgba(89, 28, 50, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.75);
+}
+
+.bday-gallery-header {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.bday-gallery-eyebrow {
+  font-family: var(--bday-font-sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9e526b;
+  margin: 0 0 6px;
+}
+
+.bday-gallery-title {
+  font-family: var(--bday-font-serif);
+  font-size: clamp(1.45rem, 3.6vw, 2rem);
+  font-weight: 700;
+  color: var(--bday-berry);
+  margin: 0 0 4px;
+}
+
+.bday-gallery-hint {
+  font-family: var(--bday-font-script);
+  font-size: 1.25rem;
+  color: var(--bday-berry-soft);
+  margin: 0;
+}
+
+.bday-memory-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 26px 22px;
+}
+
+.bday-polaroid--gallery {
+  width: 240px;
+}
+
+/* Photo Lightbox */
+.bday-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 5500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(45, 14, 28, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.bday-lightbox.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.bday-lightbox-card {
+  position: relative;
+  max-width: min(88vw, 560px);
+  max-height: 84vh;
+  padding: 14px 14px 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #fff7fa 100%);
+  border: 1px solid rgba(255, 182, 193, 0.7);
+  border-radius: 16px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(0.92);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bday-lightbox.is-open .bday-lightbox-card {
+  transform: scale(1);
+}
+
+.bday-lightbox-card img {
+  max-width: 100%;
+  max-height: 68vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  display: block;
+}
+
+.bday-lightbox-caption {
+  margin: 12px 6px 0;
+  font-family: var(--bday-font-script);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--bday-berry);
+  text-align: center;
+}
+
+.bday-lightbox-close,
+.bday-lightbox-nav {
+  position: fixed;
+  z-index: 5510;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 182, 193, 0.75);
+  background: rgba(255, 240, 245, 0.9);
+  color: var(--bday-berry);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.bday-lightbox-close {
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.bday-lightbox-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bday-lightbox-nav--prev { left: 18px; }
+.bday-lightbox-nav--next { right: 18px; }
+
+.bday-lightbox-close:hover {
+  transform: scale(1.08);
+  background: #ffffff;
+}
+
+.bday-lightbox-nav:hover {
+  transform: translateY(-50%) scale(1.08);
+  background: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   8. RESPONSIVE ADJUSTMENTS (TABLET & MOBILE)
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .bday-overlay {
+    align-items: flex-start;
+    padding: 58px 14px 36px;
+  }
+
+  .bday-celebration-layout {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    gap: 20px;
+  }
+
+  .bday-cake-card {
+    order: 1;
+    padding: 28px 20px 26px;
+  }
+
+  .bday-polaroid-col--left {
+    order: 2;
+  }
+
+  .bday-polaroid-col--right {
+    order: 3;
+  }
+
+  .bday-polaroid-col {
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .bday-polaroid {
+    width: calc(50% - 10px);
+    max-width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bday-prompt-card {
+    padding: 36px 20px 32px;
+    min-height: 320px;
+  }
+
+  .bday-memory-gallery-section {
+    padding: 22px 12px 26px;
+    margin-top: 24px;
+  }
+
+  .bday-memory-grid {
+    gap: 20px 12px;
+  }
+
+  .bday-polaroid {
+    width: min(86vw, 270px);
+    max-width: 270px;
+  }
+
+  .bday-polaroid-caption {
+    font-size: 1.05rem;
+  }
+
+  .bday-lightbox-nav {
+    width: 38px;
+    height: 38px;
+    font-size: 1.5rem;
+  }
+
+  .bday-lightbox-nav--prev { left: 8px; }
+  .bday-lightbox-nav--next { right: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bday-trigger-btn,
+  .bday-bow-badge,
+  .bday-polaroid,
+  .bday-flame,
+  .bday-flame-halo {
+    animation: none !important;
+  }
+}
