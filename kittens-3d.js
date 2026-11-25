@@ -26,12 +26,128 @@
     const CAM_DIST = 580;
 
     // ---------------------------------------------------------------------
-    // 1. Realistic Cute Baby Kitten Meow & Purr Web Audio Synthesizer
+    // 1. Real Uploaded Kitten Meow Audio Slicer + Soft Purr Controller
     // ---------------------------------------------------------------------
     let audioCtx = null;
     let soundMuted = false;
     let purrNodes = null;
     let purrActive = false;
+
+    const FALLBACK_MEOW_SLICES = [
+      { start: 0.05, dur: 0.85 },
+      { start: 2.00, dur: 0.90 },
+      { start: 5.00, dur: 0.90 },
+      { start: 6.08, dur: 0.90 },
+      { start: 8.05, dur: 0.90 },
+      { start: 10.10, dur: 0.95 },
+      { start: 13.20, dur: 0.95 },
+      { start: 16.15, dur: 0.95 },
+      { start: 18.00, dur: 0.90 },
+      { start: 22.10, dur: 0.95 },
+      { start: 24.20, dur: 0.95 },
+      { start: 27.10, dur: 0.95 },
+      { start: 30.20, dur: 0.95 },
+      { start: 33.20, dur: 1.00 },
+      { start: 36.85, dur: 0.95 },
+      { start: 42.20, dur: 0.95 },
+      { start: 48.00, dur: 1.00 },
+      { start: 53.00, dur: 1.00 }
+    ];
+
+    let rawMeowBytes = null;
+    let decodedMeowBuffer = null;
+    let meowSlices = FALLBACK_MEOW_SLICES;
+    let decodingStarted = false;
+    let lastSliceIdx = -1;
+
+    // HTMLAudioElement fallback (works offline on file:// or while Web Audio decodes)
+    const fallbackAudio = new Audio('assets/kitten-meows.mp3');
+    fallbackAudio.preload = 'auto';
+    let fallbackStopTimer = null;
+
+    // Pre-fetch raw MP3 bytes immediately when on HTTP/HTTPS
+    if (window.location.protocol !== 'file:' && typeof fetch === 'function') {
+      fetch('assets/kitten-meows.mp3')
+        .then((res) => (res.ok ? res.arrayBuffer() : null))
+        .then((buf) => {
+          if (buf) {
+            rawMeowBytes = buf;
+            if (audioCtx && !decodingStarted) decodeMeowAudio();
+          }
+        })
+        .catch(() => {});
+    }
+
+    function extractMeowSlices(audioBuf) {
+      const data = audioBuf.getChannelData(0);
+      const sr = audioBuf.sampleRate;
+      const winSize = Math.floor(sr * 0.015); // 15ms windows
+      const rmsValues = [];
+      let maxRms = 0;
+
+      for (let i = 0; i < data.length; i += winSize) {
+        let sum = 0;
+        const end = Math.min(data.length, i + winSize);
+        for (let j = i; j < end; j++) {
+          sum += data[j] * data[j];
+        }
+        const rms = Math.sqrt(sum / Math.max(1, end - i));
+        rmsValues.push(rms);
+        if (rms > maxRms) maxRms = rms;
+      }
+
+      const threshold = Math.max(0.015, maxRms * 0.14);
+      const rawRegions = [];
+      let inMeow = false;
+      let startWin = 0;
+      const minGapWins = Math.ceil(0.16 / 0.015);
+      let silentWins = 0;
+
+      for (let w = 0; w < rmsValues.length; w++) {
+        if (rmsValues[w] > threshold) {
+          if (!inMeow) {
+            inMeow = true;
+            startWin = w;
+          }
+          silentWins = 0;
+        } else if (inMeow) {
+          silentWins++;
+          if (silentWins >= minGapWins) {
+            rawRegions.push([startWin, w - silentWins]);
+            inMeow = false;
+          }
+        }
+      }
+      if (inMeow) rawRegions.push([startWin, rmsValues.length - 1]);
+
+      const detected = [];
+      for (let i = 0; i < rawRegions.length; i++) {
+        const sTime = Math.max(0, rawRegions[i][0] * 0.015 - 0.04);
+        const eTime = Math.min(audioBuf.duration, rawRegions[i][1] * 0.015 + 0.10);
+        const dur = eTime - sTime;
+        if (dur >= 0.22 && dur <= 1.75) {
+          detected.push({ start: sTime, dur });
+        }
+      }
+
+      if (detected.length >= 4) {
+        meowSlices = detected;
+      }
+    }
+
+    function decodeMeowAudio() {
+      if (!audioCtx || !rawMeowBytes || decodingStarted) return;
+      decodingStarted = true;
+      const copy = rawMeowBytes.slice(0);
+      audioCtx.decodeAudioData(copy)
+        .then((buf) => {
+          decodedMeowBuffer = buf;
+          extractMeowSlices(buf);
+        })
+        .catch(() => {
+          decodingStarted = false;
+        });
+    }
 
     function ensureAudio() {
       if (soundMuted) return null;
@@ -43,135 +159,66 @@
       if (audioCtx.state === 'suspended') {
         audioCtx.resume().catch(() => {});
       }
+      if (rawMeowBytes && !decodedMeowBuffer && !decodingStarted) {
+        decodeMeowAudio();
+      }
       return audioCtx;
     }
 
-    // Formant-filtered baby kitten meow ("mew!", "mee-ow~", "mrr-ew~")
-    function playKittenMeow(kittenKey, variant) {
-      const ac = ensureAudio();
-      if (!ac) return;
-
-      const now = ac.currentTime;
-      const isNeo = kittenKey === 'neo';
-      const pitchMul = isNeo ? 1.05 : 0.96;
-
-      // Choose cute contour
-      const style = variant || (['sweet', 'chirp', 'trill'][Math.floor(Math.random() * 3)]);
-      const dur = style === 'chirp' ? 0.25 : style === 'trill' ? 0.38 : 0.44;
-
-      // Master vocal envelope
-      const master = ac.createGain();
-      master.gain.setValueAtTime(0.0001, now);
-      master.gain.linearRampToValueAtTime(0.22, now + 0.045);
-      master.gain.setValueAtTime(0.21, now + dur * 0.48);
-      master.gain.exponentialRampToValueAtTime(0.0008, now + dur);
-      master.connect(ac.destination);
-
-      // Glottal oscillators (warm triangle + soft sawtooth for natural harmonics)
-      const osc1 = ac.createOscillator();
-      const osc2 = ac.createOscillator();
-      osc1.type = 'triangle';
-      osc2.type = 'sawtooth';
-
-      const g1 = ac.createGain();
-      const g2 = ac.createGain();
-      g1.gain.value = 0.72;
-      g2.gain.value = 0.26;
-      osc1.connect(g1);
-      osc2.connect(g2);
-
-      // Pitch contour (Hz)
-      const setPitch = (osc) => {
-        if (style === 'chirp') {
-          osc.frequency.setValueAtTime(640 * pitchMul, now);
-          osc.frequency.exponentialRampToValueAtTime(950 * pitchMul, now + 0.10);
-          osc.frequency.exponentialRampToValueAtTime(780 * pitchMul, now + dur);
-        } else if (style === 'trill') {
-          osc.frequency.setValueAtTime(540 * pitchMul, now);
-          osc.frequency.exponentialRampToValueAtTime(880 * pitchMul, now + 0.16);
-          osc.frequency.exponentialRampToValueAtTime(690 * pitchMul, now + dur);
-        } else {
-          osc.frequency.setValueAtTime(600 * pitchMul, now);
-          osc.frequency.exponentialRampToValueAtTime(910 * pitchMul, now + 0.14);
-          osc.frequency.exponentialRampToValueAtTime(620 * pitchMul, now + dur);
-        }
-      };
-      setPitch(osc1);
-      setPitch(osc2);
-
-      // Subtle natural vibrato
-      const vib = ac.createOscillator();
-      const vibGain = ac.createGain();
-      vib.frequency.value = style === 'trill' ? 23 : 6.5;
-      vibGain.gain.value = style === 'trill' ? 24 : 11;
-      vib.connect(vibGain);
-      vibGain.connect(osc1.frequency);
-      vibGain.connect(osc2.frequency);
-
-      // Parallel Vocal Formants (F1: "m -> e -> a -> o -> w", F2: bright kitten resonance)
-      const f1 = ac.createBiquadFilter();
-      f1.type = 'bandpass';
-      f1.Q.value = 4.2;
-      f1.frequency.setValueAtTime(520, now); // closed 'm'
-      f1.frequency.exponentialRampToValueAtTime(1320, now + dur * 0.36); // open 'e/a'
-      f1.frequency.exponentialRampToValueAtTime(780, now + dur); // closing 'w'
-
-      const f2 = ac.createBiquadFilter();
-      f2.type = 'bandpass';
-      f2.Q.value = 5.4;
-      f2.frequency.setValueAtTime(1850, now);
-      f2.frequency.exponentialRampToValueAtTime(2650, now + dur * 0.38);
-      f2.frequency.exponentialRampToValueAtTime(1750, now + dur);
-
-      const f1Gain = ac.createGain();
-      const f2Gain = ac.createGain();
-      f1Gain.gain.value = 1.15;
-      f2Gain.gain.value = 0.65;
-
-      // Soft air-warmth lowpass
-      const warmth = ac.createBiquadFilter();
-      warmth.type = 'lowpass';
-      warmth.frequency.value = 3600;
-
-      g1.connect(f1);
-      g2.connect(f1);
-      g1.connect(f2);
-      g2.connect(f2);
-      f1.connect(f1Gain);
-      f2.connect(f2Gain);
-      f1Gain.connect(warmth);
-      f2Gain.connect(warmth);
-      warmth.connect(master);
-
-      // Subtle soft breath puff
-      const noiseLen = Math.floor(ac.sampleRate * dur);
-      const noiseBuf = ac.createBuffer(1, noiseLen, ac.sampleRate);
-      const data = noiseBuf.getChannelData(0);
-      for (let i = 0; i < noiseLen; i++) {
-        data[i] = (Math.random() * 2 - 1) * 0.35;
+    function pickMeowSlice() {
+      const len = meowSlices.length;
+      let idx = Math.floor(Math.random() * len);
+      if (len > 1 && idx === lastSliceIdx) {
+        idx = (idx + 1 + Math.floor(Math.random() * (len - 1))) % len;
       }
-      const noiseSrc = ac.createBufferSource();
-      noiseSrc.buffer = noiseBuf;
-      const noiseFilter = ac.createBiquadFilter();
-      noiseFilter.type = 'bandpass';
-      noiseFilter.frequency.value = 1900;
-      noiseFilter.Q.value = 2.0;
-      const noiseGain = ac.createGain();
-      noiseGain.gain.value = 0.035;
-      noiseSrc.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(master);
+      lastSliceIdx = idx;
+      return meowSlices[idx];
+    }
 
-      osc1.start(now);
-      osc2.start(now);
-      vib.start(now);
-      noiseSrc.start(now);
+    function playKittenMeow(kittenKey) {
+      if (soundMuted) return 0.4;
+      const ac = ensureAudio();
+      const isNeo = kittenKey === 'neo';
+      const rate = isNeo ? 1.04 : 0.96;
+      const slice = pickMeowSlice();
+      const playDur = slice.dur / rate;
 
-      const stopAt = now + dur + 0.03;
-      osc1.stop(stopAt);
-      osc2.stop(stopAt);
-      vib.stop(stopAt);
-      noiseSrc.stop(stopAt);
+      if (ac && decodedMeowBuffer) {
+        const now = ac.currentTime;
+        const src = ac.createBufferSource();
+        src.buffer = decodedMeowBuffer;
+        src.playbackRate.value = rate;
+
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.95, now + 0.018);
+        gain.gain.setValueAtTime(0.95, now + Math.max(0.02, playDur - 0.07));
+        gain.gain.linearRampToValueAtTime(0.0001, now + playDur);
+
+        src.connect(gain);
+        gain.connect(ac.destination);
+        src.start(now, slice.start, slice.dur);
+        return playDur;
+      }
+
+      // Fallback via HTMLAudioElement (for file:// or first-tap decode)
+      try {
+        if (fallbackStopTimer) {
+          clearTimeout(fallbackStopTimer);
+          fallbackStopTimer = null;
+        }
+        fallbackAudio.pause();
+        fallbackAudio.currentTime = Math.min(slice.start, Math.max(0, (fallbackAudio.duration || 55) - 1));
+        fallbackAudio.playbackRate = rate;
+        fallbackAudio.volume = 0.9;
+        const p = fallbackAudio.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+        fallbackStopTimer = setTimeout(() => {
+          fallbackAudio.pause();
+        }, playDur * 1000);
+      } catch (_e) {}
+
+      return playDur;
     }
 
     function setPurrIntensity(intensity) {
@@ -237,6 +284,7 @@
         soundBtn.textContent = soundMuted ? '🔇 Sound Off' : '🔊 Sound On';
         if (soundMuted) {
           setPurrIntensity(0);
+          fallbackAudio.pause();
         } else {
           ensureAudio();
         }
@@ -357,8 +405,8 @@
       k.speechAlpha = 1.0;
       k.speechY = 0;
       if (withMeowStyle && audioCtx && audioCtx.state === 'running' && !soundMuted) {
-        k.meowTimer = 0.24;
-        playKittenMeow(k.key, withMeowStyle);
+        const d = playKittenMeow(k.key);
+        k.meowTimer = Math.min(0.65, d || 0.36);
       }
     }
 
@@ -456,7 +504,8 @@
         k.moodEl.textContent = k.petMoods[Math.floor(Math.random() * k.petMoods.length)];
       }
 
-      playKittenMeow(k.key, style);
+      const meowDur = playKittenMeow(k.key, style);
+      k.meowTimer = Math.min(0.65, meowDur || 0.44);
 
       const sx = px !== undefined ? px : k.hitCenter.x;
       const sy = py !== undefined ? py : k.hitCenter.y - 36;
