@@ -1,12 +1,13 @@
 /**
- * Neo (Ginger Tabby) & Husky (White & Brown) — Realistic 3D Interactive Kittens
- * Smooth 120Hz delta-time 3D rendering, tactile petting/rubbing, and formant-synthesized kitten meows + purrs.
+ * Neo (Ginger Kitten) & Husky (Fat White & Brown Persian Kitten)
+ * WebGL Skinned glTF 2.0 Renderer (Cat.glb) + Tactile Petting + Real Kitten Meows + Autonomous Play & Fight
  */
 (function () {
   'use strict';
 
   document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.getElementById('kittens-3d-canvas');
+    const glCanvas = document.getElementById('kittens-3d-canvas');
+    const fxCanvas = document.getElementById('kittens-fx-canvas');
     const card = document.getElementById('kittens-corner');
     const soundBtn = document.getElementById('kittens-sound-btn');
     const neoBadge = document.getElementById('kitten-badge-neo');
@@ -14,16 +15,15 @@
     const neoMoodEl = document.getElementById('kitten-mood-neo');
     const huskyMoodEl = document.getElementById('kitten-mood-husky');
 
-    if (!canvas || !card) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!glCanvas || !fxCanvas || !card) return;
+    const fxCtx = fxCanvas.getContext('2d');
+    const gl = glCanvas.getContext('webgl2', { alpha: true, antialias: true, powerPreference: 'high-performance' })
+      || glCanvas.getContext('webgl', { alpha: true, antialias: true, powerPreference: 'high-performance' });
+    const catData = window.CAT_GLB_DATA;
+    if (!gl || !fxCtx || !catData) return;
 
     const W = 680;
     const H = 310;
-    const CX = W / 2;
-    const CY = 186;
-    const FOV = 680;
-    const CAM_DIST = 580;
 
     // ---------------------------------------------------------------------
     // 1. Real Uploaded Kitten Meow Audio Slicer + Soft Purr Controller
@@ -34,24 +34,12 @@
     let purrActive = false;
 
     const FALLBACK_MEOW_SLICES = [
-      { start: 0.05, dur: 0.85 },
-      { start: 2.00, dur: 0.90 },
-      { start: 5.00, dur: 0.90 },
-      { start: 6.08, dur: 0.90 },
-      { start: 8.05, dur: 0.90 },
-      { start: 10.10, dur: 0.95 },
-      { start: 13.20, dur: 0.95 },
-      { start: 16.15, dur: 0.95 },
-      { start: 18.00, dur: 0.90 },
-      { start: 22.10, dur: 0.95 },
-      { start: 24.20, dur: 0.95 },
-      { start: 27.10, dur: 0.95 },
-      { start: 30.20, dur: 0.95 },
-      { start: 33.20, dur: 1.00 },
-      { start: 36.85, dur: 0.95 },
-      { start: 42.20, dur: 0.95 },
-      { start: 48.00, dur: 1.00 },
-      { start: 53.00, dur: 1.00 }
+      { start: 0.05, dur: 0.85 }, { start: 2.00, dur: 0.90 }, { start: 5.00, dur: 0.90 },
+      { start: 6.08, dur: 0.90 }, { start: 8.05, dur: 0.90 }, { start: 10.10, dur: 0.95 },
+      { start: 13.20, dur: 0.95 }, { start: 16.15, dur: 0.95 }, { start: 18.00, dur: 0.90 },
+      { start: 22.10, dur: 0.95 }, { start: 24.20, dur: 0.95 }, { start: 27.10, dur: 0.95 },
+      { start: 30.20, dur: 0.95 }, { start: 33.20, dur: 1.00 }, { start: 36.85, dur: 0.95 },
+      { start: 42.20, dur: 0.95 }, { start: 48.00, dur: 1.00 }, { start: 53.00, dur: 1.00 }
     ];
 
     let rawMeowBytes = null;
@@ -60,12 +48,10 @@
     let decodingStarted = false;
     let lastSliceIdx = -1;
 
-    // HTMLAudioElement fallback (works offline on file:// or while Web Audio decodes)
     const fallbackAudio = new Audio('assets/kitten-meows.mp3');
     fallbackAudio.preload = 'auto';
     let fallbackStopTimer = null;
 
-    // Pre-fetch raw MP3 bytes immediately when on HTTP/HTTPS
     if (window.location.protocol !== 'file:' && typeof fetch === 'function') {
       fetch('assets/kitten-meows.mp3')
         .then((res) => (res.ok ? res.arrayBuffer() : null))
@@ -81,16 +67,14 @@
     function extractMeowSlices(audioBuf) {
       const data = audioBuf.getChannelData(0);
       const sr = audioBuf.sampleRate;
-      const winSize = Math.floor(sr * 0.015); // 15ms windows
+      const winSize = Math.floor(sr * 0.015);
       const rmsValues = [];
       let maxRms = 0;
 
       for (let i = 0; i < data.length; i += winSize) {
         let sum = 0;
         const end = Math.min(data.length, i + winSize);
-        for (let j = i; j < end; j++) {
-          sum += data[j] * data[j];
-        }
+        for (let j = i; j < end; j++) sum += data[j] * data[j];
         const rms = Math.sqrt(sum / Math.max(1, end - i));
         rmsValues.push(rms);
         if (rms > maxRms) maxRms = rms;
@@ -105,10 +89,7 @@
 
       for (let w = 0; w < rmsValues.length; w++) {
         if (rmsValues[w] > threshold) {
-          if (!inMeow) {
-            inMeow = true;
-            startWin = w;
-          }
+          if (!inMeow) { inMeow = true; startWin = w; }
           silentWins = 0;
         } else if (inMeow) {
           silentWins++;
@@ -125,43 +106,29 @@
         const sTime = Math.max(0, rawRegions[i][0] * 0.015 - 0.04);
         const eTime = Math.min(audioBuf.duration, rawRegions[i][1] * 0.015 + 0.10);
         const dur = eTime - sTime;
-        if (dur >= 0.22 && dur <= 1.75) {
-          detected.push({ start: sTime, dur });
-        }
+        if (dur >= 0.22 && dur <= 1.75) detected.push({ start: sTime, dur });
       }
-
-      if (detected.length >= 4) {
-        meowSlices = detected;
-      }
+      if (detected.length >= 4) meowSlices = detected;
     }
 
     function decodeMeowAudio() {
       if (!audioCtx || !rawMeowBytes || decodingStarted) return;
       decodingStarted = true;
-      const copy = rawMeowBytes.slice(0);
-      audioCtx.decodeAudioData(copy)
+      audioCtx.decodeAudioData(rawMeowBytes.slice(0))
         .then((buf) => {
           decodedMeowBuffer = buf;
           extractMeowSlices(buf);
         })
-        .catch(() => {
-          decodingStarted = false;
-        });
+        .catch(() => { decodingStarted = false; });
     }
 
     function ensureAudio() {
       if (soundMuted) return null;
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return null;
-      if (!audioCtx) {
-        audioCtx = new AudioCtx();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
-      }
-      if (rawMeowBytes && !decodedMeowBuffer && !decodingStarted) {
-        decodeMeowAudio();
-      }
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      if (rawMeowBytes && !decodedMeowBuffer && !decodingStarted) decodeMeowAudio();
       return audioCtx;
     }
 
@@ -178,8 +145,7 @@
     function playKittenMeow(kittenKey) {
       if (soundMuted) return 0.4;
       const ac = ensureAudio();
-      const isNeo = kittenKey === 'neo';
-      const rate = isNeo ? 1.04 : 0.96;
+      const rate = kittenKey === 'neo' ? 1.06 : 0.94;
       const slice = pickMeowSlice();
       const playDur = slice.dur / rate;
 
@@ -201,23 +167,16 @@
         return playDur;
       }
 
-      // Fallback via HTMLAudioElement (for file:// or first-tap decode)
       try {
-        if (fallbackStopTimer) {
-          clearTimeout(fallbackStopTimer);
-          fallbackStopTimer = null;
-        }
+        if (fallbackStopTimer) { clearTimeout(fallbackStopTimer); fallbackStopTimer = null; }
         fallbackAudio.pause();
         fallbackAudio.currentTime = Math.min(slice.start, Math.max(0, (fallbackAudio.duration || 55) - 1));
         fallbackAudio.playbackRate = rate;
         fallbackAudio.volume = 0.9;
         const p = fallbackAudio.play();
         if (p && typeof p.catch === 'function') p.catch(() => {});
-        fallbackStopTimer = setTimeout(() => {
-          fallbackAudio.pause();
-        }, playDur * 1000);
+        fallbackStopTimer = setTimeout(() => fallbackAudio.pause(), playDur * 1000);
       } catch (_e) {}
-
       return playDur;
     }
 
@@ -233,7 +192,6 @@
       }
       const ac = ensureAudio();
       if (!ac) return;
-
       if (!purrNodes) {
         const oscA = ac.createOscillator();
         const oscB = ac.createOscillator();
@@ -246,7 +204,6 @@
         const lfoGain = ac.createGain();
         lfo.frequency.value = 26;
         lfoGain.gain.value = 0.45;
-
         const modGain = ac.createGain();
         modGain.gain.value = 0.55;
         lfo.connect(lfoGain);
@@ -258,7 +215,6 @@
 
         const master = ac.createGain();
         master.gain.value = 0.0001;
-
         oscA.connect(modGain);
         oscB.connect(modGain);
         modGain.connect(lp);
@@ -270,7 +226,6 @@
         lfo.start();
         purrNodes = { master };
       }
-
       purrActive = true;
       const now = ac.currentTime;
       purrNodes.master.gain.cancelScheduledValues(now);
@@ -292,8 +247,410 @@
     }
 
     // ---------------------------------------------------------------------
-    // 2. 3D Kitten State & Interactive Petting Controller
+    // 2. Column-Major 4x4 Matrix & Quaternion Math
     // ---------------------------------------------------------------------
+    const Mat4 = {
+      create() {
+        return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+      },
+      mul(out, a, b) {
+        const a00=a[0],a01=a[1],a02=a[2],a03=a[3],
+              a10=a[4],a11=a[5],a12=a[6],a13=a[7],
+              a20=a[8],a21=a[9],a22=a[10],a23=a[11],
+              a30=a[12],a31=a[13],a32=a[14],a33=a[15];
+        for (let c = 0; c < 4; c++) {
+          const b0 = b[c*4], b1 = b[c*4+1], b2 = b[c*4+2], b3 = b[c*4+3];
+          out[c*4]   = a00*b0 + a10*b1 + a20*b2 + a30*b3;
+          out[c*4+1] = a01*b0 + a11*b1 + a21*b2 + a31*b3;
+          out[c*4+2] = a02*b0 + a12*b1 + a22*b2 + a32*b3;
+          out[c*4+3] = a03*b0 + a13*b1 + a23*b2 + a33*b3;
+        }
+        return out;
+      },
+      fromTRS(out, t, q, s) {
+        const x=q[0], y=q[1], z=q[2], w=q[3];
+        const x2=x+x, y2=y+y, z2=z+z;
+        const xx=x*x2, xy=x*y2, xz=x*z2;
+        const yy=y*y2, yz=y*z2, zz=z*z2;
+        const wx=w*x2, wy=w*y2, wz=w*z2;
+        const sx=s[0], sy=s[1], sz=s[2];
+        out[0]=(1-(yy+zz))*sx; out[1]=(xy+wz)*sx; out[2]=(xz-wy)*sx; out[3]=0;
+        out[4]=(xy-wz)*sy; out[5]=(1-(xx+zz))*sy; out[6]=(yz+wx)*sy; out[7]=0;
+        out[8]=(xz+wy)*sz; out[9]=(yz-wx)*sz; out[10]=(1-(xx+yy))*sz; out[11]=0;
+        out[12]=t[0]; out[13]=t[1]; out[14]=t[2]; out[15]=1;
+        return out;
+      },
+      perspective(out, fovy, aspect, near, far) {
+        const f = 1.0 / Math.tan(fovy * 0.5);
+        const nf = 1.0 / (near - far);
+        out.fill(0);
+        out[0] = f / aspect;
+        out[5] = f;
+        out[10] = (far + near) * nf;
+        out[11] = -1;
+        out[14] = 2 * far * near * nf;
+        return out;
+      },
+      lookAt(out, eye, center, up) {
+        let zx = eye[0]-center[0], zy = eye[1]-center[1], zz = eye[2]-center[2];
+        let len = Math.hypot(zx, zy, zz) || 1;
+        zx/=len; zy/=len; zz/=len;
+        let xx = up[1]*zz - up[2]*zy, xy = up[2]*zx - up[0]*zz, xz = up[0]*zy - up[1]*zx;
+        len = Math.hypot(xx, xy, xz) || 1;
+        xx/=len; xy/=len; xz/=len;
+        const yx = zy*xz - zz*xy, yy = zz*xx - zx*xz, yz = zx*xy - zy*xx;
+        out[0]=xx; out[1]=yx; out[2]=zx; out[3]=0;
+        out[4]=xy; out[5]=yy; out[6]=zy; out[7]=0;
+        out[8]=xz; out[9]=yz; out[10]=zz; out[11]=0;
+        out[12]=-(xx*eye[0]+xy*eye[1]+xz*eye[2]);
+        out[13]=-(yx*eye[0]+yy*eye[1]+yz*eye[2]);
+        out[14]=-(zx*eye[0]+zy*eye[1]+zz*eye[2]);
+        out[15]=1;
+        return out;
+      },
+      projectPoint(vp, x, y, z) {
+        const cx = vp[0]*x + vp[4]*y + vp[8]*z + vp[12];
+        const cy = vp[1]*x + vp[5]*y + vp[9]*z + vp[13];
+        const cw = vp[3]*x + vp[7]*y + vp[11]*z + vp[15];
+        if (Math.abs(cw) < 1e-5) return { x: W * 0.5, y: H * 0.5 };
+        return {
+          x: (cx / cw * 0.5 + 0.5) * W,
+          y: (0.5 - cy / cw * 0.5) * H
+        };
+      }
+    };
+
+    function quatMul(out, a, b) {
+      const ax=a[0],ay=a[1],az=a[2],aw=a[3];
+      const bx=b[0],by=b[1],bz=b[2],bw=b[3];
+      out[0] = aw*bx + ax*bw + ay*bz - az*by;
+      out[1] = aw*by - ax*bz + ay*bw + az*bx;
+      out[2] = aw*bz + ax*by - ay*bx + az*bw;
+      out[3] = aw*bw - ax*bx - ay*by - az*bz;
+      return out;
+    }
+
+    function quatFromEuler(out, rx, ry, rz) {
+      // Apply Z, then Y, then X
+      const cx=Math.cos(rx*0.5), sx=Math.sin(rx*0.5);
+      const cy=Math.cos(ry*0.5), sy=Math.sin(ry*0.5);
+      const cz=Math.cos(rz*0.5), sz=Math.sin(rz*0.5);
+      out[0] = sx*cy*cz - cx*sy*sz;
+      out[1] = cx*sy*cz + sx*cy*sz;
+      out[2] = cx*cy*sz - sx*sz*sy;
+      out[3] = cx*cy*cz + sx*sy*sz;
+      return out;
+    }
+
+    // ---------------------------------------------------------------------
+    // 3. WebGL Shaders & Mesh Compilation (Skinned Cat.glb + 3D Cushion)
+    // ---------------------------------------------------------------------
+    function compileShader(type, src) {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+        console.error('Shader error:', gl.getShaderInfoLog(sh));
+      }
+      return sh;
+    }
+
+    function createProgram(vsSrc, fsSrc) {
+      const prog = gl.createProgram();
+      gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSrc));
+      gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSrc));
+      gl.linkProgram(prog);
+      return prog;
+    }
+
+    const VS_CAT = `
+      attribute vec3 aPos;
+      attribute vec3 aNorm;
+      attribute vec2 aUV;
+      attribute vec4 aJoints;
+      attribute vec4 aWeights;
+
+      uniform mat4 uProj;
+      uniform mat4 uView;
+      uniform mat4 uModel;
+      uniform mat4 uJoints[20];
+      uniform float uChubby;
+      uniform float uFluffPush;
+
+      varying vec2 vUV;
+      varying vec3 vNormal;
+      varying vec3 vWorldPos;
+
+      mat4 getJoint(int idx) {
+        for (int i = 0; i < 20; i++) {
+          if (i == idx) return uJoints[i];
+        }
+        return mat4(1.0);
+      }
+
+      void main() {
+        vec3 p = aPos;
+
+        // Fat Persian kitten proportions (uChubby = 1.0 for Husky, 0.0 for Neo)
+        if (uChubby > 0.001) {
+          float torsoMask = smoothstep(-0.22, -0.05, p.z) * (1.0 - smoothstep(0.09, 0.22, p.z)) * smoothstep(0.05, 0.14, p.y);
+          float headMask  = smoothstep(0.16, 0.24, p.z) * smoothstep(0.21, 0.29, p.y);
+          float snoutMask = smoothstep(0.27, 0.34, p.z) * smoothstep(0.23, 0.33, p.y);
+
+          // Plump chubby Persian belly & wide flanks
+          p.x *= 1.0 + uChubby * (0.18 + 0.28 * torsoMask + 0.12 * headMask);
+          p.y -= uChubby * 0.020 * torsoMask * (1.0 - smoothstep(0.09, 0.23, p.y));
+          p.y += uChubby * 0.015 * torsoMask * smoothstep(0.18, 0.28, p.y);
+          // Rounder flat-faced Persian cheeks & shorter nose
+          p.z -= uChubby * 0.022 * snoutMask;
+          // Extra fluffy fur card push
+          p += aNorm * (uFluffPush * uChubby);
+        }
+
+        mat4 skinMat =
+          aWeights.x * getJoint(int(aJoints.x + 0.5)) +
+          aWeights.y * getJoint(int(aJoints.y + 0.5)) +
+          aWeights.z * getJoint(int(aJoints.z + 0.5)) +
+          aWeights.w * getJoint(int(aJoints.w + 0.5));
+
+        vec4 worldPos = uModel * skinMat * vec4(p, 1.0);
+        vec3 worldNorm = normalize(mat3(uModel) * mat3(skinMat) * aNorm);
+
+        vUV = aUV;
+        vNormal = worldNorm;
+        vWorldPos = worldPos.xyz;
+        gl_Position = uProj * uView * worldPos;
+      }
+    `;
+
+    const FS_CAT = `
+      precision mediump float;
+      uniform sampler2D uTex;
+      uniform vec3 uCamPos;
+      uniform float uAlphaTest;
+      uniform float uPetGlow;
+
+      varying vec2 vUV;
+      varying vec3 vNormal;
+      varying vec3 vWorldPos;
+
+      void main() {
+        vec4 texCol = texture2D(uTex, vUV);
+        if (texCol.a < uAlphaTest) discard;
+
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(uCamPos - vWorldPos);
+        vec3 L1 = normalize(vec3(-0.42, 0.85, 0.65));
+        vec3 L2 = normalize(vec3(0.65, 0.45, -0.35));
+
+        float diff1 = max(dot(N, L1), 0.0);
+        float diff2 = max(dot(N, L2), 0.0);
+        float hemi = N.y * 0.5 + 0.5;
+
+        // Soft plush fur ambient + warm key light + subtle pink rim fresnel
+        vec3 ambient = mix(vec3(0.42, 0.35, 0.38), vec3(0.95, 0.90, 0.90), hemi) * 0.68;
+        vec3 light = ambient + vec3(0.95, 0.91, 0.86) * diff1 * 0.58 + vec3(0.75, 0.82, 0.95) * diff2 * 0.18;
+
+        float rim = pow(1.0 - max(dot(N, V), 0.0), 2.7);
+        vec3 rimCol = vec3(1.0, 0.86, 0.90) * rim * (0.28 + uPetGlow * 0.25);
+
+        vec3 finalRGB = texCol.rgb * light + rimCol;
+        gl_FragColor = vec4(finalRGB, texCol.a);
+      }
+    `;
+
+    const VS_SOLID = `
+      attribute vec3 aPos;
+      attribute vec3 aNorm;
+      uniform mat4 uProj;
+      uniform mat4 uView;
+      uniform mat4 uModel;
+      varying vec3 vNorm;
+      varying vec3 vLocal;
+      varying vec3 vWorldPos;
+      void main() {
+        vec4 wp = uModel * vec4(aPos, 1.0);
+        vNorm = normalize(mat3(uModel) * aNorm);
+        vLocal = aPos;
+        vWorldPos = wp.xyz;
+        gl_Position = uProj * uView * wp;
+      }
+    `;
+
+    const FS_SOLID = `
+      precision mediump float;
+      uniform vec3 uColorTop;
+      uniform vec3 uColorRim;
+      uniform vec3 uCamPos;
+      uniform float uIsShadow;
+      varying vec3 vNorm;
+      varying vec3 vLocal;
+      varying vec3 vWorldPos;
+      void main() {
+        if (uIsShadow > 0.5) {
+          float r = length(vLocal.xz);
+          float a = smoothstep(1.0, 0.1, r) * 0.26;
+          gl_FragColor = vec4(0.35, 0.14, 0.22, a);
+          return;
+        }
+        vec3 N = normalize(vNorm);
+        vec3 V = normalize(uCamPos - vWorldPos);
+        vec3 L = normalize(vec3(-0.35, 0.9, 0.5));
+        float diff = max(dot(N, L), 0.0);
+        float rim = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+        vec3 base = mix(uColorRim, uColorTop, smoothstep(-0.3, 0.7, N.y));
+        vec3 col = base * (0.68 + 0.38 * diff) + vec3(1.0, 0.94, 0.96) * rim * 0.16;
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    const catProg = createProgram(VS_CAT, FS_CAT);
+    const solidProg = createProgram(VS_SOLID, FS_SOLID);
+
+    // Decode stripped GLB binary buffer
+    const binStr = atob(catData.binBase64);
+    const binBytes = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) binBytes[i] = binStr.charCodeAt(i);
+
+    function getAccessorView(accIdx) {
+      const acc = catData.gltf.accessors[accIdx];
+      const bv = catData.gltf.bufferViews[acc.bufferView];
+      const offset = (bv.byteOffset || 0) + (acc.byteOffset || 0);
+      const compCounts = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 };
+      const count = acc.count * compCounts[acc.type];
+      if (acc.componentType === 5126) return new Float32Array(binBytes.buffer, offset, count);
+      if (acc.componentType === 5123) return new Uint16Array(binBytes.buffer, offset, count);
+      if (acc.componentType === 5121) return new Uint8Array(binBytes.buffer, offset, count);
+      return new Uint32Array(binBytes.buffer, offset, count);
+    }
+
+    function createVBO(data, target) {
+      const buf = gl.createBuffer();
+      gl.bindBuffer(target, buf);
+      gl.bufferData(target, data, gl.STATIC_DRAW);
+      return buf;
+    }
+
+    // Build GPU buffers for the 3 Cat.glb primitives
+    const primitives = catData.gltf.meshes[0].primitives.map((p) => {
+      const pos = getAccessorView(p.attributes.POSITION);
+      const norm = getAccessorView(p.attributes.NORMAL);
+      const uv = getAccessorView(p.attributes.TEXCOORD_0);
+      const jntRaw = getAccessorView(p.attributes.JOINTS_0);
+      const jnt = new Float32Array(jntRaw.length);
+      for (let i = 0; i < jntRaw.length; i++) jnt[i] = jntRaw[i];
+      const wgt = getAccessorView(p.attributes.WEIGHTS_0);
+      const idx = getAccessorView(p.indices);
+
+      return {
+        material: p.material,
+        count: idx.length,
+        posVBO: createVBO(pos, gl.ARRAY_BUFFER),
+        normVBO: createVBO(norm, gl.ARRAY_BUFFER),
+        uvVBO: createVBO(uv, gl.ARRAY_BUFFER),
+        jntVBO: createVBO(jnt, gl.ARRAY_BUFFER),
+        wgtVBO: createVBO(wgt, gl.ARRAY_BUFFER),
+        ibo: createVBO(idx, gl.ELEMENT_ARRAY_BUFFER)
+      };
+    });
+
+    // Extract InverseBindMatrices (20 x mat4)
+    const ibmFlat = getAccessorView(catData.gltf.skins[0].inverseBindMatrices);
+    const ibmList = [];
+    for (let i = 0; i < 20; i++) {
+      ibmList.push(new Float32Array(ibmFlat.buffer, ibmFlat.byteOffset + i * 64, 16));
+    }
+    const jointNodes = catData.gltf.skins[0].joints; // array of 20 node indices
+
+    // Load custom Neo & Husky textures into WebGL
+    function loadGLTextures(dataUrls) {
+      return dataUrls.map((url) => {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 230, 220, 255]));
+        const img = new Image();
+        img.onload = () => {
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.generateMipmap(gl.TEXTURE_2D);
+        };
+        img.src = url;
+        return tex;
+      });
+    }
+
+    const neoTextures = loadGLTextures(catData.textures.neo);
+    const huskyTextures = loadGLTextures(catData.textures.husky);
+
+    // Build 3D Tufted Cushion Mesh + Shadow Disc Mesh
+    function buildCushionMesh() {
+      const stacks = 18, slices = 44;
+      const verts = [], norms = [], indices = [];
+      for (let i = 0; i <= stacks; i++) {
+        const phi = (i / stacks) * Math.PI;
+        for (let j = 0; j <= slices; j++) {
+          const theta = (j / slices) * Math.PI * 2;
+          const x = Math.sin(phi) * Math.cos(theta);
+          let y = Math.cos(phi);
+          const z = Math.sin(phi) * Math.sin(theta);
+          // Slight plush pillow squashing & subtle tufted dimple
+          const tuft = 1.0 - 0.08 * Math.exp(-((x*x*4 + z*z*4)));
+          y *= 0.18 * tuft;
+          const rx = x * 0.50;
+          const rz = z * 0.27;
+          verts.push(rx, y - 0.032, rz);
+          const nx = x / 0.50, ny = y / 0.09, nz = z / 0.27;
+          const nl = Math.hypot(nx, ny, nz) || 1;
+          norms.push(nx/nl, ny/nl, nz/nl);
+        }
+      }
+      for (let i = 0; i < stacks; i++) {
+        for (let j = 0; j < slices; j++) {
+          const a = i * (slices + 1) + j;
+          const b = a + slices + 1;
+          indices.push(a, b, a + 1, b, b + 1, a + 1);
+        }
+      }
+      return {
+        posVBO: createVBO(new Float32Array(verts), gl.ARRAY_BUFFER),
+        normVBO: createVBO(new Float32Array(norms), gl.ARRAY_BUFFER),
+        ibo: createVBO(new Uint16Array(indices), gl.ELEMENT_ARRAY_BUFFER),
+        count: indices.length
+      };
+    }
+
+    function buildShadowDiscMesh() {
+      const segs = 28;
+      const verts = [0, 0, 0], norms = [0, 1, 0], indices = [];
+      for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        verts.push(Math.cos(a), 0, Math.sin(a));
+        norms.push(0, 1, 0);
+        if (i < segs) indices.push(0, i + 1, i + 2);
+      }
+      return {
+        posVBO: createVBO(new Float32Array(verts), gl.ARRAY_BUFFER),
+        normVBO: createVBO(new Float32Array(norms), gl.ARRAY_BUFFER),
+        ibo: createVBO(new Uint16Array(indices), gl.ELEMENT_ARRAY_BUFFER),
+        count: indices.length
+      };
+    }
+
+    const cushionMesh = buildCushionMesh();
+    const shadowDiscMesh = buildShadowDiscMesh();
+
+    // ---------------------------------------------------------------------
+    // 4. Kitten Rig State, Petting, & Autonomous Real-Kitten Behaviors
+    // ---------------------------------------------------------------------
+    // Node index lookup by name in Cat.glb
+    const nodeIndex = {};
+    catData.gltf.nodes.forEach((n, i) => { nodeIndex[n.name] = i; });
+
     function createKittenState(cfg) {
       return {
         ...cfg,
@@ -301,9 +658,9 @@
         lookPitch: 0,
         leanX: 0,
         leanY: 0,
-        petLevel: 0,      // 0..1 rises while rubbing
-        happySquint: 0,   // 0..1 crescent eyes
-        mouthOpen: 0,     // 0..1 meow mouth
+        petLevel: 0,
+        happySquint: 0,
+        mouthOpen: 0,
         meowTimer: 0,
         lastMeowAt: 0,
         rubEnergy: 0,
@@ -313,7 +670,7 @@
         earTwitch: 0,
         kneadPhase: Math.random() * Math.PI * 2,
         tailPhase: Math.random() * Math.PI * 2,
-        // Autonomous real-kitten behavior state
+        // Autonomous social motion
         animX: 0,
         animY: 0,
         animZ: 0,
@@ -335,21 +692,21 @@
         speechText: '',
         speechAlpha: 0,
         speechY: 0,
-        hitCenter: { x: 0, y: 0, rx: 95, ry: 95 }
+        hitCenter: { x: W * 0.5, y: H * 0.5, rx: 95, ry: 95 },
+        headScreen: { x: W * 0.5, y: H * 0.35 }
       };
     }
 
     const neo = createKittenState({
       key: 'neo',
       name: 'Neo',
-      wx: -136,
-      wy: 22,
-      wz: 10,
-      baseYaw: 0.16,
-      coat: 'ginger',
-      eyeCols: ['#FFF2A6', '#85B86E', '#3A6B41'],
-      collarCol: '#8ECAE6',
-      tagCol: '#FFD166',
+      wx: -0.22,
+      wy: 0.0,
+      wz: 0.03,
+      baseYaw: 0.42,
+      scale: 0.90,
+      chubby: 0.0, // Sleek ginger kitten
+      textures: neoTextures,
       badgeEl: neoBadge,
       moodEl: neoMoodEl,
       idleMood: 'Ginger Kitty · Rub to pet',
@@ -359,52 +716,44 @@
     const husky = createKittenState({
       key: 'husky',
       name: 'Husky',
-      wx: 136,
-      wy: 22,
-      wz: 10,
-      baseYaw: -0.16,
-      coat: 'bicolor',
-      eyeCols: ['#D2ECFF', '#5FA8DF', '#254E75'],
-      collarCol: '#FF9EBB',
-      tagCol: '#FFD166',
+      wx: 0.22,
+      wy: 0.0,
+      wz: 0.03,
+      baseYaw: -0.42,
+      scale: 1.04,
+      chubby: 1.0, // Fat white & brown Persian kitten!
+      textures: huskyTextures,
       badgeEl: huskyBadge,
       moodEl: huskyMoodEl,
-      idleMood: 'White & Brown · Rub to pet',
-      petMoods: ['Mee-oww~ 💖', 'Making biscuits! 🐾', 'Purrs so loud~ 🤎']
+      idleMood: 'Chubby Persian · Rub to pet',
+      petMoods: ['Mee-oww~ 💖', 'Making biscuits! 🐾', 'Fluffy purrs~ 🤎']
     });
 
     const kittens = [neo, husky];
     const floatingParticles = [];
 
-    // Autonomous Real-Kitten Social Behavior Controller
     const social = {
-      state: 'idle', // 'idle' | 'play_fight' | 'play_pounce' | 'cuddle_nuzzle' | 'tail_bat' | 'stretch_play'
-      timer: 1.8,    // First playful interaction starts shortly after unlocking
+      state: 'idle',
+      timer: 1.8,
       duration: 0,
       phaseTime: 0,
-      actorIdx: 0,   // 0 = Neo, 1 = Husky
+      actorIdx: 0,
       bapStep: 0,
       pounced: false
     };
 
     function resetSocialTargets() {
       kittens.forEach((k) => {
-        k.targetX = 0;
-        k.targetY = 0;
-        k.targetZ = 0;
-        k.targetYaw = 0;
-        k.targetCrouch = 0;
-        k.targetEarFlatten = 0;
-        k.socialSquint = 0;
-        k.socialMood = '';
+        k.targetX = 0; k.targetY = 0; k.targetZ = 0; k.targetYaw = 0;
+        k.targetCrouch = 0; k.targetEarFlatten = 0; k.socialSquint = 0; k.socialMood = '';
       });
     }
 
-    function showKittenBubble(k, text, withMeowStyle) {
+    function showKittenBubble(k, text, withMeow) {
       k.speechText = text;
       k.speechAlpha = 1.0;
       k.speechY = 0;
-      if (withMeowStyle && audioCtx && audioCtx.state === 'running' && !soundMuted) {
+      if (withMeow && audioCtx && audioCtx.state === 'running' && !soundMuted) {
         const d = playKittenMeow(k.key);
         k.meowTimer = Math.min(0.65, d || 0.36);
       }
@@ -417,66 +766,61 @@
       social.bapStep = 0;
       social.pounced = false;
 
-      if (r < 0.34) {
-        // Play-fighting / cute bap-bap wrestling!
+      if (r < 0.35) {
         social.state = 'play_fight';
         social.duration = 3.4;
-        neo.targetX = 82;   // Moves toward center (-136 + 82 = -54)
-        husky.targetX = -82; // Moves toward center (+136 - 82 = +54)
-        neo.targetYaw = 0.85;
-        husky.targetYaw = -0.85;
-        neo.targetEarFlatten = 0.85;
-        husky.targetEarFlatten = 0.85;
+        neo.targetX = 0.09;
+        husky.targetX = -0.09;
+        neo.targetYaw = 0.95;
+        husky.targetYaw = -0.95;
+        neo.targetEarFlatten = 0.8;
+        husky.targetEarFlatten = 0.8;
         neo.socialMood = 'Play-fighting Husky! 🐾';
         husky.socialMood = 'Bap-bap-bapping Neo! 🐾';
-        showKittenBubble(kittens[social.actorIdx], 'rawr! 🐾', 'chirp');
-      } else if (r < 0.60) {
-        // Stalk, butt-wiggle & playful pounce!
+        showKittenBubble(kittens[social.actorIdx], 'rawr! 🐾', true);
+      } else if (r < 0.62) {
         social.state = 'play_pounce';
         social.duration = 3.2;
         const attacker = kittens[social.actorIdx];
         const defender = kittens[1 - social.actorIdx];
         const dir = social.actorIdx === 0 ? 1 : -1;
-        attacker.targetX = dir * 32;
-        attacker.targetYaw = dir * 0.75;
+        attacker.targetX = dir * 0.04;
+        attacker.targetYaw = dir * 0.85;
         attacker.targetCrouch = 1.0;
-        defender.targetYaw = -dir * 0.65;
+        defender.targetYaw = -dir * 0.7;
         attacker.socialMood = `Stalking ${defender.name}... 👀`;
         defender.socialMood = 'Watching closely! ✨';
-      } else if (r < 0.80) {
-        // Cozy cuddle & nuzzle together
+      } else if (r < 0.82) {
         social.state = 'cuddle_nuzzle';
         social.duration = 3.6;
-        neo.targetX = 92;
-        husky.targetX = -92;
-        neo.targetYaw = 0.52;
-        husky.targetYaw = -0.52;
+        neo.targetX = 0.11;
+        husky.targetX = -0.11;
+        neo.targetYaw = 0.62;
+        husky.targetYaw = -0.62;
         neo.socialSquint = 1.0;
         husky.socialSquint = 1.0;
         neo.socialMood = 'Cuddling Husky 💕';
         husky.socialMood = 'Nuzzling Neo 🤎';
-        showKittenBubble(neo, 'mrr~ 💕', 'trill');
+        showKittenBubble(neo, 'mrr~ 💕', true);
       } else if (r < 0.92) {
-        // Tail batting game
         social.state = 'tail_bat';
         social.duration = 3.0;
         const batter = kittens[social.actorIdx];
         const waver = kittens[1 - social.actorIdx];
         const dir = social.actorIdx === 0 ? 1 : -1;
-        batter.targetX = dir * 74;
-        batter.targetYaw = dir * 0.8;
-        waver.targetX = -dir * 40;
-        waver.targetYaw = -dir * 1.15; // Turns slightly so tail waves toward batter
+        batter.targetX = dir * 0.08;
+        batter.targetYaw = dir * 0.85;
+        waver.targetX = -dir * 0.04;
+        waver.targetYaw = -dir * 1.35;
         batter.socialMood = `Batting ${waver.name}'s tail! 🐾`;
         waver.socialMood = 'Teasing with tail~ ✨';
       } else {
-        // Cozy stretch & play pose
         social.state = 'stretch_play';
         social.duration = 2.6;
         const k = kittens[social.actorIdx];
-        k.targetCrouch = 0.78;
+        k.targetCrouch = 0.82;
         k.socialSquint = 0.6;
-        k.socialMood = 'Big kitten stretch~ ✨';
+        k.socialMood = 'Big Persian/kitty stretch~ ✨';
       }
     }
 
@@ -490,8 +834,7 @@
       if (nowMs - k.lastMeowAt < 650) return;
       k.lastMeowAt = nowMs;
 
-      k.meowTimer = style === 'chirp' ? 0.28 : 0.44;
-      k.petLevel = Math.min(1, k.petLevel + 0.45);
+      k.petLevel = Math.min(1, k.petLevel + 0.48);
       k.speechText = style === 'chirp' ? 'mew! 💕' : style === 'trill' ? 'mrr-ow~ ✨' : 'mee-ow~ 💖';
       k.speechAlpha = 1.0;
       k.speechY = 0;
@@ -504,19 +847,19 @@
         k.moodEl.textContent = k.petMoods[Math.floor(Math.random() * k.petMoods.length)];
       }
 
-      const meowDur = playKittenMeow(k.key, style);
+      const meowDur = playKittenMeow(k.key);
       k.meowTimer = Math.min(0.65, meowDur || 0.44);
 
-      const sx = px !== undefined ? px : k.hitCenter.x;
-      const sy = py !== undefined ? py : k.hitCenter.y - 36;
+      const sx = px !== undefined ? px : k.headScreen.x;
+      const sy = py !== undefined ? py : k.headScreen.y;
       for (let i = 0; i < 4; i++) {
         floatingParticles.push({
-          x: sx + (Math.random() - 0.5) * 34,
-          y: sy + (Math.random() - 0.5) * 16,
+          x: sx + (Math.random() - 0.5) * 38,
+          y: sy + (Math.random() - 0.5) * 18,
           vx: (Math.random() - 0.5) * 24,
           vy: -(32 + Math.random() * 26),
           symbol: ['💗', '🐾', '✨', '💕'][Math.floor(Math.random() * 4)],
-          size: 13 + Math.random() * 6,
+          size: 14 + Math.random() * 6,
           life: 0,
           maxLife: 1.05 + Math.random() * 0.35
         });
@@ -540,12 +883,12 @@
 
       if (Math.random() < Math.min(0.45, moveDist * 0.025)) {
         floatingParticles.push({
-          x: px + (Math.random() - 0.5) * 20,
+          x: px + (Math.random() - 0.5) * 22,
           y: py - 8,
           vx: (Math.random() - 0.5) * 18,
           vy: -(24 + Math.random() * 22),
           symbol: Math.random() > 0.35 ? '💗' : '✨',
-          size: 11 + Math.random() * 5,
+          size: 12 + Math.random() * 5,
           life: 0,
           maxLife: 0.9 + Math.random() * 0.3
         });
@@ -558,647 +901,232 @@
     }
 
     // ---------------------------------------------------------------------
-    // 3. 3D Math, Shading & Kitten Rig Renderer
+    // 5. Skeletal Pose Evaluation (20 Cat.glb Bones)
     // ---------------------------------------------------------------------
+    const nodes = catData.gltf.nodes;
+    const nodeLocalMats = nodes.map(() => Mat4.create());
+    const nodeWorldMats = nodes.map(() => Mat4.create());
+    const jointUniformBuf = new Float32Array(20 * 16);
+    const tmpQuat = new Float32Array(4);
+    const tmpDeltaQ = new Float32Array(4);
+    const tmpTrans = new Float32Array(3);
+    const identityMat = Mat4.create();
+
+    function evaluateSkeleton(k, elapsed) {
+      const breath = Math.sin(elapsed * 2.6 + (k.key === 'neo' ? 0 : 1.2));
+      const purrVib = k.petLevel > 0.15 ? Math.sin(elapsed * 46) * 0.0025 * k.petLevel : 0;
+
+      // Per-node bone offsets (Euler rx, ry, rz in local bone space)
+      const rotOffsets = {};
+      const addRot = (name, rx, ry, rz) => {
+        const idx = nodeIndex[name];
+        if (idx !== undefined) rotOffsets[idx] = [rx, ry, rz];
+      };
+
+      // Head tracks cursor & leans into rubs (+ subtle playful ear flatten tilt)
+      const headYaw = k.lookYaw * 0.55 + k.leanX * 0.25;
+      const headPitch = -k.lookPitch * 0.35 - k.petLevel * 0.18 + k.leanY * 0.14 + k.crouchAmt * 0.22;
+      const headRoll = k.leanX * 0.20 + Math.sin(elapsed * 1.6 + (k.key === 'neo' ? 0 : 2)) * 0.05 + k.earFlatten * 0.12;
+      addRot('Head', headRoll, headYaw, headPitch);
+
+      // Neck follows gently
+      addRot('Neck', 0, k.lookYaw * 0.22, -breath * 0.025 + k.crouchAmt * 0.28 - k.petLevel * 0.08);
+
+      // Jaw opens smoothly when meowing!
+      addRot('Mouth', 0, 0, k.mouthOpen * 0.42);
+
+      // Spine breathing & crouch
+      addRot('Back', 0, k.buttWiggle * 0.04, breath * 0.022 + k.crouchAmt * 0.22);
+
+      // Tail swish + happy upward curl when petted!
+      const tailFreq = 2.4 + k.petLevel * 2.2;
+      const tailSwish = Math.sin(elapsed * tailFreq + k.tailPhase) * (0.28 + k.petLevel * 0.18);
+      const tailCurlUp = -0.35 - k.petLevel * 0.65 - k.crouchAmt * 0.2;
+      addRot('Tail',  0, tailSwish * 0.7, tailCurlUp * 0.6);
+      addRot('Tail1', 0, tailSwish * 0.85, tailCurlUp * 0.55);
+      addRot('Tail2', 0, tailSwish, tailCurlUp * 0.5);
+
+      // Front paws: kneading ("making biscuits") when petted OR bapping during play-fight!
+      const kneadL = Math.max(0, Math.sin(k.kneadPhase)) * k.petLevel * 0.35;
+      const kneadR = Math.max(0, Math.sin(k.kneadPhase + Math.PI)) * k.petLevel * 0.35;
+      const swatL = k.pawSwipeL * 1.05 + kneadL;
+      const swatR = k.pawSwipeR * 1.05 + kneadR;
+
+      addRot('L_Shoulder', 0, 0, -swatL + k.crouchAmt * 0.32);
+      addRot('L_Arm',      0, 0, swatL * 0.55 - k.crouchAmt * 0.45);
+      addRot('L__FrontPaw',0, 0, swatL * 0.35);
+
+      addRot('R_Shoulder', 0, 0, -swatR + k.crouchAmt * 0.32);
+      addRot('R_Arm',      0, 0, swatR * 0.55 - k.crouchAmt * 0.45);
+      addRot('R_FrontPaw', 0, 0, swatR * 0.35);
+
+      // Hind legs bend smoothly during crouch/pounce
+      addRot('L_Thigh', 0, 0, -k.crouchAmt * 0.28);
+      addRot('R_Thigh', 0, 0, -k.crouchAmt * 0.28);
+
+      // Compute local matrices from bind pose + offsets
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        const bt = n.translation || [0, 0, 0];
+        const br = n.rotation || [0, 0, 0, 1];
+        const bs = n.scale || [1, 1, 1];
+
+        tmpTrans[0] = bt[0];
+        tmpTrans[1] = bt[1];
+        tmpTrans[2] = bt[2];
+        if (i === nodeIndex.Butt) {
+          tmpTrans[1] -= k.crouchAmt * 0.045;
+          tmpTrans[2] += k.buttWiggle * 0.003 + purrVib;
+        }
+
+        if (rotOffsets[i]) {
+          const [rx, ry, rz] = rotOffsets[i];
+          quatFromEuler(tmpDeltaQ, rx, ry, rz);
+          quatMul(tmpQuat, br, tmpDeltaQ);
+        } else {
+          tmpQuat[0] = br[0]; tmpQuat[1] = br[1]; tmpQuat[2] = br[2]; tmpQuat[3] = br[3];
+        }
+        Mat4.fromTRS(nodeLocalMats[i], tmpTrans, tmpQuat, bs);
+      }
+
+      // Traverse hierarchy starting at root node 21 (feline_ARM)
+      function visit(idx, parentMat) {
+        Mat4.mul(nodeWorldMats[idx], parentMat, nodeLocalMats[idx]);
+        const ch = nodes[idx].children;
+        if (ch) {
+          for (let i = 0; i < ch.length; i++) visit(ch[i], nodeWorldMats[idx]);
+        }
+      }
+      visit(21, identityMat);
+
+      // Fill uJoints[20] = nodeWorldMats[joint] * IBM[joint]
+      const tmpJ = Mat4.create();
+      for (let j = 0; j < 20; j++) {
+        Mat4.mul(tmpJ, nodeWorldMats[jointNodes[j]], ibmList[j]);
+        jointUniformBuf.set(tmpJ, j * 16);
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // 6. WebGL Drawing Functions
+    // ---------------------------------------------------------------------
+    const projMat = Mat4.create();
+    const viewMat = Mat4.create();
+    const vpMat = Mat4.create();
+    const modelMat = Mat4.create();
+    const tmpQModel = new Float32Array(4);
+
     let camYaw = 0;
-    let camPitch = 0.24;
+    let camPitch = 0.34;
     let targetCamYaw = 0;
-    let targetCamPitch = 0.24;
+    let targetCamPitch = 0.34;
     let pointerNormX = 0;
     let pointerNormY = 0;
 
-    function project(x, y, z) {
-      const cosY = Math.cos(camYaw);
-      const sinY = Math.sin(camYaw);
-      const x1 = x * cosY - z * sinY;
-      const z1 = x * sinY + z * cosY;
-
-      const cosP = Math.cos(camPitch);
-      const sinP = Math.sin(camPitch);
-      const y2 = y * cosP + z1 * sinP;
-      const z2 = z1 * cosP - y * sinP;
-
-      const s = FOV / (CAM_DIST - z2);
-      return { x: CX + x1 * s, y: CY + y2 * s, z: z2, s };
+    function bindAttr(loc, vbo, size) {
+      if (loc < 0) return;
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
     }
 
-    function drawCushionStage() {
-      // Soft floor shadow
-      const fl = project(0, 66, 0);
-      const flg = ctx.createRadialGradient(fl.x, fl.y, 40, fl.x, fl.y, 265 * fl.s);
-      flg.addColorStop(0, 'rgba(89, 28, 50, 0.16)');
-      flg.addColorStop(0.7, 'rgba(89, 28, 50, 0.05)');
-      flg.addColorStop(1, 'rgba(89, 28, 50, 0)');
-      ctx.save();
-      ctx.translate(fl.x, fl.y);
-      ctx.scale(1, 0.26);
-      ctx.beginPath();
-      ctx.arc(0, 0, 265 * fl.s, 0, Math.PI * 2);
-      ctx.fillStyle = flg;
-      ctx.fill();
-      ctx.restore();
+    function drawSolidMesh(mesh, mMat, camPos, colorTop, colorRim, isShadow) {
+      gl.useProgram(solidProg);
+      gl.uniformMatrix4fv(gl.getUniformLocation(solidProg, 'uProj'), false, projMat);
+      gl.uniformMatrix4fv(gl.getUniformLocation(solidProg, 'uView'), false, viewMat);
+      gl.uniformMatrix4fv(gl.getUniformLocation(solidProg, 'uModel'), false, mMat);
+      gl.uniform3fv(gl.getUniformLocation(solidProg, 'uCamPos'), camPos);
+      gl.uniform3fv(gl.getUniformLocation(solidProg, 'uColorTop'), colorTop);
+      gl.uniform3fv(gl.getUniformLocation(solidProg, 'uColorRim'), colorRim);
+      gl.uniform1f(gl.getUniformLocation(solidProg, 'uIsShadow'), isShadow ? 1.0 : 0.0);
 
-      // 3D Velvet Cushion Base Rim
-      const rimPts = [];
-      const topPts = [];
-      const segs = 48;
-      for (let i = 0; i <= segs; i++) {
-        const a = (i / segs) * Math.PI * 2;
-        const rx = Math.cos(a) * 248;
-        const rz = Math.sin(a) * 108;
-        topPts.push(project(rx, 46, rz));
-        if (Math.sin(a) >= -0.05) {
-          rimPts.push(project(rx, 64, rz));
-        }
-      }
-
-      // Cushion side thickness
-      const frontTop = [];
-      for (let i = 0; i <= segs; i++) {
-        const a = (i / segs) * Math.PI * 2;
-        if (Math.sin(a) >= -0.05) {
-          frontTop.push(project(Math.cos(a) * 248, 46, Math.sin(a) * 108));
-        }
-      }
-      if (frontTop.length > 2 && rimPts.length === frontTop.length) {
-        ctx.beginPath();
-        ctx.moveTo(frontTop[0].x, frontTop[0].y);
-        for (let i = 1; i < frontTop.length; i++) ctx.lineTo(frontTop[i].x, frontTop[i].y);
-        for (let i = rimPts.length - 1; i >= 0; i--) ctx.lineTo(rimPts[i].x, rimPts[i].y);
-        ctx.closePath();
-        const sideG = ctx.createLinearGradient(0, fl.y - 24, 0, fl.y + 10);
-        sideG.addColorStop(0, '#F7CFD9');
-        sideG.addColorStop(1, '#DDA3B4');
-        ctx.fillStyle = sideG;
-        ctx.fill();
-      }
-
-      // Cushion top plush surface
-      ctx.beginPath();
-      ctx.moveTo(topPts[0].x, topPts[0].y);
-      for (let i = 1; i < topPts.length; i++) ctx.lineTo(topPts[i].x, topPts[i].y);
-      ctx.closePath();
-      const topP = project(0, 46, 0);
-      const topG = ctx.createRadialGradient(topP.x - 40, topP.y - 18, 20, topP.x, topP.y, 260 * topP.s);
-      topG.addColorStop(0, '#FFF9FB');
-      topG.addColorStop(0.6, '#FFE8F0');
-      topG.addColorStop(1, '#F5C4D4');
-      ctx.fillStyle = topG;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(224, 175, 190, 0.8)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Quilted tufted cushion buttons
-      [[-170, 52, 26], [0, 52, 34], [170, 52, 26]].forEach(([bx, by, bz]) => {
-        const bp = project(bx, by, bz);
-        ctx.beginPath();
-        ctx.arc(bp.x, bp.y, 3.6 * bp.s, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(218, 155, 174, 0.55)';
-        ctx.fill();
-      });
+      bindAttr(gl.getAttribLocation(solidProg, 'aPos'), mesh.posVBO, 3);
+      bindAttr(gl.getAttribLocation(solidProg, 'aNorm'), mesh.normVBO, 3);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ibo);
+      gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0);
     }
 
-    function draw3DSphere(wx, wy, wz, rx, ry, cLight, cMid, cDark, strokeCol) {
-      const p = project(wx, wy, wz);
-      const prx = rx * p.s;
-      const pry = (ry || rx) * p.s;
-      const g = ctx.createRadialGradient(
-        p.x - prx * 0.34,
-        p.y - pry * 0.36,
-        Math.max(1, prx * 0.1),
-        p.x,
-        p.y,
-        Math.max(prx, pry) * 1.05
-      );
-      g.addColorStop(0, cLight);
-      g.addColorStop(0.55, cMid);
-      g.addColorStop(1, cDark);
-
-      ctx.beginPath();
-      ctx.ellipse(p.x, p.y, prx, pry, 0, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
-      if (strokeCol) {
-        ctx.strokeStyle = strokeCol;
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-      }
-      return p;
-    }
-
-    function drawKitten(k, elapsed) {
-      const isGinger = k.coat === 'ginger';
-      const purrVib = k.petLevel > 0.15 ? Math.sin(elapsed * 46) * 0.65 * k.petLevel : 0;
-      const breath = Math.sin(elapsed * 2.5 + (isGinger ? 0 : 1.1));
-      const bodyBounce = breath * 1.4;
+    function drawCatGL(k, elapsed, camPos) {
+      evaluateSkeleton(k, elapsed);
 
       const curX = k.wx + k.animX;
-      const curY = k.wy + k.animY + k.hopY + k.crouchAmt * 7;
+      const curY = k.wy + k.animY + k.hopY;
       const curZ = k.wz + k.animZ;
-      const yaw = k.baseYaw + k.animYaw + k.lookYaw * 0.32 + k.leanX * 0.16;
-      const cosK = Math.cos(yaw);
-      const sinK = Math.sin(yaw);
+      const curYaw = k.baseYaw + k.animYaw;
 
-      // Local-to-world helper around kitten anchor
-      const toWorld = (lx, ly, lz) => ({
-        x: curX + (lx * cosK - lz * sinK) + purrVib,
-        y: curY + ly + bodyBounce,
-        z: curZ + (lx * sinK + lz * cosK)
+      // Ground contact shadow right under kitten
+      gl.depthMask(false);
+      const shScale = Math.max(0.55, 1.0 - k.hopY * 3.5);
+      Mat4.fromTRS(
+        modelMat,
+        [curX, 0.002, curZ],
+        [0, 0, 0, 1],
+        [0.18 * k.scale * shScale * (1 + k.chubby * 0.25), 1, 0.26 * k.scale * shScale]
+      );
+      drawSolidMesh(shadowDiscMesh, modelMat, camPos, [0,0,0], [0,0,0], true);
+      gl.depthMask(true);
+
+      // Cat model transform
+      quatFromEuler(tmpQModel, 0, curYaw, 0);
+      Mat4.fromTRS(modelMat, [curX, curY, curZ], tmpQModel, [k.scale, k.scale, k.scale]);
+
+      // Project screen anchors for hit testing & speech bubbles!
+      const headProj = Mat4.projectPoint(vpMat, curX, curY + 0.34 * k.scale, curZ + 0.14 * k.scale);
+      const bodyProj = Mat4.projectPoint(vpMat, curX, curY + 0.18 * k.scale, curZ);
+      k.headScreen = { x: headProj.x, y: headProj.y - 16 };
+      k.hitCenter = { x: bodyProj.x, y: bodyProj.y - 10, rx: 105, ry: 105 };
+
+      gl.useProgram(catProg);
+      gl.uniformMatrix4fv(gl.getUniformLocation(catProg, 'uProj'), false, projMat);
+      gl.uniformMatrix4fv(gl.getUniformLocation(catProg, 'uView'), false, viewMat);
+      gl.uniformMatrix4fv(gl.getUniformLocation(catProg, 'uModel'), false, modelMat);
+      gl.uniformMatrix4fv(gl.getUniformLocation(catProg, 'uJoints'), false, jointUniformBuf);
+      gl.uniform3fv(gl.getUniformLocation(catProg, 'uCamPos'), camPos);
+      gl.uniform1f(gl.getUniformLocation(catProg, 'uChubby'), k.chubby);
+      gl.uniform1f(gl.getUniformLocation(catProg, 'uPetGlow'), k.petLevel);
+
+      const aPos = gl.getAttribLocation(catProg, 'aPos');
+      const aNorm = gl.getAttribLocation(catProg, 'aNorm');
+      const aUV = gl.getAttribLocation(catProg, 'aUV');
+      const aJoints = gl.getAttribLocation(catProg, 'aJoints');
+      const aWeights = gl.getAttribLocation(catProg, 'aWeights');
+      const uTex = gl.getUniformLocation(catProg, 'uTex');
+      const uAlphaTest = gl.getUniformLocation(catProg, 'uAlphaTest');
+      const uFluffPush = gl.getUniformLocation(catProg, 'uFluffPush');
+
+      // Draw opaque body & head first (prim 0, prim 1), then alpha-blended fur tufts (prim 2)
+      [0, 1, 2].forEach((pi) => {
+        const p = primitives[pi];
+        const isFur = pi === 2;
+        if (isFur) gl.depthMask(false);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, k.textures[p.material]);
+        gl.uniform1i(uTex, 0);
+        gl.uniform1f(uAlphaTest, isFur ? 0.12 : 0.5);
+        gl.uniform1f(uFluffPush, isFur ? 0.008 : 0.0);
+
+        bindAttr(aPos, p.posVBO, 3);
+        bindAttr(aNorm, p.normVBO, 3);
+        bindAttr(aUV, p.uvVBO, 2);
+        bindAttr(aJoints, p.jntVBO, 4);
+        bindAttr(aWeights, p.wgtVBO, 4);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, p.ibo);
+        gl.drawElements(gl.TRIANGLES, p.count, gl.UNSIGNED_SHORT, 0);
+
+        if (isFur) gl.depthMask(true);
       });
-
-      // Contact shadow on cushion (shrinks slightly when hopping in the air!)
-      const shadowScale = Math.max(0.6, 1 + k.hopY * 0.012);
-      const sh = project(curX, 45, curZ + 4);
-      const shG = ctx.createRadialGradient(sh.x, sh.y, 8, sh.x, sh.y, 76 * sh.s * shadowScale);
-      shG.addColorStop(0, `rgba(130, 62, 84, ${0.25 * shadowScale})`);
-      shG.addColorStop(1, 'rgba(130, 62, 84, 0)');
-      ctx.save();
-      ctx.translate(sh.x, sh.y);
-      ctx.scale(1.15 * shadowScale, 0.36 * shadowScale);
-      ctx.beginPath();
-      ctx.arc(0, 0, 72 * sh.s, 0, Math.PI * 2);
-      ctx.fillStyle = shG;
-      ctx.fill();
-      ctx.restore();
-
-      // Palette definitions
-      const furLight = isGinger ? '#FFBE7B' : '#FFFFFF';
-      const furMid   = isGinger ? '#E8833A' : '#F4EBE5';
-      const furDark  = isGinger ? '#B35318' : '#D5C6BD';
-      const patchLight = '#9E6647';
-      const patchMid   = '#704128';
-      const patchDark  = '#472413';
-
-      const parts = [];
-
-      // 1. Articulated 3D Tail (10 segments curving out & upward when happy)
-      const tailHappyLift = k.petLevel * 22;
-      const tailSway = Math.sin(elapsed * (2.3 + k.petLevel * 1.8) + k.tailPhase);
-      const tailSide = isGinger ? -1 : 1;
-      for (let t = 0; t < 10; t++) {
-        const u = t / 9;
-        const lx = tailSide * (28 + u * 36 + tailSway * (10 + u * 16));
-        const ly = 20 - Math.pow(u, 1.35) * (24 + tailHappyLift) + Math.cos(elapsed * 2.5 + u * 2) * 3;
-        const lz = -34 + u * 18;
-        const w = toWorld(lx, ly, lz);
-        const rad = 11.5 - u * 4.2;
-        const pProj = project(w.x, w.y, w.z);
-        const useBrownTip = !isGinger && u > 0.52;
-        const useStripe = isGinger && t % 2 === 1;
-        parts.push({
-          z: pProj.z,
-          draw: () => {
-            draw3DSphere(
-              w.x, w.y, w.z, rad, rad,
-              useBrownTip ? patchLight : useStripe ? '#E57A30' : furLight,
-              useBrownTip ? patchMid : useStripe ? '#BC5617' : furMid,
-              useBrownTip ? patchDark : useStripe ? '#8A3808' : furDark
-            );
-          }
-        });
-      }
-
-      // 2. Plump Haunches & Torso (depth-sorted 3D spheres with pounce butt-wiggle!)
-      const wig = k.buttWiggle;
-      const haunchL = toWorld(-26 + wig, 14 - k.crouchAmt * 5, -14);
-      const haunchR = toWorld(26 + wig, 14 - k.crouchAmt * 5, -14);
-      const torsoBack = toWorld(wig * 0.7, 6 - k.crouchAmt * 3, -18);
-      const torsoChest = toWorld(0, 4 + breath * 0.6 + k.crouchAmt * 5, 8);
-
-      [
-        { w: haunchL, rx: 28, ry: 26, brown: !isGinger },
-        { w: haunchR, rx: 28, ry: 26, brown: false },
-        { w: torsoBack, rx: 38, ry: 34 + breath * 0.8, brown: !isGinger && false },
-        { w: torsoChest, rx: 34 + breath * 0.8, ry: 31, cream: true }
-      ].forEach((vol, idx) => {
-        const pp = project(vol.w.x, vol.w.y, vol.w.z);
-        parts.push({
-          z: pp.z,
-          draw: () => {
-            if (vol.cream) {
-              draw3DSphere(
-                vol.w.x, vol.w.y, vol.w.z, vol.rx, vol.ry,
-                isGinger ? '#FFF6EC' : '#FFFFFF',
-                isGinger ? '#FFE5CC' : '#F6EFEA',
-                isGinger ? '#E8B78C' : '#D9CBC2'
-              );
-            } else if (vol.brown) {
-              draw3DSphere(vol.w.x, vol.w.y, vol.w.z, vol.rx, vol.ry, patchLight, patchMid, patchDark);
-            } else {
-              draw3DSphere(vol.w.x, vol.w.y, vol.w.z, vol.rx, vol.ry, furLight, furMid, furDark);
-            }
-
-            // Tabby stripes on Neo's back
-            if (isGinger && idx === 2) {
-              ctx.save();
-              ctx.strokeStyle = 'rgba(162, 70, 18, 0.48)';
-              ctx.lineWidth = 4.2 * pp.s;
-              ctx.lineCap = 'round';
-              [-1, 1].forEach((side) => {
-                ctx.beginPath();
-                ctx.moveTo(pp.x + side * 14 * pp.s, pp.y - 18 * pp.s);
-                ctx.quadraticCurveTo(pp.x + side * 26 * pp.s, pp.y - 4 * pp.s, pp.x + side * 22 * pp.s, pp.y + 12 * pp.s);
-                ctx.stroke();
-              });
-              ctx.restore();
-            }
-
-            // Cute cocoa saddle patch on Husky's back
-            if (!isGinger && idx === 2) {
-              draw3DSphere(vol.w.x + 8, vol.w.y - 10, vol.w.z - 4, 21, 16, patchLight, patchMid, patchDark);
-            }
-          }
-        });
-      });
-
-      // 3. Front Legs & Kneading / Play-Fighting Bapping Paws
-      const kneadAmt = k.petLevel * 4.5;
-      const pawL_lift = Math.max(0, Math.sin(k.kneadPhase)) * kneadAmt + k.pawSwipeL * 24;
-      const pawR_lift = Math.max(0, Math.sin(k.kneadPhase + Math.PI)) * kneadAmt + k.pawSwipeR * 24;
-
-      [
-        { lx: -17, lift: pawL_lift, swipe: k.pawSwipeL },
-        { lx: 17, lift: pawR_lift, swipe: k.pawSwipeR }
-      ].forEach(({ lx, lift, swipe }) => {
-        const reachZ = swipe * 26 + k.crouchAmt * 8;
-        const legW = toWorld(lx, 18 - lift * 0.6, 26 + reachZ * 0.45);
-        const pawW = toWorld(lx, 30 - lift, 34 + reachZ);
-        const legP = project(legW.x, legW.y, legW.z);
-        const pawP = project(pawW.x, pawW.y, pawW.z);
-
-        parts.push({
-          z: legP.z,
-          draw: () => {
-            draw3DSphere(legW.x, legW.y, legW.z, 11.5, 16, furLight, furMid, furDark);
-          }
-        });
-        parts.push({
-          z: pawP.z + 1,
-          draw: () => {
-            const p = draw3DSphere(
-              pawW.x, pawW.y, pawW.z, 13, 9.5,
-              '#FFFFFF',
-              isGinger ? '#FFF0E0' : '#F5ECE6',
-              isGinger ? '#DFBFA0' : '#D5C5BC'
-            );
-            // Tiny toe creases
-            ctx.strokeStyle = 'rgba(140, 95, 85, 0.35)';
-            ctx.lineWidth = 1.1 * p.s;
-            [-4, 4].forEach((tx) => {
-              ctx.beginPath();
-              ctx.moveTo(p.x + tx * p.s, p.y + 1 * p.s);
-              ctx.lineTo(p.x + tx * p.s, p.y + 7 * p.s);
-              ctx.stroke();
-            });
-            // Tiny pink toe bean peek when kneading
-            if (lift > 1.2) {
-              ctx.fillStyle = '#FF9EB5';
-              ctx.beginPath();
-              ctx.ellipse(p.x, p.y + 5.5 * p.s, 4 * p.s, 2.2 * p.s, 0, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-        });
-      });
-
-      // 4. Collar & Golden Heart Tag
-      const collarW = toWorld(0, -14, 24);
-      const collarP = project(collarW.x, collarW.y, collarW.z);
-      parts.push({
-        z: collarP.z + 2,
-        draw: () => {
-          ctx.save();
-          ctx.strokeStyle = k.collarCol;
-          ctx.lineWidth = 5.5 * collarP.s;
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          ctx.ellipse(collarP.x, collarP.y, 24 * collarP.s, 9 * collarP.s, 0, 0.15, Math.PI - 0.15);
-          ctx.stroke();
-
-          // Tiny golden heart charm
-          const ty = collarP.y + 10.5 * collarP.s;
-          ctx.fillStyle = k.tagCol;
-          ctx.strokeStyle = '#C99738';
-          ctx.lineWidth = 0.8;
-          ctx.beginPath();
-          ctx.arc(collarP.x, ty, 4.6 * collarP.s, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(collarP.x - 1.4 * collarP.s, ty - 1.4 * collarP.s, 1.4 * collarP.s, 0, Math.PI * 2);
-          ctx.fillStyle = '#FFF9E2';
-          ctx.fill();
-          ctx.restore();
-        }
-      });
-
-      // 5. Articulated 3D Head (rotates toward pointer + leans into rubs!)
-      const hYaw = yaw + k.lookYaw * 0.55 + k.leanX * 0.24;
-      const hPitch = k.lookPitch * 0.35 - k.petLevel * 0.14 + k.leanY * 0.12;
-      const hRoll = k.leanX * 0.16 + Math.sin(elapsed * 1.7 + (isGinger ? 0 : 2)) * 0.04;
-
-      const cosHY = Math.cos(hYaw);
-      const sinHY = Math.sin(hYaw);
-      const cosHP = Math.cos(hPitch);
-      const sinHP = Math.sin(hPitch);
-      const cosHR = Math.cos(hRoll);
-      const sinHR = Math.sin(hRoll);
-
-      const headPivot = toWorld(k.leanX * 4, -36 - k.petLevel * 2, 14);
-      const headTransform = (lx, ly, lz) => {
-        // Roll -> Pitch -> Yaw
-        const x1 = lx * cosHR - ly * sinHR;
-        const y1 = lx * sinHR + ly * cosHR;
-        const y2 = y1 * cosHP - lz * sinHP;
-        const z2 = y1 * sinHP + lz * cosHP;
-        const x3 = x1 * cosHY - z2 * sinHY;
-        const z3 = x1 * sinHY + z2 * cosHY;
-        return {
-          x: headPivot.x + x3,
-          y: headPivot.y + y2,
-          z: headPivot.z + z3
-        };
-      };
-
-      const headCenterProj = project(headPivot.x, headPivot.y, headPivot.z);
-      k.hitCenter = { x: headCenterProj.x, y: headCenterProj.y + 18, rx: 95, ry: 95 };
-
-      // 5a. Plush 3D Ears (outer fur + pink inner ear; flatten slightly during play-fight!)
-      [-1, 1].forEach((side) => {
-        const earDroop = k.petLevel * 5 + k.earFlatten * 11 + (side === 1 ? k.earTwitch * 4 : 0);
-        const earBaseA = headTransform(side * 12, -26, 2);
-        const earBaseB = headTransform(side * 34, -12 + earDroop * 0.3, -4);
-        const earTip = headTransform(side * 33, -52 + earDroop, -2);
-        const innerA = headTransform(side * 15, -24, 5);
-        const innerB = headTransform(side * 30, -14 + earDroop * 0.3, 1);
-        const innerTip = headTransform(side * 30, -45 + earDroop, 2);
-
-        const pA = project(earBaseA.x, earBaseA.y, earBaseA.z);
-        const pB = project(earBaseB.x, earBaseB.y, earBaseB.z);
-        const pT = project(earTip.x, earTip.y, earTip.z);
-        const piA = project(innerA.x, innerA.y, innerA.z);
-        const piB = project(innerB.x, innerB.y, innerB.z);
-        const piT = project(innerTip.x, innerTip.y, innerTip.z);
-
-        const earUseBrown = !isGinger;
-        parts.push({
-          z: (pA.z + pB.z + pT.z) / 3,
-          draw: () => {
-            ctx.beginPath();
-            ctx.moveTo(pA.x, pA.y);
-            ctx.quadraticCurveTo((pA.x + pT.x) * 0.5, pT.y + 6, pT.x, pT.y);
-            ctx.quadraticCurveTo((pB.x + pT.x) * 0.5 + side * 4, (pB.y + pT.y) * 0.5, pB.x, pB.y);
-            ctx.closePath();
-            ctx.fillStyle = earUseBrown ? patchMid : furMid;
-            ctx.fill();
-            ctx.strokeStyle = earUseBrown ? patchDark : furDark;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // Inner soft pink ear
-            ctx.beginPath();
-            ctx.moveTo(piA.x, piA.y);
-            ctx.lineTo(piT.x, piT.y);
-            ctx.lineTo(piB.x, piB.y);
-            ctx.closePath();
-            ctx.fillStyle = '#FFADC2';
-            ctx.fill();
-          }
-        });
-      });
-
-      // 5b. Main 3D Skull + Cheek Fluffs + Facial Features
-      parts.push({
-        z: headCenterProj.z,
-        draw: () => {
-          // Cheek fluff spheres behind/sides
-          const cL = headTransform(-22, 8, 6);
-          const cR = headTransform(22, 8, 6);
-          draw3DSphere(cL.x, cL.y, cL.z, 19, 16, furLight, furMid, furDark);
-          draw3DSphere(cR.x, cR.y, cR.z, 19, 16, furLight, furMid, furDark);
-
-          // Main plump 3D head
-          const hp = draw3DSphere(headPivot.x, headPivot.y, headPivot.z, 36, 32, furLight, furMid, furDark);
-
-          // Coat-specific forehead/mask markings projected on 3D skull
-          if (isGinger) {
-            // Cute ginger tabby forehead 'M' stripes
-            ctx.save();
-            ctx.strokeStyle = 'rgba(165, 72, 18, 0.58)';
-            ctx.lineWidth = 2.6 * hp.s;
-            ctx.lineCap = 'round';
-            [-9, 0, 9].forEach((sx, idx) => {
-              const s0 = headTransform(sx, -24, 29);
-              const s1 = headTransform(sx * 0.7, -13 - (idx === 1 ? 2 : 0), 33);
-              const ps0 = project(s0.x, s0.y, s0.z);
-              const ps1 = project(s1.x, s1.y, s1.z);
-              ctx.beginPath();
-              ctx.moveTo(ps0.x, ps0.y);
-              ctx.lineTo(ps1.x, ps1.y);
-              ctx.stroke();
-            });
-            ctx.restore();
-          } else {
-            // Husky's adorable white & chocolate-brown bicolor face mask!
-            [-1, 1].forEach((side) => {
-              const capW = headTransform(side * 16, -13, 18);
-              draw3DSphere(capW.x, capW.y, capW.z, 19, 16, patchLight, patchMid, patchDark);
-            });
-            // Clean snowy white blaze down the center nose bridge & fluffy white cheeks
-            const blazeTop = headTransform(0, -18, 32);
-            const blazeMid = headTransform(0, -4, 34);
-            const pb0 = project(blazeTop.x, blazeTop.y, blazeTop.z);
-            const pb1 = project(blazeMid.x, blazeMid.y, blazeMid.z);
-            ctx.beginPath();
-            ctx.moveTo(pb0.x, pb0.y);
-            ctx.lineTo(pb1.x - 12 * pb1.s, pb1.y + 8 * pb1.s);
-            ctx.lineTo(pb1.x + 12 * pb1.s, pb1.y + 8 * pb1.s);
-            ctx.closePath();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fill();
-          }
-
-          // Plush cream/white muzzle puffs
-          const muzL = headTransform(-7.5, 10, 31);
-          const muzR = headTransform(7.5, 10, 31);
-          draw3DSphere(muzL.x, muzL.y, muzL.z, 10.5, 8.8, '#FFFFFF', isGinger ? '#FFF3E4' : '#FAF5F2', isGinger ? '#E5BE9A' : '#DFD2CA');
-          draw3DSphere(muzR.x, muzR.y, muzR.z, 10.5, 8.8, '#FFFFFF', isGinger ? '#FFF3E4' : '#FAF5F2', isGinger ? '#E5BE9A' : '#DFD2CA');
-
-          // Rosy blush cheeks (glow warmly when petted!)
-          const blushAlpha = 0.25 + k.petLevel * 0.5;
-          [-20, 20].forEach((bx) => {
-            const bw = headTransform(bx, 11, 28);
-            const bp = project(bw.x, bw.y, bw.z);
-            const bg = ctx.createRadialGradient(bp.x, bp.y, 1, bp.x, bp.y, 10 * bp.s);
-            bg.addColorStop(0, `rgba(255, 120, 155, ${blushAlpha})`);
-            bg.addColorStop(1, 'rgba(255, 120, 155, 0)');
-            ctx.fillStyle = bg;
-            ctx.beginPath();
-            ctx.arc(bp.x, bp.y, 10 * bp.s, 0, Math.PI * 2);
-            ctx.fill();
-          });
-
-          // Expressive 3D Glossy Eyes (or happy ^ ^ squint when rubbed!)
-          [-14, 14].forEach((ex) => {
-            const ew = headTransform(ex, -2, 31);
-            const ep = project(ew.x, ew.y, ew.z);
-            const er = 7.4 * ep.s;
-
-            if (k.happySquint > 0.45) {
-              // Happy crescent purr eyes ^ ^
-              ctx.strokeStyle = '#3B1D26';
-              ctx.lineWidth = 2.6 * ep.s;
-              ctx.lineCap = 'round';
-              ctx.beginPath();
-              ctx.arc(ep.x, ep.y + 2 * ep.s, er * 0.78, Math.PI * 1.15, Math.PI * 1.85);
-              ctx.stroke();
-            } else {
-              const eyeOpenY = Math.max(0.12, 1 - k.blinkAmt);
-              ctx.save();
-              ctx.translate(ep.x, ep.y);
-              ctx.scale(1, eyeOpenY);
-
-              // Outer eye socket shadow + glossy iris
-              const ig = ctx.createRadialGradient(0, -er * 0.2, 1, 0, 0, er);
-              ig.addColorStop(0, k.eyeCols[0]);
-              ig.addColorStop(0.55, k.eyeCols[1]);
-              ig.addColorStop(1, k.eyeCols[2]);
-              ctx.beginPath();
-              ctx.arc(0, 0, er, 0, Math.PI * 2);
-              ctx.fillStyle = ig;
-              ctx.fill();
-
-              // Cute big kitten pupil (dilates gently with affection!)
-              const pupW = er * (0.58 + k.petLevel * 0.14);
-              const pupH = er * 0.76;
-              ctx.beginPath();
-              ctx.ellipse(k.lookYaw * 1.8 * ep.s, k.lookPitch * 1.5 * ep.s, pupW, pupH, 0, 0, Math.PI * 2);
-              ctx.fillStyle = '#181014';
-              ctx.fill();
-
-              // Dual crisp specular corneal catchlights
-              ctx.fillStyle = '#FFFFFF';
-              ctx.beginPath();
-              ctx.arc(-er * 0.34, -er * 0.34, er * 0.28, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.beginPath();
-              ctx.arc(er * 0.28, er * 0.26, er * 0.13, 0, Math.PI * 2);
-              ctx.fill();
-
-              // Soft upper lash rim
-              ctx.strokeStyle = '#2B151D';
-              ctx.lineWidth = 1.6 * ep.s;
-              ctx.beginPath();
-              ctx.arc(0, 0, er, Math.PI * 1.08, Math.PI * 1.92);
-              ctx.stroke();
-              ctx.restore();
-            }
-          });
-
-          // Tiny 3D Rosy Pink Nose
-          const nw = headTransform(0, 6.5, 36);
-          const np = project(nw.x, nw.y, nw.z);
-          ctx.fillStyle = '#FF87A2';
-          ctx.beginPath();
-          ctx.moveTo(np.x - 4.2 * np.s, np.y - 2.2 * np.s);
-          ctx.lineTo(np.x + 4.2 * np.s, np.y - 2.2 * np.s);
-          ctx.quadraticCurveTo(np.x, np.y + 4.2 * np.s, np.x - 4.2 * np.s, np.y - 2.2 * np.s);
-          ctx.fill();
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-          ctx.beginPath();
-          ctx.arc(np.x - 1.2 * np.s, np.y - 1.2 * np.s, 1.1 * np.s, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Cute 'ω' mouth OR open meowing pink mouth!
-          const mw = headTransform(0, 12.5, 34);
-          const mp = project(mw.x, mw.y, mw.z);
-          if (k.mouthOpen > 0.08) {
-            const mo = k.mouthOpen;
-            ctx.fillStyle = '#992B4C';
-            ctx.beginPath();
-            ctx.ellipse(mp.x, mp.y + 1.5 * mp.s, 4.2 * mp.s, (2.2 + mo * 4.8) * mp.s, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // Cute tiny pink tongue
-            ctx.fillStyle = '#FF8FAB';
-            ctx.beginPath();
-            ctx.ellipse(mp.x, mp.y + (2.5 + mo * 2.5) * mp.s, 2.8 * mp.s, (1.6 + mo * 1.8) * mp.s, 0, 0, Math.PI * 2);
-            ctx.fill();
-          } else {
-            ctx.strokeStyle = '#6A3844';
-            ctx.lineWidth = 1.6 * mp.s;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(mp.x, mp.y - 3 * mp.s);
-            ctx.lineTo(mp.x, mp.y - 0.5 * mp.s);
-            ctx.quadraticCurveTo(mp.x - 3.5 * mp.s, mp.y + 3 * mp.s, mp.x - 6.5 * mp.s, mp.y + 0.5 * mp.s);
-            ctx.moveTo(mp.x, mp.y - 0.5 * mp.s);
-            ctx.quadraticCurveTo(mp.x + 3.5 * mp.s, mp.y + 3 * mp.s, mp.x + 6.5 * mp.s, mp.y + 0.5 * mp.s);
-            ctx.stroke();
-          }
-
-          // Delicate 3D Curved Whiskers
-          ctx.strokeStyle = isGinger ? 'rgba(255, 248, 240, 0.85)' : 'rgba(195, 175, 170, 0.8)';
-          ctx.lineWidth = 1.15 * hp.s;
-          [-1, 1].forEach((side) => {
-            [-2, 2, 6].forEach((wyOffset, wi) => {
-              const ws0 = headTransform(side * 12, 9 + wyOffset * 0.6, 32);
-              const ws1 = headTransform(side * 38, 7 + wyOffset * 1.8, 26);
-              const p0 = project(ws0.x, ws0.y, ws0.z);
-              const p1 = project(ws1.x, ws1.y, ws1.z);
-              ctx.beginPath();
-              ctx.moveTo(p0.x, p0.y);
-              ctx.quadraticCurveTo((p0.x + p1.x) * 0.5, p0.y - (1 - wi) * 2, p1.x, p1.y);
-              ctx.stroke();
-            });
-          });
-        }
-      });
-
-      // Depth-sort all 3D parts of this kitten back-to-front!
-      parts.sort((a, b) => a.z - b.z);
-      for (let i = 0; i < parts.length; i++) {
-        parts[i].draw();
-      }
-
-      // Floating cute meow speech bubble right above kitten
-      if (k.speechAlpha > 0.02) {
-        const spX = headCenterProj.x;
-        const spY = headCenterProj.y - 58 * headCenterProj.s - k.speechY;
-        ctx.save();
-        ctx.globalAlpha = Math.min(1, k.speechAlpha);
-        ctx.font = '700 14px "Gloria Hallelujah", cursive';
-        const tw = ctx.measureText(k.speechText).width;
-        const bw = tw + 20;
-        const bh = 26;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.strokeStyle = '#FFB6C1';
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        if (typeof ctx.roundRect === 'function') {
-          ctx.roundRect(spX - bw / 2, spY - bh / 2, bw, bh, 13);
-        } else {
-          ctx.rect(spX - bw / 2, spY - bh / 2, bw, bh);
-        }
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#E60023';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(k.speechText, spX, spY + 1);
-        ctx.restore();
-      }
     }
 
     // ---------------------------------------------------------------------
-    // 4. Pointer / Touch Rubbing & Hover Handlers
+    // 7. Pointer / Touch Rubbing & Hover Handlers
     // ---------------------------------------------------------------------
     let isPointerDown = false;
     let lastPX = 0;
     let lastPY = 0;
 
     function getCanvasCoords(e) {
-      const rect = canvas.getBoundingClientRect();
+      const rect = glCanvas.getBoundingClientRect();
       return {
         x: ((e.clientX - rect.left) / rect.width) * W,
         y: ((e.clientY - rect.top) / rect.height) * H
@@ -1210,14 +1138,12 @@
         const k = kittens[i];
         const dx = (cx - k.hitCenter.x) / k.hitCenter.rx;
         const dy = (cy - k.hitCenter.y) / k.hitCenter.ry;
-        if (dx * dx + dy * dy <= 1.0) {
-          return { kitten: k, dx, dy };
-        }
+        if (dx * dx + dy * dy <= 1.0) return { kitten: k, dx, dy };
       }
       return null;
     }
 
-    canvas.addEventListener('pointerdown', (e) => {
+    glCanvas.addEventListener('pointerdown', (e) => {
       e.stopPropagation();
       isPointerDown = true;
       const pt = getCanvasCoords(e);
@@ -1232,12 +1158,12 @@
       }
     });
 
-    canvas.addEventListener('pointermove', (e) => {
+    glCanvas.addEventListener('pointermove', (e) => {
       const pt = getCanvasCoords(e);
       pointerNormX = (pt.x / W - 0.5) * 2;
       pointerNormY = (pt.y / H - 0.5) * 2;
-      targetCamYaw = pointerNormX * 0.12;
-      targetCamPitch = 0.24 - pointerNormY * 0.05;
+      targetCamYaw = pointerNormX * 0.24;
+      targetCamPitch = Math.max(0.16, Math.min(0.55, 0.34 - pointerNormY * 0.10));
 
       const moveDist = Math.hypot(pt.x - lastPX, pt.y - lastPY);
       lastPX = pt.x;
@@ -1245,59 +1171,49 @@
 
       const hit = hitTestKitten(pt.x, pt.y);
       if (hit) {
-        canvas.style.cursor = 'pointer';
-        // Both touch-drag rubbing AND mouse-hover rubbing over the kitten pet it smoothly!
+        glCanvas.style.cursor = 'pointer';
         if (isPointerDown || (e.pointerType === 'mouse' && moveDist > 1.5)) {
           applyPetRub(hit.kitten, moveDist, pt.x, pt.y, hit.dx, hit.dy);
         }
       } else {
-        canvas.style.cursor = isPointerDown ? 'grabbing' : 'grab';
+        glCanvas.style.cursor = isPointerDown ? 'grabbing' : 'grab';
       }
     });
 
-    const endRub = () => {
-      isPointerDown = false;
-    };
-    canvas.addEventListener('pointerup', endRub);
-    canvas.addEventListener('pointercancel', endRub);
-    canvas.addEventListener('pointerleave', () => {
+    const endRub = () => { isPointerDown = false; };
+    glCanvas.addEventListener('pointerup', endRub);
+    glCanvas.addEventListener('pointercancel', endRub);
+    glCanvas.addEventListener('pointerleave', () => {
       isPointerDown = false;
       targetCamYaw = 0;
-      targetCamPitch = 0.24;
+      targetCamPitch = 0.34;
       pointerNormX = 0;
       pointerNormY = 0;
     });
 
-    if (neoBadge) {
-      neoBadge.addEventListener('click', () => {
-        ensureAudio();
-        triggerKittenMeow(neo, 'sweet');
-      });
-    }
-    if (huskyBadge) {
-      huskyBadge.addEventListener('click', () => {
-        ensureAudio();
-        triggerKittenMeow(husky, 'sweet');
-      });
-    }
+    if (neoBadge) neoBadge.addEventListener('click', () => { ensureAudio(); triggerKittenMeow(neo, 'sweet'); });
+    if (huskyBadge) huskyBadge.addEventListener('click', () => { ensureAudio(); triggerKittenMeow(husky, 'sweet'); });
 
     // ---------------------------------------------------------------------
-    // 5. Smooth 120Hz Animation Loop (Auto-pauses offscreen or when hidden)
+    // 8. Smooth 120Hz Render Loop (WebGL 3D + 2D FX Overlay)
     // ---------------------------------------------------------------------
     let isInView = true;
     let rafId = null;
     let lastTime = 0;
     let elapsed = 0;
+    const mainEl = document.getElementById('main');
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      glCanvas.width = W * dpr;
+      glCanvas.height = H * dpr;
+      fxCanvas.width = W * dpr;
+      fxCanvas.height = H * dpr;
+      gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+      fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
 
-    const mainEl = document.getElementById('main');
     function shouldAnimate() {
       if (document.hidden || !isInView) return false;
       const bday = document.getElementById('bday-overlay');
@@ -1323,64 +1239,59 @@
       camYaw += (targetCamYaw - camYaw) * camDamp;
       camPitch += (targetCamPitch - camPitch) * camDamp;
 
-      // Update autonomous real-kitten social behavior (paused while petting)
+      // Autonomous social behavior update
       const isBeingPetted = kittens.some((k) => k.petLevel > 0.18);
       if (!isBeingPetted) {
         if (social.state === 'idle') {
           social.timer -= dt;
-          if (social.timer <= 0) {
-            startNextSocialBehavior();
-          }
+          if (social.timer <= 0) startNextSocialBehavior();
         } else {
           social.phaseTime += dt;
           const pt = social.phaseTime;
 
           if (social.state === 'play_fight') {
-            // Alternating rapid soft-paw baps between Neo & Husky!
             const bapPhase = Math.max(0, pt - 0.45);
             const sw = Math.sin(bapPhase * 15);
-            neo.pawSwipeL = Math.max(0, sw) * 0.9;
-            neo.pawSwipeR = Math.max(0, -sw) * 0.9;
-            husky.pawSwipeR = Math.max(0, Math.sin(bapPhase * 15 + 1.4)) * 0.9;
-            husky.pawSwipeL = Math.max(0, -Math.sin(bapPhase * 15 + 1.4)) * 0.9;
-            neo.hopY = -Math.abs(Math.sin(bapPhase * 6.5)) * 7;
-            husky.hopY = -Math.abs(Math.sin(bapPhase * 6.5 + 1.1)) * 7;
+            neo.pawSwipeL = Math.max(0, sw) * 0.95;
+            neo.pawSwipeR = Math.max(0, -sw) * 0.95;
+            husky.pawSwipeR = Math.max(0, Math.sin(bapPhase * 15 + 1.4)) * 0.95;
+            husky.pawSwipeL = Math.max(0, -Math.sin(bapPhase * 15 + 1.4)) * 0.95;
+            neo.hopY = Math.abs(Math.sin(bapPhase * 6.5)) * 0.024;
+            husky.hopY = Math.abs(Math.sin(bapPhase * 6.5 + 1.1)) * 0.024;
 
             if (pt > 0.6 && social.bapStep === 0) {
               social.bapStep = 1;
-              showKittenBubble(husky, 'bap bap! 🐾', 'chirp');
-              floatingParticles.push({ x: CX, y: CY - 38, vx: 0, vy: -26, symbol: '🐾', size: 16, life: 0, maxLife: 0.9 });
+              showKittenBubble(husky, 'bap bap! 🐾', true);
+              floatingParticles.push({ x: W * 0.5, y: H * 0.36, vx: 0, vy: -26, symbol: '🐾', size: 17, life: 0, maxLife: 0.9 });
             } else if (pt > 1.7 && social.bapStep === 1) {
               social.bapStep = 2;
-              showKittenBubble(neo, 'mew! 💥', 'trill');
-              floatingParticles.push({ x: CX + 10, y: CY - 44, vx: 8, vy: -30, symbol: '✨', size: 15, life: 0, maxLife: 0.9 });
+              showKittenBubble(neo, 'mew! 💥', true);
+              floatingParticles.push({ x: W * 0.52, y: H * 0.32, vx: 8, vy: -30, symbol: '✨', size: 16, life: 0, maxLife: 0.9 });
             }
           } else if (social.state === 'play_pounce') {
             const attacker = kittens[social.actorIdx];
             const defender = kittens[1 - social.actorIdx];
             const dir = social.actorIdx === 0 ? 1 : -1;
-
             if (pt < 1.25) {
-              // Cute pre-pounce butt wiggle!
               attacker.buttWiggle = Math.sin(pt * 22) * 3.8 * Math.min(1, pt * 2);
             } else if (pt < 2.05) {
               const pProg = (pt - 1.25) / 0.8;
               attacker.buttWiggle = 0;
               attacker.targetCrouch = 0;
-              attacker.targetX = dir * 92;
-              attacker.hopY = -Math.sin(pProg * Math.PI) * 34;
+              attacker.targetX = dir * 0.13;
+              attacker.hopY = Math.sin(pProg * Math.PI) * 0.085;
               attacker.pawSwipeL = Math.sin(pProg * Math.PI) * 0.8;
               attacker.pawSwipeR = Math.sin(pProg * Math.PI) * 0.8;
 
               if (!social.pounced && pProg > 0.45) {
                 social.pounced = true;
-                defender.targetX = dir * 18; // Playful startle hop back
-                defender.hopY = -18;
-                showKittenBubble(attacker, 'gotcha! ✨', 'chirp');
-                showKittenBubble(defender, 'eep! 🐾', 'chirp');
+                defender.targetX = dir * 0.03;
+                defender.hopY = 0.04;
+                showKittenBubble(attacker, 'gotcha! ✨', true);
+                showKittenBubble(defender, 'eep! 🐾', true);
               }
               if (pProg > 0.55) {
-                defender.hopY = -Math.sin(((pProg - 0.55) / 0.45) * Math.PI) * 16;
+                defender.hopY = Math.sin(((pProg - 0.55) / 0.45) * Math.PI) * 0.045;
               }
             } else {
               attacker.hopY = 0;
@@ -1389,23 +1300,22 @@
           } else if (social.state === 'cuddle_nuzzle') {
             if (Math.random() < 0.08) {
               floatingParticles.push({
-                x: CX + (Math.random() - 0.5) * 26,
-                y: CY - 46,
+                x: W * 0.5 + (Math.random() - 0.5) * 28,
+                y: H * 0.34,
                 vx: (Math.random() - 0.5) * 14,
                 vy: -28,
                 symbol: Math.random() > 0.4 ? '💕' : '💖',
-                size: 14,
+                size: 15,
                 life: 0,
                 maxLife: 1.1
               });
             }
           } else if (social.state === 'tail_bat') {
             const batter = kittens[social.actorIdx];
-            const sw = Math.max(0, Math.sin(pt * 9.5));
-            batter.pawSwipeR = sw * 0.85;
+            batter.pawSwipeR = Math.max(0, Math.sin(pt * 9.5)) * 0.9;
             if (pt > 0.9 && social.bapStep === 0) {
               social.bapStep = 1;
-              showKittenBubble(batter, 'bap! 🐾', 'chirp');
+              showKittenBubble(batter, 'bap! 🐾', true);
             }
           }
 
@@ -1413,19 +1323,13 @@
             social.state = 'idle';
             social.timer = 3.8 + Math.random() * 4.2;
             resetSocialTargets();
-            kittens.forEach((k) => {
-              k.hopY = 0;
-              k.pawSwipeL = 0;
-              k.pawSwipeR = 0;
-              k.buttWiggle = 0;
-            });
+            kittens.forEach((k) => { k.hopY = 0; k.pawSwipeL = 0; k.pawSwipeR = 0; k.buttWiggle = 0; });
           }
         }
       }
 
       let maxPetLevel = 0;
       kittens.forEach((k) => {
-        // Smoothly damp autonomous motion targets
         const posDamp = 1 - Math.exp(-5.8 * dt);
         k.animX += (k.targetX - k.animX) * posDamp;
         k.animY += (k.targetY - k.animY) * posDamp;
@@ -1440,85 +1344,95 @@
           k.buttWiggle *= Math.exp(-10 * dt);
         }
 
-        // Head follows cursor smoothly (blended down during play-fight so they look at each other!)
         const lookScale = social.state === 'play_fight' || social.state === 'cuddle_nuzzle' ? 0.2 : 1;
-        const targetLookY = Math.max(-0.5, Math.min(0.5, (pointerNormX * 340 - (k.wx + k.animX)) / 260)) * lookScale;
-        const targetLookP = Math.max(-0.3, Math.min(0.3, pointerNormY * 0.3)) * lookScale;
+        const targetLookY = Math.max(-0.55, Math.min(0.55, pointerNormX * 0.65)) * lookScale;
+        const targetLookP = Math.max(-0.35, Math.min(0.35, pointerNormY * 0.45)) * lookScale;
         const lookDamp = 1 - Math.exp(-7 * dt);
         k.lookYaw += (targetLookY - k.lookYaw) * lookDamp;
         k.lookPitch += (targetLookP - k.lookPitch) * lookDamp;
 
-        // Smooth decay of petting & lean
-        const petDecay = Math.exp(-1.2 * dt);
-        k.petLevel *= petDecay;
+        k.petLevel *= Math.exp(-1.2 * dt);
         k.leanX *= Math.exp(-5 * dt);
         k.leanY *= Math.exp(-5 * dt);
         if (k.moodEl && k.petLevel < 0.08 && k.speechAlpha < 0.05) {
           const desiredMood = k.socialMood || k.idleMood;
-          if (k.moodEl.textContent !== desiredMood) {
-            k.moodEl.textContent = desiredMood;
-          }
+          if (k.moodEl.textContent !== desiredMood) k.moodEl.textContent = desiredMood;
         }
         maxPetLevel = Math.max(maxPetLevel, k.petLevel);
 
-        // Happy squint & paw kneading
-        const squintTarget = Math.max(k.socialSquint, k.petLevel > 0.25 ? Math.min(1, k.petLevel * 1.2) : 0);
-        k.happySquint += (squintTarget - k.happySquint) * (1 - Math.exp(-8 * dt));
         k.kneadPhase += dt * (2.2 + k.petLevel * 6.5);
 
-        // Meow mouth envelope
         if (k.meowTimer > 0) {
           k.meowTimer = Math.max(0, k.meowTimer - dt);
-          const mTarget = Math.sin((k.meowTimer / 0.44) * Math.PI);
+          const mTarget = Math.sin((k.meowTimer / 0.45) * Math.PI);
           k.mouthOpen += (mTarget - k.mouthOpen) * (1 - Math.exp(-18 * dt));
         } else {
           k.mouthOpen *= Math.exp(-14 * dt);
         }
 
-        // Speech bubble float & fade
         if (k.speechAlpha > 0) {
           k.speechY += dt * 16;
           k.speechAlpha = Math.max(0, k.speechAlpha - dt * 0.72);
-        }
-
-        // Natural blinking
-        k.blinkTimer -= dt;
-        if (k.blinkTimer <= 0) {
-          if (k.blinkTimer > -0.16) {
-            k.blinkAmt = Math.sin(((-k.blinkTimer) / 0.16) * Math.PI);
-          } else {
-            k.blinkAmt = 0;
-            k.blinkTimer = 2.6 + Math.random() * 3.2;
-          }
-        }
-
-        // Occasional cute ear twitch
-        k.earTwitchTimer -= dt;
-        if (k.earTwitchTimer <= 0) {
-          if (k.earTwitchTimer > -0.18) {
-            k.earTwitch = Math.sin(((-k.earTwitchTimer) / 0.18) * Math.PI * 2);
-          } else {
-            k.earTwitch = 0;
-            k.earTwitchTimer = 3 + Math.random() * 4;
-          }
         }
       });
 
       setPurrIntensity(maxPetLevel);
 
-      // Render 3D scene
-      ctx.clearRect(0, 0, W, H);
-      drawCushionStage();
+      // WebGL 3D Render Pass
+      const camR = 1.06;
+      const eye = [
+        Math.sin(camYaw) * Math.cos(camPitch) * camR,
+        0.16 + Math.sin(camPitch) * camR,
+        Math.cos(camYaw) * Math.cos(camPitch) * camR
+      ];
+      Mat4.perspective(projMat, 0.62, W / H, 0.05, 10.0);
+      Mat4.lookAt(viewMat, eye, [0, 0.16, 0.02], [0, 1, 0]);
+      Mat4.mul(vpMat, projMat, viewMat);
 
-      // Depth-sort kittens based on animated 3D world position
-      const ordered = kittens
-        .map((k) => ({ k, z: project(k.wx + k.animX, k.wy + k.animY, k.wz + k.animZ).z }))
-        .sort((a, b) => a.z - b.z);
-      for (let i = 0; i < ordered.length; i++) {
-        drawKitten(ordered[i].k, elapsed);
-      }
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-      // Update & draw floating heart/paw particles
+      // Draw 3D Velvet Cushion
+      Mat4.fromTRS(modelMat, [0, 0, 0.02], [0, 0, 0, 1], [1, 1, 1]);
+      drawSolidMesh(cushionMesh, modelMat, eye, [1.0, 0.93, 0.96], [0.92, 0.72, 0.80], false);
+
+      // Draw both rigged 3D GLB kittens!
+      drawCatGL(neo, elapsed, eye);
+      drawCatGL(husky, elapsed, eye);
+
+      // 2D Overlay FX Pass (speech bubbles + floating hearts/paws)
+      fxCtx.clearRect(0, 0, W, H);
+      kittens.forEach((k) => {
+        if (k.speechAlpha > 0.02) {
+          const spX = k.headScreen.x;
+          const spY = Math.max(20, k.headScreen.y - k.speechY);
+          fxCtx.save();
+          fxCtx.globalAlpha = Math.min(1, k.speechAlpha);
+          fxCtx.font = '700 14px "Gloria Hallelujah", cursive';
+          const tw = fxCtx.measureText(k.speechText).width;
+          const bw = tw + 20, bh = 26;
+          fxCtx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+          fxCtx.strokeStyle = '#FFB6C1';
+          fxCtx.lineWidth = 1.6;
+          fxCtx.beginPath();
+          if (typeof fxCtx.roundRect === 'function') {
+            fxCtx.roundRect(spX - bw / 2, spY - bh / 2, bw, bh, 13);
+          } else {
+            fxCtx.rect(spX - bw / 2, spY - bh / 2, bw, bh);
+          }
+          fxCtx.fill();
+          fxCtx.stroke();
+          fxCtx.fillStyle = '#E60023';
+          fxCtx.textAlign = 'center';
+          fxCtx.textBaseline = 'middle';
+          fxCtx.fillText(k.speechText, spX, spY + 1);
+          fxCtx.restore();
+        }
+      });
+
       for (let i = floatingParticles.length - 1; i >= 0; i--) {
         const p = floatingParticles[i];
         p.life += dt;
@@ -1529,13 +1443,13 @@
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         const alpha = Math.sin((1 - p.life / p.maxLife) * Math.PI * 0.5);
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, alpha);
-        ctx.font = `${p.size}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(p.symbol, p.x, p.y);
-        ctx.restore();
+        fxCtx.save();
+        fxCtx.globalAlpha = Math.max(0, alpha);
+        fxCtx.font = `${p.size}px sans-serif`;
+        fxCtx.textAlign = 'center';
+        fxCtx.textBaseline = 'middle';
+        fxCtx.fillText(p.symbol, p.x, p.y);
+        fxCtx.restore();
       }
 
       rafId = requestAnimationFrame(tick);
@@ -1558,7 +1472,6 @@
       io.observe(card);
     }
 
-    // Watch #main visibility (unlocks after password!) and #bday-overlay
     if (mainEl && 'MutationObserver' in window) {
       const mo = new MutationObserver(() => {
         if (mainEl.style.display !== 'none') {
