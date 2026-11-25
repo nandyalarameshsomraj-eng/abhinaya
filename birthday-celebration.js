@@ -70,8 +70,21 @@
     // Flower Sticker Splash state (uses assets/lily-sticker.png)
     const splashCtx = flowerSplashCanvas ? flowerSplashCanvas.getContext('2d') : null;
     const lilyStickerImg = new Image();
+    let lilyStickerSprite = null;
     let lilyStickerReady = false;
     lilyStickerImg.onload = () => {
+      // Pre-render into a 128x128 offscreen canvas for fast frame-rate blitting
+      const spriteSize = 128;
+      const offscreen = document.createElement('canvas');
+      offscreen.width = spriteSize;
+      offscreen.height = spriteSize;
+      const offCtx = offscreen.getContext('2d');
+      if (offCtx) {
+        offCtx.drawImage(lilyStickerImg, 0, 0, spriteSize, spriteSize);
+        lilyStickerSprite = offscreen;
+      } else {
+        lilyStickerSprite = lilyStickerImg;
+      }
       lilyStickerReady = true;
     };
     lilyStickerImg.src = 'assets/lily-sticker.png';
@@ -490,15 +503,19 @@
       if (!ctx || !confettiCanvas) return;
       ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
 
-      confettiPieces = confettiPieces.filter((p) => p.alpha > 0.02 && p.y < confettiCanvas.height + 30);
-
-      for (const p of confettiPieces) {
+      for (let i = confettiPieces.length - 1; i >= 0; i--) {
+        const p = confettiPieces[i];
         p.vx *= 0.985;
         p.vy += 0.19; // soft gravity
         p.x += p.vx;
         p.y += p.vy;
         p.rot += p.vRot;
         p.alpha -= 0.007;
+
+        if (p.alpha <= 0.02 || p.y >= confettiCanvas.height + 30) {
+          confettiPieces.splice(i, 1);
+          continue;
+        }
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, p.alpha);
@@ -677,9 +694,9 @@
       const vh = window.innerHeight;
       splashCtx.clearRect(0, 0, vw, vh);
 
-      // Update & draw sparkle glints
-      splashGlints = splashGlints.filter((g) => g.life < g.maxLife && g.alpha > 0.02);
-      for (const g of splashGlints) {
+      // Update & draw sparkle glints in-place
+      for (let i = splashGlints.length - 1; i >= 0; i--) {
+        const g = splashGlints[i];
         g.life++;
         g.vx *= 0.965;
         g.vy = g.vy * 0.965 + 0.14;
@@ -688,21 +705,22 @@
         const progress = g.life / g.maxLife;
         g.alpha = progress > 0.6 ? Math.max(0, 1 - (progress - 0.6) / 0.4) : 1;
 
-        splashCtx.save();
+        if (g.life >= g.maxLife || g.alpha <= 0.02) {
+          splashGlints.splice(i, 1);
+          continue;
+        }
+
         splashCtx.globalAlpha = g.alpha;
         splashCtx.fillStyle = g.color;
         splashCtx.beginPath();
         splashCtx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
         splashCtx.fill();
-        splashCtx.restore();
       }
+      splashCtx.globalAlpha = 1;
 
-      // Update & draw lily sticker splashes
-      flowerSplashes = flowerSplashes.filter(
-        (f) => f.life < f.maxLife && f.alpha > 0.02 && f.y < vh + f.size * 1.5
-      );
-
-      for (const f of flowerSplashes) {
+      // Update & draw lily sticker splashes in-place
+      for (let i = flowerSplashes.length - 1; i >= 0; i--) {
+        const f = flowerSplashes[i];
         f.life++;
         f.vx *= f.drag;
         f.vy = f.vy * f.drag + f.gravity;
@@ -724,14 +742,19 @@
           f.alpha = Math.max(0, 1 - (lifeRatio - 0.68) / 0.32);
         }
 
+        if (f.life >= f.maxLife || f.alpha <= 0.02 || f.y >= vh + f.size * 1.5) {
+          flowerSplashes.splice(i, 1);
+          continue;
+        }
+
         splashCtx.save();
         splashCtx.globalAlpha = f.alpha;
         splashCtx.translate(f.x, f.y);
         splashCtx.rotate(f.rot);
         splashCtx.scale(f.scale, f.scale);
 
-        if (lilyStickerReady && lilyStickerImg.complete && lilyStickerImg.naturalWidth > 0) {
-          splashCtx.drawImage(lilyStickerImg, -f.size / 2, -f.size / 2, f.size, f.size);
+        if (lilyStickerReady && lilyStickerSprite) {
+          splashCtx.drawImage(lilyStickerSprite, -f.size / 2, -f.size / 2, f.size, f.size);
         } else {
           drawFallbackLily(splashCtx, f.size);
         }

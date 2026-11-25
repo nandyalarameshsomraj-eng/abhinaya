@@ -141,18 +141,18 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   overscroll-behavior: contain;
   background:
-    radial-gradient(circle at 18% 20%, rgba(255, 182, 193, 0.45) 0%, transparent 45%),
-    radial-gradient(circle at 82% 18%, rgba(224, 191, 184, 0.42) 0%, transparent 42%),
-    radial-gradient(circle at 50% 85%, rgba(255, 182, 193, 0.38) 0%, transparent 50%),
-    linear-gradient(155deg, rgba(255, 240, 245, 0.96) 0%, rgba(255, 228, 238, 0.95) 50%, rgba(250, 235, 238, 0.97) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+    radial-gradient(circle at 18% 20%, rgba(255, 182, 193, 0.48) 0%, transparent 45%),
+    radial-gradient(circle at 82% 18%, rgba(224, 191, 184, 0.45) 0%, transparent 42%),
+    radial-gradient(circle at 50% 85%, rgba(255, 182, 193, 0.4) 0%, transparent 50%),
+    linear-gradient(155deg, rgba(255, 240, 245, 0.985) 0%, rgba(255, 228, 238, 0.985) 50%, rgba(250, 235, 238, 0.99) 100%);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+  transition: opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
   font-family: var(--bday-font-sans);
   color: var(--bday-berry);
   box-sizing: border-box;
@@ -202,7 +202,7 @@
   color: var(--bday-pink);
   opacity: 0;
   user-select: none;
-  filter: drop-shadow(0 2px 6px rgba(255, 182, 193, 0.5));
+  will-change: transform, opacity;
   animation: bdayAmbientFloat linear forwards;
 }
 
@@ -211,14 +211,15 @@
   color: var(--bday-rose-gold);
   opacity: 0;
   user-select: none;
+  will-change: transform, opacity;
   animation: bdayAmbientSparkle ease-in-out infinite;
 }
 
 @keyframes bdayAmbientFloat {
-  0% { transform: translateY(0) translateX(0) scale(0.7) rotate(-8deg); opacity: 0; }
+  0% { transform: translate3d(0, 0, 0) scale(0.7) rotate(-8deg); opacity: 0; }
   12% { opacity: 0.65; }
   85% { opacity: 0.55; }
-  100% { transform: translateY(-110vh) translateX(var(--drift, 20px)) scale(1.15) rotate(14deg); opacity: 0; }
+  100% { transform: translate3d(var(--drift, 20px), -110vh, 0) scale(1.15) rotate(14deg); opacity: 0; }
 }
 
 @keyframes bdayAmbientSparkle {
@@ -313,8 +314,9 @@
   width: 100%;
   display: none;
   opacity: 0;
-  transform: translateY(16px) scale(0.97);
-  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate3d(0, 14px, 0) scale(0.975);
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
 
 .bday-step.is-active {
@@ -325,7 +327,7 @@
 
 .bday-step.is-visible {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .bday-glass-card {
@@ -563,7 +565,6 @@
   width: 100%;
   height: auto;
   overflow: visible;
-  filter: drop-shadow(0 16px 26px rgba(89, 28, 50, 0.12));
 }
 
 /* Candle Flame & Shrink Animations */
@@ -580,6 +581,7 @@
 .bday-flame {
   transform-box: fill-box;
   transform-origin: center bottom;
+  will-change: transform;
   animation: bdayFlameFlicker 1.15s ease-in-out infinite alternate;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
@@ -592,6 +594,7 @@
 .bday-flame-halo {
   transform-box: fill-box;
   transform-origin: center;
+  will-change: transform, opacity;
   animation: bdayHaloPulse 1.4s ease-in-out infinite alternate;
   transition: opacity 0.35s ease;
 }
@@ -765,7 +768,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   7. FLOATING Y2K DIGITAL CAMERA STICKER PHOTO FRAMES
+   7. FLOATING Y2K DIGITAL CAMERA STICKER PHOTO FRAMES & SCRAPBOOK STICKERS
    -------------------------------------------------------------------------- */
 .bday-polaroid {
   position: relative;
@@ -779,7 +782,9 @@
   flex-direction: column;
   align-items: center;
   transform: rotate(var(--tilt, -3deg)) translateZ(0);
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  backface-visibility: hidden;
   animation: bdayPolaroidBob 5.2s ease-in-out infinite;
   animation-delay: var(--bob-delay, 0s);
   cursor: pointer;
@@ -794,7 +799,7 @@
 @media (hover: hover) and (pointer: fine) {
   .bday-polaroid:hover {
     animation: none;
-    transform: rotate(0deg) scale(1.05) translateY(-4px);
+    transform: rotate(0deg) scale(1.045) translate3d(0, -4px, 0);
     z-index: 6;
   }
 }
@@ -803,12 +808,11 @@
   position: relative;
   width: 100%;
   aspect-ratio: 371 / 246;
-  overflow: hidden;
-  filter: drop-shadow(0 8px 14px rgba(89, 28, 50, 0.14));
+  overflow: visible;
 }
 
 .pin-camera-frame {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .bday-photo-img {
@@ -834,6 +838,116 @@
   display: block;
   pointer-events: none;
   z-index: 2;
+}
+
+/* Custom Uploaded Scrapbook Stickers Near Every Frame */
+.frame-sticker {
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+  user-select: none;
+  transform: rotate(var(--sticker-rot, 0deg)) translateZ(0);
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.frame-sticker img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.frame-sticker--cutout img {
+  filter: drop-shadow(0 2px 4px rgba(89, 28, 50, 0.2));
+}
+
+.frame-sticker--card img {
+  border-radius: 7px;
+  padding: 2px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(89, 28, 50, 0.22);
+}
+
+/* Positioned around camera corners/edges — guaranteed clear of viewfinder (9.8%..54.3%, 32.3%..82.3%) */
+.frame-sticker--favorite {
+  top: -12%;
+  left: -4%;
+  width: 31%;
+}
+
+.frame-sticker--lucky-top {
+  top: -9%;
+  right: -3%;
+  width: 44%;
+}
+
+.frame-sticker--lucky-bottom {
+  bottom: -6%;
+  right: -3%;
+  width: 42%;
+}
+
+.frame-sticker--heart-tr {
+  top: -11%;
+  right: -4%;
+  width: 20%;
+}
+
+.frame-sticker--heart-tl {
+  top: -10%;
+  left: -3%;
+  width: 19%;
+}
+
+.frame-sticker--heart-bl {
+  bottom: -6%;
+  left: -3%;
+  width: 18%;
+}
+
+.frame-sticker--heart-br {
+  bottom: -6%;
+  right: -3%;
+  width: 19%;
+}
+
+.frame-sticker--spotify-tr {
+  top: -11%;
+  right: -4%;
+  width: 24%;
+}
+
+.frame-sticker--spotify-br {
+  bottom: -7%;
+  right: -4%;
+  width: 23%;
+}
+
+/* Subtle extra margin on slideshow frame stickers inside modal */
+.slideshow-frame-wrap .frame-sticker--favorite {
+  top: -16px;
+  left: -14px;
+  width: clamp(82px, 22%, 124px);
+}
+
+.slideshow-frame-wrap .frame-sticker--heart-br {
+  bottom: -14px;
+  right: -12px;
+  width: clamp(54px, 14%, 82px);
+}
+
+.slideshow-frame-wrap .frame-sticker--lucky-top {
+  top: -14px;
+  right: -10px;
+  width: clamp(130px, 34%, 190px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bday-polaroid:hover .frame-sticker,
+  .pin:hover .frame-sticker {
+    transform: rotate(calc(var(--sticker-rot, 0deg) * 0.55)) scale(1.08) translate3d(0, -2px, 0);
+  }
 }
 
 .bday-polaroid-caption {
@@ -906,7 +1020,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 26px 22px;
+  gap: 30px 24px;
 }
 
 .bday-polaroid--gallery {
@@ -914,6 +1028,9 @@
   max-width: 230px;
   animation: none;
   filter: none;
+  will-change: transform;
+  content-visibility: auto;
+  contain-intrinsic-size: 230px 210px;
 }
 
 .bday-polaroid--gallery .bday-camera-frame {
@@ -930,13 +1047,14 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(45, 14, 28, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(45, 14, 28, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
 }
 
 .bday-lightbox.is-open {
@@ -957,12 +1075,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: scale(0.92);
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(0.92) translate3d(0, 8px, 0);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .bday-lightbox.is-open .bday-lightbox-card {
-  transform: scale(1);
+  transform: scale(1) translate3d(0, 0, 0);
 }
 
 .bday-lightbox-card img {
@@ -973,6 +1092,7 @@
   object-fit: contain;
   border-radius: 10px;
   display: block;
+  transition: opacity 0.2s ease;
 }
 
 .bday-lightbox-caption {
@@ -1065,7 +1185,7 @@
   .bday-polaroid-col {
     flex-direction: row;
     justify-content: center;
-    gap: 16px;
+    gap: 24px 16px;
     flex-wrap: wrap;
   }
 
@@ -1120,7 +1240,7 @@
   }
 
   .bday-memory-grid {
-    gap: 20px 12px;
+    gap: 26px 14px;
   }
 
   .bday-polaroid,

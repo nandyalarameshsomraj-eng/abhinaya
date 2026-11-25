@@ -17,11 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             intro.style.display = 'none';
             lock.style.display = 'flex';
-            setTimeout(() => lock.classList.remove('hidden'), 50);
-        }, 1000);
-        
-        // Start video on first interaction
-        bgVideo.play().catch(e => console.log("Video blocked"));
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    lock.classList.remove('hidden');
+                    if (passwordInput) passwordInput.focus();
+                });
+            });
+        }, 560);
+
+        // Start video on first interaction if source exists
+        if (bgVideo && bgVideo.currentSrc) {
+            bgVideo.play().catch(() => {});
+        }
     };
 
     window.checkPassword = () => {
@@ -29,22 +36,35 @@ document.addEventListener('DOMContentLoaded', () => {
             lock.classList.add('hidden');
             setTimeout(() => {
                 lock.style.display = 'none';
+                main.classList.add('is-entering');
                 main.style.display = 'flex';
-                setTimeout(() => main.classList.remove('hidden'), 50);
-                
+                const pins = main.querySelectorAll('.pin');
+                pins.forEach((pin, idx) => {
+                    pin.style.transitionDelay = `${Math.min(idx * 45, 360)}ms`;
+                });
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        main.classList.remove('hidden');
+                        main.classList.remove('is-entering');
+                        main.classList.add('is-entered');
+                        setTimeout(() => {
+                            pins.forEach((pin) => { pin.style.transitionDelay = ''; });
+                        }, 650);
+                    });
+                });
+
                 // RECURRING CELEBRATION: If it's the 13th, spark the magic!
                 const now = new Date();
                 if (now.getDate() === 13) {
                     setTimeout(() => {
                         startFireworks();
                         startAmbientCelebration(); // Start all-day celebration
-                    }, 1000);
+                    }, 900);
                 } else {
                     startConfetti();
                 }
-            }, 1000);
+            }, 560);
         } else {
-            // ... (rest of old logic)
             passwordInput.style.border = "2px solid #ff4d6d";
             passwordInput.value = "";
             passwordInput.placeholder = "Wrong Secret 💔";
@@ -54,6 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
         }
     };
+
+    if (passwordInput) {
+        passwordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+    }
 
 
     // 2. Timer Logic
@@ -105,22 +131,33 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTimer();
 
     // 3. Floating Heart Logic
-    const isCelebrationOpen = () => {
+    const isModalOrCelebrationOpen = () => {
         const bday = document.getElementById('bday-overlay');
-        return Boolean(bday && bday.classList.contains('is-open'));
+        if (bday && bday.classList.contains('is-open')) return true;
+        const modals = ['letter-modal', 'anniversary-modal', 'four-month-modal', 'proposal-overlay', 'ring-overlay', 'certificate-modal'];
+        return modals.some((id) => {
+            const el = document.getElementById(id);
+            return el && el.classList.contains('show');
+        });
     };
 
+    let activeFloatingHearts = 0;
     const createHeart = () => {
-        if (document.hidden || isCelebrationOpen()) return;
+        if (document.hidden || isModalOrCelebrationOpen() || activeFloatingHearts >= 16) return;
+        activeFloatingHearts++;
         const heart = document.createElement('div');
         heart.classList.add('heart');
-        heart.innerHTML = ['❤️', '💖', '💕', '💗', '💓'][Math.floor(Math.random() * 5)];
+        heart.textContent = ['❤️', '💖', '💕', '💗', '💓'][Math.floor(Math.random() * 5)];
         heart.style.left = Math.random() * 100 + 'vw';
-        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-        heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        heart.style.fontSize = (Math.random() * 18 + 12) + 'px';
+        const duration = Math.random() * 4 + 6;
+        heart.style.animationDuration = duration + 's';
         document.body.appendChild(heart);
 
-        setTimeout(() => heart.remove(), 10000);
+        setTimeout(() => {
+            heart.remove();
+            activeFloatingHearts = Math.max(0, activeFloatingHearts - 1);
+        }, duration * 1000 + 150);
     };
     
     // 3.5 Floating Floral Logic
@@ -133,8 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `<svg viewBox="0 0 100 100"><path d="M50 95 Q 45 75, 50 60" stroke="#4a4a4a" fill="none" stroke-width="1.5" /><g transform="translate(50, 60)"><circle cx="0" cy="0" r="8" fill="#5D4037" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(0)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(45)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(90)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(135)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(180)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(225)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(270)" /><path d="M0 -8 Q -5 -20, 0 -25 Q 5 -20, 0 -8" fill="#FBC02D" stroke="#F9A825" stroke-width="0.5" transform="rotate(315)" /></g></svg>`
     ];
 
+    let activeFloatingFlowers = 0;
     const createFlower = (type) => {
-        if (document.hidden || isCelebrationOpen()) return;
+        if (document.hidden || isModalOrCelebrationOpen() || activeFloatingFlowers >= 6) return;
+        activeFloatingFlowers++;
         const flower = document.createElement('div');
         const svgs = type === 'sunflower' ? sunflowerSVGs : lilySVGs;
         flower.classList.add(type === 'sunflower' ? 'floating-sunflower' : 'floating-lily');
@@ -143,13 +182,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Random responsive size
         const baseSize = window.innerWidth < 600 ? 25 : 35;
         const size = (Math.random() * 20 + baseSize) + 'px';
+        const duration = Math.random() * 6 + 10;
         
         flower.style.left = Math.random() * 100 + 'vw';
         flower.style.width = size;
         flower.style.height = size;
-        flower.style.animationDuration = (Math.random() * 8 + 10) + 's';
+        flower.style.animationDuration = duration + 's';
         document.body.appendChild(flower);
-        setTimeout(() => flower.remove(), 20000);
+        setTimeout(() => {
+            flower.remove();
+            activeFloatingFlowers = Math.max(0, activeFloatingFlowers - 1);
+        }, duration * 1000 + 200);
     };
 
     // Adjust spawning based on screen size
@@ -242,10 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isOpen) {
             overlay.style.display = 'block';
             modal.style.display = 'flex';
-            setTimeout(() => {
-                overlay.classList.add('show');
-                modal.classList.add('show');
-            }, 10);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    overlay.classList.add('show');
+                    modal.classList.add('show');
+                });
+            });
             document.body.style.overflow = 'hidden';
         } else {
             overlay.classList.remove('show');
@@ -254,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 overlay.style.display = 'none';
                 modal.style.display = 'none';
                 document.body.style.overflow = 'auto';
-            }, 500);
+            }, 400);
         }
     };
 
@@ -268,10 +313,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isOpen) {
             overlay.style.display = 'block';
             modal.style.display = 'flex';
-            setTimeout(() => {
-                overlay.classList.add('show');
-                modal.classList.add('show');
-            }, 10);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    overlay.classList.add('show');
+                    modal.classList.add('show');
+                });
+            });
             document.body.style.overflow = 'hidden';
             // Spark fireworks when opening the 4-month anniversary card
             startFireworks();
@@ -284,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.style.overflow = 'auto';
                 // Show the marriage proposal overlay after closing the letter!
                 showProposalOverlay();
-            }, 500);
+            }, 400);
         }
     };
 
@@ -370,10 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `<svg viewBox="0 0 100 100"><rect x="10" y="25" width="80" height="50" rx="5" fill="#ffccd5"/><polygon points="10,25 50,55 90,25" fill="#ffaab8"/><circle cx="50" cy="55" r="8" fill="#e60023"/></svg>`
         ];
 
-        const pins = document.querySelectorAll('.pin');
+        const pins = Array.from(document.querySelectorAll('.pin')).filter(
+            (pin) => !pin.querySelector('.bday-camera-frame')
+        );
         if (pins.length === 0) return;
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 24; i++) {
             const sticker = document.createElement('div');
             sticker.classList.add('scatter-sticker');
             sticker.innerHTML = stickerSVGs[Math.floor(Math.random() * stickerSVGs.length)];
@@ -420,6 +469,84 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     scatterStickers();
+
+    // 8B. Attach the 5 Custom Scrapbook Stickers Near Every Camera & Photo Frame
+    const attachFrameStickers = () => {
+        const STICKERS = {
+            favorite: { src: 'assets/stickers/favorite-person.png', kind: 'cutout' },
+            lucky:    { src: 'assets/stickers/lucky-you.png',       kind: 'cutout' },
+            heart:    { src: 'assets/stickers/my-girl-heart.png',   kind: 'cutout' },
+            birds:    { src: 'assets/stickers/birds-of-a-feather.jpg', kind: 'card' },
+            october:  { src: 'assets/stickers/fell-in-love.jpg',    kind: 'card' }
+        };
+
+        // Curated non-overlapping sticker pairings around camera corners/edges
+        const FRAME_LAYOUTS = [
+            [
+                { sticker: STICKERS.favorite, slot: 'frame-sticker--favorite', rot: -7 },
+                { sticker: STICKERS.birds,    slot: 'frame-sticker--spotify-tr', rot: 7 }
+            ],
+            [
+                { sticker: STICKERS.heart, slot: 'frame-sticker--heart-tl', rot: -11 },
+                { sticker: STICKERS.lucky, slot: 'frame-sticker--lucky-bottom', rot: -2.5 }
+            ],
+            [
+                { sticker: STICKERS.favorite, slot: 'frame-sticker--favorite', rot: -6 },
+                { sticker: STICKERS.october,  slot: 'frame-sticker--spotify-tr', rot: 6 }
+            ],
+            [
+                { sticker: STICKERS.lucky, slot: 'frame-sticker--lucky-top', rot: 3 },
+                { sticker: STICKERS.heart, slot: 'frame-sticker--heart-bl', rot: -9 }
+            ],
+            [
+                { sticker: STICKERS.heart, slot: 'frame-sticker--heart-tr', rot: 11 },
+                { sticker: STICKERS.birds, slot: 'frame-sticker--spotify-br', rot: -6 }
+            ],
+            [
+                { sticker: STICKERS.favorite, slot: 'frame-sticker--favorite', rot: -8 },
+                { sticker: STICKERS.heart,    slot: 'frame-sticker--heart-br', rot: 9 }
+            ],
+            [
+                { sticker: STICKERS.lucky,   slot: 'frame-sticker--lucky-top', rot: 2.5 },
+                { sticker: STICKERS.october, slot: 'frame-sticker--spotify-br', rot: 7 }
+            ]
+        ];
+
+        const createStickerEl = ({ sticker, slot, rot }) => {
+            const el = document.createElement('div');
+            el.className = `frame-sticker ${slot} frame-sticker--${sticker.kind}`;
+            el.style.setProperty('--sticker-rot', `${rot}deg`);
+            const img = document.createElement('img');
+            img.src = sticker.src;
+            img.alt = '';
+            img.setAttribute('aria-hidden', 'true');
+            img.decoding = 'async';
+            img.loading = 'lazy';
+            el.appendChild(img);
+            return el;
+        };
+
+        const cameraFrames = document.querySelectorAll('.bday-camera-frame');
+        cameraFrames.forEach((frame, idx) => {
+            if (frame.dataset.stickersAttached) return;
+            frame.dataset.stickersAttached = '1';
+            const layout = FRAME_LAYOUTS[idx % FRAME_LAYOUTS.length];
+            layout.forEach((item) => frame.appendChild(createStickerEl(item)));
+        });
+
+        // Also adorn the Anniversary Slideshow frame
+        const slideshowWrap = document.querySelector('.slideshow-frame-wrap');
+        if (slideshowWrap && !slideshowWrap.dataset.stickersAttached) {
+            slideshowWrap.dataset.stickersAttached = '1';
+            [
+                { sticker: STICKERS.favorite, slot: 'frame-sticker--favorite', rot: -8 },
+                { sticker: STICKERS.lucky,    slot: 'frame-sticker--lucky-top', rot: 3 },
+                { sticker: STICKERS.heart,    slot: 'frame-sticker--heart-br', rot: 10 }
+            ].forEach((item) => slideshowWrap.appendChild(createStickerEl(item)));
+        }
+    };
+
+    attachFrameStickers();
 
     // 9. Album Player Logic
     window.toggleAudio = () => {
@@ -569,13 +696,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         draw() {
-            ctx.save();
-            ctx.globalAlpha = this.alpha;
+            ctx.globalAlpha = Math.max(0, this.alpha);
             ctx.beginPath();
-            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+            ctx.arc(this.x, this.y, 2.2, 0, Math.PI * 2, false);
             ctx.fillStyle = this.color;
             ctx.fill();
-            ctx.restore();
         }
 
         update() {
@@ -640,6 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (particles.length > 0) {
             requestAnimationFrame(animateFireworks);
         } else {
+            ctx.globalAlpha = 1;
             fireworkActive = false;
         }
     };
