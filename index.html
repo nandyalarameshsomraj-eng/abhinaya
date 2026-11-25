@@ -13,6 +13,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="birthday-celebration.css">
+    <link rel="stylesheet" href="kittens-3d.css">
 </head>
 
 <body>
@@ -354,6 +355,36 @@
                 <span>Tap for a Surprise 🎂</span>
             </button>
         </div>
+
+        <!-- ===== INTERACTIVE 3D KITTENS: NEO & HUSKY ===== -->
+        <section id="kittens-corner" class="kittens-corner-card" aria-label="Interactive 3D kittens Neo and Husky">
+            <div class="kittens-header">
+                <h2 class="kittens-title">Meet Neo &amp; Husky 🐾💕</h2>
+                <button type="button" id="kittens-sound-btn" class="kittens-sound-btn" aria-label="Toggle kitten meow sound">🔊 Sound On</button>
+            </div>
+            <p class="kittens-subtitle">Touch or rub gently on Neo &amp; Husky to pet them &amp; hear them meow!</p>
+
+            <div class="kittens-stage">
+                <canvas id="kittens-3d-canvas" class="kittens-3d-canvas" aria-label="3D animated ginger kitten Neo and white and brown kitten Husky"></canvas>
+            </div>
+
+            <div class="kittens-badges">
+                <button type="button" id="kitten-badge-neo" class="kitten-badge">
+                    <span class="kitten-avatar-dot kitten-avatar-dot--neo" aria-hidden="true">🧡</span>
+                    <span class="kitten-badge-text">
+                        <span class="kitten-name">Neo</span>
+                        <span id="kitten-mood-neo" class="kitten-mood">Ginger Kitty · Rub to pet</span>
+                    </span>
+                </button>
+                <button type="button" id="kitten-badge-husky" class="kitten-badge">
+                    <span class="kitten-avatar-dot kitten-avatar-dot--husky" aria-hidden="true">🤎</span>
+                    <span class="kitten-badge-text">
+                        <span class="kitten-name">Husky</span>
+                        <span id="kitten-mood-husky" class="kitten-mood">White &amp; Brown · Rub to pet</span>
+                    </span>
+                </button>
+            </div>
+        </section>
 
         <div class="pin-container">
 
@@ -842,6 +873,7 @@
 
     <script src="script.js"></script>
     <script src="birthday-celebration.js"></script>
+    <script src="kittens-3d.js"></script>
 </body>
 
 </html>
