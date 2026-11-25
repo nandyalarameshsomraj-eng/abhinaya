@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Annie+Use+Your+Telescope&display=swap');
-
 :root {
   --primary: #E60023; /* Pinterest Red */
   --primary-light: #ff5252;
@@ -18,12 +16,18 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Annie Use Your Telescope', cursive; /* Handwritten Global Font */
   color: var(--text-dark);
   overflow-x: hidden;
   background-color: var(--babypink);
   font-size: 1.3rem; /* Slightly larger for handwriting */
+  -webkit-tap-highlight-color: transparent;
 }
 
 #bg-overlay {
@@ -52,12 +56,13 @@ video {
 
 .screen {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
-  transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+  transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
   position: absolute;
   top: 0;
   left: 0;
@@ -154,8 +159,9 @@ input {
 
 #main {
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   justify-content: flex-start;
-  padding: 80px 20px;
+  padding: clamp(32px, 6vw, 72px) clamp(14px, 4vw, 28px);
 }
 
 .pin-container {
@@ -166,11 +172,16 @@ input {
   margin: 0 auto;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .pin-container { column-count: 2; }
 }
-@media (max-width: 600px) {
+@media (max-width: 620px) {
   .pin-container { column-count: 1; }
+  .glass-card { padding: 28px 20px; border-radius: 26px; }
+  .proposal-overlay-inner,
+  .ring-overlay-inner { padding: 34px 22px; border-radius: 28px; }
+  .ring-close-btn,
+  .certificate-close-btn { top: -12px; right: -10px; }
 }
 
 .pin {
@@ -633,13 +644,14 @@ input {
   pointer-events: none;
   animation: lilyFloatUp 12s linear forwards;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes lilyFloatUp {
-  0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+  0% { transform: translate3d(0, 110vh, 0) rotate(0deg); opacity: 0; }
   10% { opacity: 0.7; }
   90% { opacity: 0.7; }
-  100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+  100% { transform: translate3d(0, -20vh, 0) rotate(360deg); opacity: 0; }
 }
 
 .lily-pos-1 { top: -20px; left: -20px; transform: rotate(-15deg); }

@@ -4,8 +4,6 @@
    All selectors are scoped with `.bday-` to avoid colliding with site styles.
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-
 :root {
   --bday-blush: #FFF0F5;
   --bday-pink: #FFB6C1;
@@ -139,20 +137,22 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 28px 16px 48px;
+  padding: max(28px, env(safe-area-inset-top)) 16px max(48px, env(safe-area-inset-bottom));
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background:
     radial-gradient(circle at 18% 20%, rgba(255, 182, 193, 0.45) 0%, transparent 45%),
     radial-gradient(circle at 82% 18%, rgba(224, 191, 184, 0.42) 0%, transparent 42%),
     radial-gradient(circle at 50% 85%, rgba(255, 182, 193, 0.38) 0%, transparent 50%),
-    linear-gradient(155deg, rgba(255, 240, 245, 0.94) 0%, rgba(255, 228, 238, 0.93) 50%, rgba(250, 235, 238, 0.96) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+    linear-gradient(155deg, rgba(255, 240, 245, 0.96) 0%, rgba(255, 228, 238, 0.95) 50%, rgba(250, 235, 238, 0.97) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
   font-family: var(--bday-font-sans);
   color: var(--bday-berry);
   box-sizing: border-box;
@@ -457,10 +457,10 @@
   position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: 245px minmax(300px, 470px) 245px;
+  grid-template-columns: minmax(185px, 240px) minmax(300px, 460px) minmax(185px, 240px);
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: clamp(14px, 2vw, 24px);
   padding: 12px 0;
 }
 
@@ -768,7 +768,8 @@
    -------------------------------------------------------------------------- */
 .bday-polaroid {
   position: relative;
-  width: 240px;
+  width: 100%;
+  max-width: 240px;
   margin: 0;
   padding: 0;
   background: transparent;
@@ -776,29 +777,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: rotate(var(--tilt, -3deg));
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
-  animation: bdayPolaroidBob 4.8s ease-in-out infinite;
+  transform: rotate(var(--tilt, -3deg)) translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: bdayPolaroidBob 5.2s ease-in-out infinite;
   animation-delay: var(--bob-delay, 0s);
   cursor: pointer;
+  touch-action: manipulation;
+  contain: layout style;
 }
 
-.bday-polaroid:hover {
-  animation: none;
-  transform: rotate(0deg) scale(1.06) translateY(-4px);
-  z-index: 6;
+.bday-polaroid:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bday-polaroid:hover {
+    animation: none;
+    transform: rotate(0deg) scale(1.05) translateY(-4px);
+    z-index: 6;
+  }
 }
 
 .bday-camera-frame {
   position: relative;
   width: 100%;
   aspect-ratio: 371 / 246;
-  filter: drop-shadow(0 12px 22px rgba(89, 28, 50, 0.18));
-  transition: filter 0.35s ease;
-}
-
-.bday-polaroid:hover .bday-camera-frame {
-  filter: drop-shadow(0 18px 30px rgba(89, 28, 50, 0.25));
+  filter: drop-shadow(0 8px 14px rgba(89, 28, 50, 0.14));
 }
 
 .bday-photo-img {
@@ -811,6 +815,7 @@
   border-radius: 4px;
   z-index: 1;
   display: block;
+  background: #ffe6ef;
 }
 
 .bday-camera-overlay {
@@ -827,11 +832,11 @@
   margin: 8px 4px 0;
   padding: 4px 14px;
   border-radius: 999px;
-  background: rgba(255, 245, 249, 0.85);
+  background: rgba(255, 245, 249, 0.9);
   border: 1px solid rgba(255, 182, 193, 0.6);
-  box-shadow: 0 4px 12px rgba(89, 28, 50, 0.08);
+  box-shadow: 0 3px 10px rgba(89, 28, 50, 0.08);
   font-family: var(--bday-font-script);
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   font-weight: 700;
   color: var(--bday-berry);
   text-align: center;
@@ -839,8 +844,8 @@
 }
 
 @keyframes bdayPolaroidBob {
-  0%, 100% { transform: rotate(var(--tilt, -4deg)) translateY(0px); }
-  50% { transform: rotate(var(--tilt, -4deg)) translateY(-8px); }
+  0%, 100% { transform: rotate(var(--tilt, -3deg)) translate3d(0, 0, 0); }
+  50% { transform: rotate(var(--tilt, -3deg)) translate3d(0, -6px, 0); }
 }
 
 /* --------------------------------------------------------------------------
@@ -848,17 +853,15 @@
    -------------------------------------------------------------------------- */
 .bday-memory-gallery-section {
   width: 100%;
-  max-width: 1020px;
-  margin: 34px auto 12px;
-  padding: 28px 22px 34px;
-  background: rgba(255, 255, 255, 0.36);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 182, 193, 0.55);
+  max-width: 1040px;
+  margin: 32px auto 12px;
+  padding: 28px 20px 34px;
+  background: rgba(255, 245, 249, 0.78);
+  border: 1px solid rgba(255, 182, 193, 0.6);
   border-radius: 28px;
   box-shadow:
-    0 16px 40px rgba(89, 28, 50, 0.06),
-    inset 0 1px 1px rgba(255, 255, 255, 0.75);
+    0 14px 34px rgba(89, 28, 50, 0.07),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 
 .bday-gallery-header {
@@ -899,7 +902,15 @@
 }
 
 .bday-polaroid--gallery {
-  width: 240px;
+  width: 230px;
+  max-width: 230px;
+  animation: none;
+  filter: none;
+}
+
+.bday-polaroid--gallery .bday-camera-frame {
+  filter: none;
+  box-shadow: none;
 }
 
 /* Photo Lightbox */
@@ -1016,18 +1027,18 @@
 }
 
 /* --------------------------------------------------------------------------
-   8. RESPONSIVE ADJUSTMENTS (TABLET & MOBILE)
+   8. RESPONSIVE ADJUSTMENTS (LAPTOP, TABLET & MOBILE)
    -------------------------------------------------------------------------- */
 @media (max-width: 960px) {
   .bday-overlay {
     align-items: flex-start;
-    padding: 58px 14px 36px;
+    padding: max(72px, calc(env(safe-area-inset-top) + 64px)) 16px max(40px, env(safe-area-inset-bottom));
   }
 
   .bday-celebration-layout {
     grid-template-columns: 1fr;
-    max-width: 520px;
-    gap: 20px;
+    max-width: 560px;
+    gap: 22px;
   }
 
   .bday-cake-card {
@@ -1052,28 +1063,62 @@
 
   .bday-polaroid {
     width: calc(50% - 10px);
-    max-width: 240px;
+    max-width: 235px;
+    animation: none;
+  }
+
+  .bday-polaroid--gallery {
+    width: calc(33.333% - 16px);
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 680px) {
+  .bday-polaroid--gallery {
+    width: calc(50% - 10px);
+    max-width: 230px;
   }
 }
 
 @media (max-width: 480px) {
+  .bday-overlay {
+    padding: max(70px, calc(env(safe-area-inset-top) + 62px)) 12px max(34px, env(safe-area-inset-bottom));
+  }
+
+  .bday-music-toggle {
+    top: max(12px, env(safe-area-inset-top));
+    left: 12px;
+    height: 38px;
+    padding: 0 13px;
+    font-size: 0.8rem;
+  }
+
+  .bday-close-btn {
+    top: max(12px, env(safe-area-inset-top));
+    right: 12px;
+    width: 38px;
+    height: 38px;
+  }
+
   .bday-prompt-card {
-    padding: 36px 20px 32px;
-    min-height: 320px;
+    padding: 34px 18px 30px;
+    min-height: 310px;
   }
 
   .bday-memory-gallery-section {
-    padding: 22px 12px 26px;
-    margin-top: 24px;
+    padding: 20px 12px 26px;
+    margin-top: 22px;
+    border-radius: 22px;
   }
 
   .bday-memory-grid {
     gap: 20px 12px;
   }
 
-  .bday-polaroid {
-    width: min(86vw, 270px);
-    max-width: 270px;
+  .bday-polaroid,
+  .bday-polaroid--gallery {
+    width: min(84vw, 275px);
+    max-width: 275px;
   }
 
   .bday-polaroid-caption {

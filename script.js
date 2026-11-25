@@ -105,7 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTimer();
 
     // 3. Floating Heart Logic
+    const isCelebrationOpen = () => {
+        const bday = document.getElementById('bday-overlay');
+        return Boolean(bday && bday.classList.contains('is-open'));
+    };
+
     const createHeart = () => {
+        if (document.hidden || isCelebrationOpen()) return;
         const heart = document.createElement('div');
         heart.classList.add('heart');
         heart.innerHTML = ['❤️', '💖', '💕', '💗', '💓'][Math.floor(Math.random() * 5)];
@@ -116,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => heart.remove(), 10000);
     };
-    setInterval(createHeart, 500);
     
     // 3.5 Floating Floral Logic
     const lilySVGs = [
@@ -129,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const createFlower = (type) => {
+        if (document.hidden || isCelebrationOpen()) return;
         const flower = document.createElement('div');
         const svgs = type === 'sunflower' ? sunflowerSVGs : lilySVGs;
         flower.classList.add(type === 'sunflower' ? 'floating-sunflower' : 'floating-lily');
@@ -147,25 +153,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Adjust spawning based on screen size
-    const floralFrequency = window.innerWidth < 600 ? 6000 : 3000;
-    const heartFrequency = window.innerWidth < 600 ? 1500 : 700;
+    const getFrequencies = () => ({
+        floral: window.innerWidth < 600 ? 5500 : 3000,
+        heart: window.innerWidth < 600 ? 1600 : 750
+    });
 
+    let lastWidth = window.innerWidth;
+    let freqs = getFrequencies();
     let flowerInterval = setInterval(() => {
         createFlower(Math.random() > 0.4 ? 'lily' : 'sunflower');
-    }, floralFrequency);
+    }, freqs.floral);
 
-    let heartInterval = setInterval(createHeart, heartFrequency);
+    let heartInterval = setInterval(createHeart, freqs.heart);
 
-    // Re-adjust on resize
+    // Re-adjust only when viewport width changes (avoids mobile URL bar jitter)
     window.addEventListener('resize', () => {
+        if (window.innerWidth === lastWidth) return;
+        lastWidth = window.innerWidth;
         clearInterval(flowerInterval);
         clearInterval(heartInterval);
-        const newFloralFreq = window.innerWidth < 600 ? 6000 : 3000;
-        const newHeartFreq = window.innerWidth < 600 ? 1500 : 700;
+        freqs = getFrequencies();
         flowerInterval = setInterval(() => {
             createFlower(Math.random() > 0.4 ? 'lily' : 'sunflower');
-        }, newFloralFreq);
-        heartInterval = setInterval(createHeart, newHeartFreq);
+        }, freqs.floral);
+        heartInterval = setInterval(createHeart, freqs.heart);
     });
 
     // 4. Proposal Modal
@@ -614,22 +625,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const animateFireworks = () => {
-        if (!fireworkActive && particles.length === 0) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            return;
-        }
-        
-        requestAnimationFrame(animateFireworks);
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        particles.forEach((particle, index) => {
-            if (particle.alpha <= 0) {
-                particles.splice(index, 1);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const particle = particles[i];
+            if (particle.alpha <= 0.02) {
+                particles.splice(i, 1);
             } else {
                 particle.update();
                 particle.draw();
             }
-        });
+        }
+
+        if (particles.length > 0) {
+            requestAnimationFrame(animateFireworks);
+        } else {
+            fireworkActive = false;
+        }
     };
 });

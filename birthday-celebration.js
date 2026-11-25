@@ -529,7 +529,7 @@
     // -----------------------------------------------------------------------
     function resizeFlowerSplashCanvas() {
       if (!flowerSplashCanvas || !splashCtx) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const w = window.innerWidth;
       const h = window.innerHeight;
       flowerSplashCanvas.width = Math.floor(w * dpr);
@@ -629,7 +629,8 @@
         }
       }
 
-      const wave1Count = baseCount || 44;
+      const adaptiveDefault = vw < 600 ? 26 : vw < 960 ? 34 : 42;
+      const wave1Count = baseCount ? Math.min(baseCount, adaptiveDefault) : adaptiveDefault;
       // Wave 1: Immediate 360-degree splash from the tapped button
       spawnSplashWave(ox, oy, wave1Count, 'radial');
 
@@ -795,6 +796,21 @@
       lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox) closeLightbox();
       });
+
+      // Touch swipe navigation on mobile & tablet
+      let touchStartX = 0;
+      lightbox.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX;
+        }
+      }, { passive: true });
+      lightbox.addEventListener('touchend', (e) => {
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 45) {
+          openLightbox(dx < 0 ? activeLightboxIndex + 1 : activeLightboxIndex - 1);
+        }
+      }, { passive: true });
     }
 
     // -----------------------------------------------------------------------
@@ -802,7 +818,7 @@
     // -----------------------------------------------------------------------
     triggerBtn.addEventListener('click', () => {
       playSurpriseSong();
-      launchFlowerSplash(triggerBtn, 44);
+      launchFlowerSplash(triggerBtn);
       openCelebration();
     });
     if (musicToggleBtn) {
@@ -842,7 +858,10 @@
       }
     });
 
+    let lastResizeW = window.innerWidth;
     window.addEventListener('resize', () => {
+      if (window.innerWidth === lastResizeW) return;
+      lastResizeW = window.innerWidth;
       resizeConfettiCanvas();
       resizeFlowerSplashCanvas();
     });
