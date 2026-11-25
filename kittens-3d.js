@@ -265,6 +265,25 @@
         earTwitch: 0,
         kneadPhase: Math.random() * Math.PI * 2,
         tailPhase: Math.random() * Math.PI * 2,
+        // Autonomous real-kitten behavior state
+        animX: 0,
+        animY: 0,
+        animZ: 0,
+        animYaw: 0,
+        targetX: 0,
+        targetY: 0,
+        targetZ: 0,
+        targetYaw: 0,
+        hopY: 0,
+        crouchAmt: 0,
+        targetCrouch: 0,
+        earFlatten: 0,
+        targetEarFlatten: 0,
+        pawSwipeL: 0,
+        pawSwipeR: 0,
+        buttWiggle: 0,
+        socialSquint: 0,
+        socialMood: '',
         speechText: '',
         speechAlpha: 0,
         speechY: 0,
@@ -309,7 +328,116 @@
     const kittens = [neo, husky];
     const floatingParticles = [];
 
+    // Autonomous Real-Kitten Social Behavior Controller
+    const social = {
+      state: 'idle', // 'idle' | 'play_fight' | 'play_pounce' | 'cuddle_nuzzle' | 'tail_bat' | 'stretch_play'
+      timer: 1.8,    // First playful interaction starts shortly after unlocking
+      duration: 0,
+      phaseTime: 0,
+      actorIdx: 0,   // 0 = Neo, 1 = Husky
+      bapStep: 0,
+      pounced: false
+    };
+
+    function resetSocialTargets() {
+      kittens.forEach((k) => {
+        k.targetX = 0;
+        k.targetY = 0;
+        k.targetZ = 0;
+        k.targetYaw = 0;
+        k.targetCrouch = 0;
+        k.targetEarFlatten = 0;
+        k.socialSquint = 0;
+        k.socialMood = '';
+      });
+    }
+
+    function showKittenBubble(k, text, withMeowStyle) {
+      k.speechText = text;
+      k.speechAlpha = 1.0;
+      k.speechY = 0;
+      if (withMeowStyle && audioCtx && audioCtx.state === 'running' && !soundMuted) {
+        k.meowTimer = 0.24;
+        playKittenMeow(k.key, withMeowStyle);
+      }
+    }
+
+    function startNextSocialBehavior() {
+      const r = Math.random();
+      social.actorIdx = Math.random() < 0.5 ? 0 : 1;
+      social.phaseTime = 0;
+      social.bapStep = 0;
+      social.pounced = false;
+
+      if (r < 0.34) {
+        // Play-fighting / cute bap-bap wrestling!
+        social.state = 'play_fight';
+        social.duration = 3.4;
+        neo.targetX = 82;   // Moves toward center (-136 + 82 = -54)
+        husky.targetX = -82; // Moves toward center (+136 - 82 = +54)
+        neo.targetYaw = 0.85;
+        husky.targetYaw = -0.85;
+        neo.targetEarFlatten = 0.85;
+        husky.targetEarFlatten = 0.85;
+        neo.socialMood = 'Play-fighting Husky! 🐾';
+        husky.socialMood = 'Bap-bap-bapping Neo! 🐾';
+        showKittenBubble(kittens[social.actorIdx], 'rawr! 🐾', 'chirp');
+      } else if (r < 0.60) {
+        // Stalk, butt-wiggle & playful pounce!
+        social.state = 'play_pounce';
+        social.duration = 3.2;
+        const attacker = kittens[social.actorIdx];
+        const defender = kittens[1 - social.actorIdx];
+        const dir = social.actorIdx === 0 ? 1 : -1;
+        attacker.targetX = dir * 32;
+        attacker.targetYaw = dir * 0.75;
+        attacker.targetCrouch = 1.0;
+        defender.targetYaw = -dir * 0.65;
+        attacker.socialMood = `Stalking ${defender.name}... 👀`;
+        defender.socialMood = 'Watching closely! ✨';
+      } else if (r < 0.80) {
+        // Cozy cuddle & nuzzle together
+        social.state = 'cuddle_nuzzle';
+        social.duration = 3.6;
+        neo.targetX = 92;
+        husky.targetX = -92;
+        neo.targetYaw = 0.52;
+        husky.targetYaw = -0.52;
+        neo.socialSquint = 1.0;
+        husky.socialSquint = 1.0;
+        neo.socialMood = 'Cuddling Husky 💕';
+        husky.socialMood = 'Nuzzling Neo 🤎';
+        showKittenBubble(neo, 'mrr~ 💕', 'trill');
+      } else if (r < 0.92) {
+        // Tail batting game
+        social.state = 'tail_bat';
+        social.duration = 3.0;
+        const batter = kittens[social.actorIdx];
+        const waver = kittens[1 - social.actorIdx];
+        const dir = social.actorIdx === 0 ? 1 : -1;
+        batter.targetX = dir * 74;
+        batter.targetYaw = dir * 0.8;
+        waver.targetX = -dir * 40;
+        waver.targetYaw = -dir * 1.15; // Turns slightly so tail waves toward batter
+        batter.socialMood = `Batting ${waver.name}'s tail! 🐾`;
+        waver.socialMood = 'Teasing with tail~ ✨';
+      } else {
+        // Cozy stretch & play pose
+        social.state = 'stretch_play';
+        social.duration = 2.6;
+        const k = kittens[social.actorIdx];
+        k.targetCrouch = 0.78;
+        k.socialSquint = 0.6;
+        k.socialMood = 'Big kitten stretch~ ✨';
+      }
+    }
+
     function triggerKittenMeow(k, style, px, py) {
+      if (social.state !== 'idle') {
+        social.state = 'idle';
+        social.timer = 4.5 + Math.random() * 3.0;
+        resetSocialTargets();
+      }
       const nowMs = performance.now();
       if (nowMs - k.lastMeowAt < 650) return;
       k.lastMeowAt = nowMs;
@@ -347,6 +475,11 @@
     }
 
     function applyPetRub(k, moveDist, px, py, dxNorm, dyNorm) {
+      if (social.state !== 'idle') {
+        social.state = 'idle';
+        social.timer = 4.5 + Math.random() * 3.0;
+        resetSocialTargets();
+      }
       k.petLevel = Math.min(1, k.petLevel + 0.16 + moveDist * 0.008);
       k.leanX = Math.max(-1, Math.min(1, dxNorm));
       k.leanY = Math.max(-1, Math.min(1, dyNorm));
@@ -511,25 +644,29 @@
       const breath = Math.sin(elapsed * 2.5 + (isGinger ? 0 : 1.1));
       const bodyBounce = breath * 1.4;
 
-      const yaw = k.baseYaw + k.lookYaw * 0.32 + k.leanX * 0.16;
+      const curX = k.wx + k.animX;
+      const curY = k.wy + k.animY + k.hopY + k.crouchAmt * 7;
+      const curZ = k.wz + k.animZ;
+      const yaw = k.baseYaw + k.animYaw + k.lookYaw * 0.32 + k.leanX * 0.16;
       const cosK = Math.cos(yaw);
       const sinK = Math.sin(yaw);
 
       // Local-to-world helper around kitten anchor
       const toWorld = (lx, ly, lz) => ({
-        x: k.wx + (lx * cosK - lz * sinK) + purrVib,
-        y: k.wy + ly + bodyBounce,
-        z: k.wz + (lx * sinK + lz * cosK)
+        x: curX + (lx * cosK - lz * sinK) + purrVib,
+        y: curY + ly + bodyBounce,
+        z: curZ + (lx * sinK + lz * cosK)
       });
 
-      // Contact shadow on cushion
-      const sh = project(k.wx, 45, k.wz + 4);
-      const shG = ctx.createRadialGradient(sh.x, sh.y, 8, sh.x, sh.y, 76 * sh.s);
-      shG.addColorStop(0, 'rgba(130, 62, 84, 0.25)');
+      // Contact shadow on cushion (shrinks slightly when hopping in the air!)
+      const shadowScale = Math.max(0.6, 1 + k.hopY * 0.012);
+      const sh = project(curX, 45, curZ + 4);
+      const shG = ctx.createRadialGradient(sh.x, sh.y, 8, sh.x, sh.y, 76 * sh.s * shadowScale);
+      shG.addColorStop(0, `rgba(130, 62, 84, ${0.25 * shadowScale})`);
       shG.addColorStop(1, 'rgba(130, 62, 84, 0)');
       ctx.save();
       ctx.translate(sh.x, sh.y);
-      ctx.scale(1.15, 0.36);
+      ctx.scale(1.15 * shadowScale, 0.36 * shadowScale);
       ctx.beginPath();
       ctx.arc(0, 0, 72 * sh.s, 0, Math.PI * 2);
       ctx.fillStyle = shG;
@@ -573,11 +710,12 @@
         });
       }
 
-      // 2. Plump Haunches & Torso (depth-sorted 3D spheres)
-      const haunchL = toWorld(-26, 14, -14);
-      const haunchR = toWorld(26, 14, -14);
-      const torsoBack = toWorld(0, 6, -18);
-      const torsoChest = toWorld(0, 4 + breath * 0.6, 8);
+      // 2. Plump Haunches & Torso (depth-sorted 3D spheres with pounce butt-wiggle!)
+      const wig = k.buttWiggle;
+      const haunchL = toWorld(-26 + wig, 14 - k.crouchAmt * 5, -14);
+      const haunchR = toWorld(26 + wig, 14 - k.crouchAmt * 5, -14);
+      const torsoBack = toWorld(wig * 0.7, 6 - k.crouchAmt * 3, -18);
+      const torsoChest = toWorld(0, 4 + breath * 0.6 + k.crouchAmt * 5, 8);
 
       [
         { w: haunchL, rx: 28, ry: 26, brown: !isGinger },
@@ -625,17 +763,18 @@
         });
       });
 
-      // 3. Front Legs & Kneading Paws ("Making Biscuits" when petted!)
+      // 3. Front Legs & Kneading / Play-Fighting Bapping Paws
       const kneadAmt = k.petLevel * 4.5;
-      const pawL_lift = Math.max(0, Math.sin(k.kneadPhase)) * kneadAmt;
-      const pawR_lift = Math.max(0, Math.sin(k.kneadPhase + Math.PI)) * kneadAmt;
+      const pawL_lift = Math.max(0, Math.sin(k.kneadPhase)) * kneadAmt + k.pawSwipeL * 24;
+      const pawR_lift = Math.max(0, Math.sin(k.kneadPhase + Math.PI)) * kneadAmt + k.pawSwipeR * 24;
 
       [
-        { lx: -17, lift: pawL_lift },
-        { lx: 17, lift: pawR_lift }
-      ].forEach(({ lx, lift }) => {
-        const legW = toWorld(lx, 18 - lift * 0.6, 26);
-        const pawW = toWorld(lx, 30 - lift, 34);
+        { lx: -17, lift: pawL_lift, swipe: k.pawSwipeL },
+        { lx: 17, lift: pawR_lift, swipe: k.pawSwipeR }
+      ].forEach(({ lx, lift, swipe }) => {
+        const reachZ = swipe * 26 + k.crouchAmt * 8;
+        const legW = toWorld(lx, 18 - lift * 0.6, 26 + reachZ * 0.45);
+        const pawW = toWorld(lx, 30 - lift, 34 + reachZ);
         const legP = project(legW.x, legW.y, legW.z);
         const pawP = project(pawW.x, pawW.y, pawW.z);
 
@@ -736,9 +875,9 @@
       const headCenterProj = project(headPivot.x, headPivot.y, headPivot.z);
       k.hitCenter = { x: headCenterProj.x, y: headCenterProj.y + 18, rx: 95, ry: 95 };
 
-      // 5a. Plush 3D Ears (outer fur + pink inner ear)
+      // 5a. Plush 3D Ears (outer fur + pink inner ear; flatten slightly during play-fight!)
       [-1, 1].forEach((side) => {
-        const earDroop = k.petLevel * 5 + (side === 1 ? k.earTwitch * 4 : 0);
+        const earDroop = k.petLevel * 5 + k.earFlatten * 11 + (side === 1 ? k.earTwitch * 4 : 0);
         const earBaseA = headTransform(side * 12, -26, 2);
         const earBaseB = headTransform(side * 34, -12 + earDroop * 0.3, -4);
         const earTip = headTransform(side * 33, -52 + earDroop, -2);
@@ -1135,11 +1274,127 @@
       camYaw += (targetCamYaw - camYaw) * camDamp;
       camPitch += (targetCamPitch - camPitch) * camDamp;
 
+      // Update autonomous real-kitten social behavior (paused while petting)
+      const isBeingPetted = kittens.some((k) => k.petLevel > 0.18);
+      if (!isBeingPetted) {
+        if (social.state === 'idle') {
+          social.timer -= dt;
+          if (social.timer <= 0) {
+            startNextSocialBehavior();
+          }
+        } else {
+          social.phaseTime += dt;
+          const pt = social.phaseTime;
+
+          if (social.state === 'play_fight') {
+            // Alternating rapid soft-paw baps between Neo & Husky!
+            const bapPhase = Math.max(0, pt - 0.45);
+            const sw = Math.sin(bapPhase * 15);
+            neo.pawSwipeL = Math.max(0, sw) * 0.9;
+            neo.pawSwipeR = Math.max(0, -sw) * 0.9;
+            husky.pawSwipeR = Math.max(0, Math.sin(bapPhase * 15 + 1.4)) * 0.9;
+            husky.pawSwipeL = Math.max(0, -Math.sin(bapPhase * 15 + 1.4)) * 0.9;
+            neo.hopY = -Math.abs(Math.sin(bapPhase * 6.5)) * 7;
+            husky.hopY = -Math.abs(Math.sin(bapPhase * 6.5 + 1.1)) * 7;
+
+            if (pt > 0.6 && social.bapStep === 0) {
+              social.bapStep = 1;
+              showKittenBubble(husky, 'bap bap! 🐾', 'chirp');
+              floatingParticles.push({ x: CX, y: CY - 38, vx: 0, vy: -26, symbol: '🐾', size: 16, life: 0, maxLife: 0.9 });
+            } else if (pt > 1.7 && social.bapStep === 1) {
+              social.bapStep = 2;
+              showKittenBubble(neo, 'mew! 💥', 'trill');
+              floatingParticles.push({ x: CX + 10, y: CY - 44, vx: 8, vy: -30, symbol: '✨', size: 15, life: 0, maxLife: 0.9 });
+            }
+          } else if (social.state === 'play_pounce') {
+            const attacker = kittens[social.actorIdx];
+            const defender = kittens[1 - social.actorIdx];
+            const dir = social.actorIdx === 0 ? 1 : -1;
+
+            if (pt < 1.25) {
+              // Cute pre-pounce butt wiggle!
+              attacker.buttWiggle = Math.sin(pt * 22) * 3.8 * Math.min(1, pt * 2);
+            } else if (pt < 2.05) {
+              const pProg = (pt - 1.25) / 0.8;
+              attacker.buttWiggle = 0;
+              attacker.targetCrouch = 0;
+              attacker.targetX = dir * 92;
+              attacker.hopY = -Math.sin(pProg * Math.PI) * 34;
+              attacker.pawSwipeL = Math.sin(pProg * Math.PI) * 0.8;
+              attacker.pawSwipeR = Math.sin(pProg * Math.PI) * 0.8;
+
+              if (!social.pounced && pProg > 0.45) {
+                social.pounced = true;
+                defender.targetX = dir * 18; // Playful startle hop back
+                defender.hopY = -18;
+                showKittenBubble(attacker, 'gotcha! ✨', 'chirp');
+                showKittenBubble(defender, 'eep! 🐾', 'chirp');
+              }
+              if (pProg > 0.55) {
+                defender.hopY = -Math.sin(((pProg - 0.55) / 0.45) * Math.PI) * 16;
+              }
+            } else {
+              attacker.hopY = 0;
+              defender.hopY = 0;
+            }
+          } else if (social.state === 'cuddle_nuzzle') {
+            if (Math.random() < 0.08) {
+              floatingParticles.push({
+                x: CX + (Math.random() - 0.5) * 26,
+                y: CY - 46,
+                vx: (Math.random() - 0.5) * 14,
+                vy: -28,
+                symbol: Math.random() > 0.4 ? '💕' : '💖',
+                size: 14,
+                life: 0,
+                maxLife: 1.1
+              });
+            }
+          } else if (social.state === 'tail_bat') {
+            const batter = kittens[social.actorIdx];
+            const sw = Math.max(0, Math.sin(pt * 9.5));
+            batter.pawSwipeR = sw * 0.85;
+            if (pt > 0.9 && social.bapStep === 0) {
+              social.bapStep = 1;
+              showKittenBubble(batter, 'bap! 🐾', 'chirp');
+            }
+          }
+
+          if (pt >= social.duration) {
+            social.state = 'idle';
+            social.timer = 3.8 + Math.random() * 4.2;
+            resetSocialTargets();
+            kittens.forEach((k) => {
+              k.hopY = 0;
+              k.pawSwipeL = 0;
+              k.pawSwipeR = 0;
+              k.buttWiggle = 0;
+            });
+          }
+        }
+      }
+
       let maxPetLevel = 0;
       kittens.forEach((k) => {
-        // Head follows cursor smoothly
-        const targetLookY = Math.max(-0.5, Math.min(0.5, (pointerNormX * 340 - k.wx) / 260));
-        const targetLookP = Math.max(-0.3, Math.min(0.3, pointerNormY * 0.3));
+        // Smoothly damp autonomous motion targets
+        const posDamp = 1 - Math.exp(-5.8 * dt);
+        k.animX += (k.targetX - k.animX) * posDamp;
+        k.animY += (k.targetY - k.animY) * posDamp;
+        k.animZ += (k.targetZ - k.animZ) * posDamp;
+        k.animYaw += (k.targetYaw - k.animYaw) * posDamp;
+        k.crouchAmt += (k.targetCrouch - k.crouchAmt) * (1 - Math.exp(-7.5 * dt));
+        k.earFlatten += (k.targetEarFlatten - k.earFlatten) * (1 - Math.exp(-8 * dt));
+        if (social.state === 'idle' || isBeingPetted) {
+          k.hopY *= Math.exp(-10 * dt);
+          k.pawSwipeL *= Math.exp(-10 * dt);
+          k.pawSwipeR *= Math.exp(-10 * dt);
+          k.buttWiggle *= Math.exp(-10 * dt);
+        }
+
+        // Head follows cursor smoothly (blended down during play-fight so they look at each other!)
+        const lookScale = social.state === 'play_fight' || social.state === 'cuddle_nuzzle' ? 0.2 : 1;
+        const targetLookY = Math.max(-0.5, Math.min(0.5, (pointerNormX * 340 - (k.wx + k.animX)) / 260)) * lookScale;
+        const targetLookP = Math.max(-0.3, Math.min(0.3, pointerNormY * 0.3)) * lookScale;
         const lookDamp = 1 - Math.exp(-7 * dt);
         k.lookYaw += (targetLookY - k.lookYaw) * lookDamp;
         k.lookPitch += (targetLookP - k.lookPitch) * lookDamp;
@@ -1149,13 +1404,16 @@
         k.petLevel *= petDecay;
         k.leanX *= Math.exp(-5 * dt);
         k.leanY *= Math.exp(-5 * dt);
-        if (k.petLevel < 0.04 && k.moodEl && k.moodEl.textContent !== k.idleMood && k.speechAlpha < 0.05) {
-          k.moodEl.textContent = k.idleMood;
+        if (k.moodEl && k.petLevel < 0.08 && k.speechAlpha < 0.05) {
+          const desiredMood = k.socialMood || k.idleMood;
+          if (k.moodEl.textContent !== desiredMood) {
+            k.moodEl.textContent = desiredMood;
+          }
         }
         maxPetLevel = Math.max(maxPetLevel, k.petLevel);
 
         // Happy squint & paw kneading
-        const squintTarget = k.petLevel > 0.25 ? Math.min(1, k.petLevel * 1.2) : 0;
+        const squintTarget = Math.max(k.socialSquint, k.petLevel > 0.25 ? Math.min(1, k.petLevel * 1.2) : 0);
         k.happySquint += (squintTarget - k.happySquint) * (1 - Math.exp(-8 * dt));
         k.kneadPhase += dt * (2.2 + k.petLevel * 6.5);
 
@@ -1203,9 +1461,9 @@
       ctx.clearRect(0, 0, W, H);
       drawCushionStage();
 
-      // Depth-sort kittens left/right based on camYaw
+      // Depth-sort kittens based on animated 3D world position
       const ordered = kittens
-        .map((k) => ({ k, z: project(k.wx, k.wy, k.wz).z }))
+        .map((k) => ({ k, z: project(k.wx + k.animX, k.wy + k.animY, k.wz + k.animZ).z }))
         .sort((a, b) => a.z - b.z);
       for (let i = 0; i < ordered.length; i++) {
         drawKitten(ordered[i].k, elapsed);
