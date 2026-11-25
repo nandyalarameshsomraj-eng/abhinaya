@@ -865,120 +865,221 @@
     <script src="birthday-celebration.js"></script>
     <script src="kittens-3d.js"></script>
 
-    <!-- ✿ Cat-paw tap effect: appears on every click/touch anywhere, every device ✿ -->
+    <!-- ✿ Cat-paw effect: tap-stamp + live following paw on EVERY device ✿ -->
     <script>
     (function () {
       'use strict';
 
-      /* Inline SVG for the tap-paw stamp */
-      const PAW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-hidden="true">
-        <g transform="translate(0.7 1.4) scale(0.92) rotate(-22 15 16)">
-          <path d="M20.5 28.5 Q22.5 23.5 24.2 19.5 C26.8 18.2 27 12.2 24.2 10.6
-                   C22.6 9.8 21 10.8 20.4 11.8 C21.2 9.4 20.6 5 17.8 4.8
-                   C15.6 4.7 14.6 6.8 14.6 8.6 C14.2 6.6 13 4.4 10.8 4.8
-                   C8 5.3 7.6 9.6 8.8 11.8 C7.6 10.8 5.4 10.8 4.2 12.8
-                   C2.8 15.2 4.2 19.2 6.8 20.4 Q8.2 24.2 10.5 28.5
-                   Q15.5 30.2 20.5 28.5 Z"
-                fill="#ffeede" stroke="#5c3828" stroke-width="1.75" stroke-linejoin="round"/>
-          <path d="M10.4 24.5 Q15.5 26 20.6 24.5 L20.1 27.6 Q15.5 29.2 10.9 27.6 Z"
-                fill="#ffc299" opacity="0.9"/>
-          <ellipse cx="6.8"  cy="15.2" rx="2.0" ry="2.5" transform="rotate(-22 6.8 15.2)"  fill="#ff477e"/>
-          <ellipse cx="11.2" cy="9.0"  rx="2.1" ry="2.7" transform="rotate(-7 11.2 9.0)"   fill="#ff477e"/>
-          <ellipse cx="17.6" cy="8.8"  rx="2.1" ry="2.7" transform="rotate(8 17.6 8.8)"    fill="#ff477e"/>
-          <ellipse cx="22.9" cy="14.4" rx="2.0" ry="2.5" transform="rotate(20 22.9 14.4)"  fill="#ff477e"/>
-          <path d="M15.2 14.2 C12.4 14.2 10.3 16.5 10.6 19.2
-                   C10.8 21.4 12.7 22.4 15.2 21.7
-                   C17.7 22.4 19.6 21.4 19.8 19.2
-                   C20.1 16.5 18 14.2 15.2 14.2 Z" fill="#e63973"/>
-          <circle cx="13.9" cy="16.4" r="0.95" fill="#ffffff" opacity="0.85"/>
-        </g>
-      </svg>`;
+      /* ── SVG shapes (reused for both stamp and live cursor) ── */
+      function makePawSVG(opts) {
+        // opts: { size, fill, stroke, padFill, theme }
+        const s = opts.size || 52;
+        const f = opts.fill   || '#ffeede';
+        const k = opts.stroke || '#5c3828';
+        const p = opts.pad    || '#ffc299';
+        const b = opts.blob   || '#e63973';
+        const t = opts.toe    || '#ff477e';
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 32 32" aria-hidden="true">
+          <g transform="translate(0.7 1.4) scale(0.92) rotate(-22 15 16)">
+            <path d="M20.5 28.5 Q22.5 23.5 24.2 19.5 C26.8 18.2 27 12.2 24.2 10.6
+                     C22.6 9.8 21 10.8 20.4 11.8 C21.2 9.4 20.6 5 17.8 4.8
+                     C15.6 4.7 14.6 6.8 14.6 8.6 C14.2 6.6 13 4.4 10.8 4.8
+                     C8 5.3 7.6 9.6 8.8 11.8 C7.6 10.8 5.4 10.8 4.2 12.8
+                     C2.8 15.2 4.2 19.2 6.8 20.4 Q8.2 24.2 10.5 28.5
+                     Q15.5 30.2 20.5 28.5 Z"
+                  fill="${f}" stroke="${k}" stroke-width="1.75" stroke-linejoin="round"/>
+            <path d="M10.4 24.5 Q15.5 26 20.6 24.5 L20.1 27.6 Q15.5 29.2 10.9 27.6 Z"
+                  fill="${p}" opacity="0.9"/>
+            <ellipse cx="6.8"  cy="15.2" rx="2.0" ry="2.5" transform="rotate(-22 6.8 15.2)"  fill="${t}"/>
+            <ellipse cx="11.2" cy="9.0"  rx="2.1" ry="2.7" transform="rotate(-7 11.2 9.0)"   fill="${t}"/>
+            <ellipse cx="17.6" cy="8.8"  rx="2.1" ry="2.7" transform="rotate(8 17.6 8.8)"    fill="${t}"/>
+            <ellipse cx="22.9" cy="14.4" rx="2.0" ry="2.5" transform="rotate(20 22.9 14.4)"  fill="${t}"/>
+            <path d="M15.2 14.2 C12.4 14.2 10.3 16.5 10.6 19.2
+                     C10.8 21.4 12.7 22.4 15.2 21.7
+                     C17.7 22.4 19.6 21.4 19.8 19.2
+                     C20.1 16.5 18 14.2 15.2 14.2 Z" fill="${b}"/>
+            <circle cx="13.9" cy="16.4" r="0.95" fill="#ffffff" opacity="0.85"/>
+          </g>
+        </svg>`;
+      }
 
-      /* ── Inject styles once ── */
+      /* ── Inject all styles once ── */
       const styleEl = document.createElement('style');
       styleEl.textContent = `
+        /* ── Tap-stamp: bursts at tap/click point then fades ── */
         .tap-paw-stamp {
           position: fixed;
-          /* size scales with viewport: 11vmin on mobile, capped at 72px on desktop */
-          width:  clamp(44px, 11vmin, 72px);
-          height: clamp(44px, 11vmin, 72px);
+          width:  clamp(48px, 13vmin, 76px);
+          height: clamp(48px, 13vmin, 76px);
           pointer-events: none;
-          z-index: 2147483647;        /* max z-index — above everything */
-          transform: translate(-50%, -50%) scale(0.3) rotate(-18deg);
+          z-index: 2147483647;
+          transform: translate(-50%, -50%) scale(0.25) rotate(-20deg);
           opacity: 0;
           will-change: transform, opacity;
-          animation: tapPawPop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-          filter: drop-shadow(0 3px 8px rgba(89,28,50,0.32));
-          /* Keep it inside the visible viewport even at edges */
-          contain: layout style;
+          animation: tapPawPop 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          filter: drop-shadow(0 3px 10px rgba(89,28,50,0.35));
         }
-        .tap-paw-stamp svg {
-          width: 100%;
-          height: 100%;
-          display: block;
-        }
+        .tap-paw-stamp svg { width: 100%; height: 100%; display: block; }
+
         @keyframes tapPawPop {
-          0%   { transform: translate(-50%,-50%) scale(0.25) rotate(-20deg); opacity: 0;    }
-          28%  { transform: translate(-50%,-50%) scale(1.22)  rotate(7deg);  opacity: 1;    }
-          55%  { transform: translate(-50%,-50%) scale(0.96)  rotate(-4deg); opacity: 0.92; }
-          78%  { transform: translate(-50%,-50%) scale(1.05)  rotate(2deg);  opacity: 0.75; }
-          100% { transform: translate(-50%,-50%) scale(1.08)  rotate(3deg);  opacity: 0;    }
+          0%   { transform: translate(-50%,-50%) scale(0.2)  rotate(-22deg); opacity: 0;    }
+          25%  { transform: translate(-50%,-50%) scale(1.25) rotate(8deg);   opacity: 1;    }
+          55%  { transform: translate(-50%,-50%) scale(0.94) rotate(-5deg);  opacity: 0.9;  }
+          78%  { transform: translate(-50%,-50%) scale(1.06) rotate(2deg);   opacity: 0.65; }
+          100% { transform: translate(-50%,-50%) scale(1.1)  rotate(3deg);   opacity: 0;    }
         }
-        /* Respect user reduced-motion preference */
+
+        /* ── Live paw: follows finger/mouse silently ── */
+        #live-paw-cursor {
+          position: fixed;
+          width:  clamp(40px, 10vmin, 60px);
+          height: clamp(40px, 10vmin, 60px);
+          pointer-events: none;
+          z-index: 2147483646;
+          transform: translate(-8px, -6px);   /* hotspot offset matches top-left of paw */
+          opacity: 0;
+          will-change: left, top, opacity;
+          transition: opacity 0.18s ease;
+          filter: drop-shadow(0 2px 6px rgba(89,28,50,0.22));
+        }
+        #live-paw-cursor svg { width: 100%; height: 100%; display: block; }
+        #live-paw-cursor.visible  { opacity: 1; }
+        #live-paw-cursor.pressing { opacity: 0.7; transform: translate(-8px,-6px) scale(0.88); }
+
+        /* Hide live cursor on true-mouse devices (we have the CSS cursor there) */
+        @media (hover: hover) and (pointer: fine) {
+          #live-paw-cursor { display: none !important; }
+        }
+
+        /* Reduced motion: simple fade only */
         @media (prefers-reduced-motion: reduce) {
           .tap-paw-stamp {
             animation: tapPawFade 0.4s ease forwards;
           }
           @keyframes tapPawFade {
-            0%   { transform: translate(-50%,-50%) scale(0.8); opacity: 0.9; }
-            100% { transform: translate(-50%,-50%) scale(1.1); opacity: 0;   }
+            0%   { transform: translate(-50%,-50%) scale(0.85); opacity: 0.9; }
+            100% { transform: translate(-50%,-50%) scale(1.08); opacity: 0;   }
           }
         }
       `;
       document.head.appendChild(styleEl);
 
-      /* ── Spawn one paw at viewport (x, y) ── */
+      /* ── Build live-cursor element (touch/coarse devices) ── */
+      const liveCursor = document.createElement('div');
+      liveCursor.id = 'live-paw-cursor';
+      liveCursor.innerHTML = makePawSVG({ fill: '#fff8f2', stroke: '#5c3828', pad: '#ffd8b8', blob: '#ff7aa2', toe: '#ff8fab' });
+      document.body.appendChild(liveCursor);
+
+      /* Smoothly position live cursor via RAF batching */
+      let lcX = -200, lcY = -200, lcRaf = 0;
+      function moveLiveCursor(x, y) {
+        lcX = x; lcY = y;
+        if (lcRaf) return;
+        lcRaf = requestAnimationFrame(() => {
+          lcRaf = 0;
+          liveCursor.style.left = lcX + 'px';
+          liveCursor.style.top  = lcY + 'px';
+        });
+      }
+
+      /* ── Spawn tap-stamp at viewport (x, y) ── */
       function spawnPaw(x, y) {
         const el = document.createElement('div');
         el.className = 'tap-paw-stamp';
-        el.innerHTML = PAW_SVG;
-        /* Clamp position so paw never goes off-screen */
-        const half = 36;
+        el.innerHTML = makePawSVG({ fill: '#ffeede', stroke: '#5c3828', pad: '#ffc299', blob: '#e63973', toe: '#ff477e' });
+        const half = 38;
         el.style.left = Math.max(half, Math.min(window.innerWidth  - half, x)) + 'px';
         el.style.top  = Math.max(half, Math.min(window.innerHeight - half, y)) + 'px';
         document.body.appendChild(el);
-        /* Remove after animation; fallback timer in case animationend misfires */
         const cleanup = () => { if (el.parentNode) el.remove(); };
         el.addEventListener('animationend', cleanup, { once: true });
-        setTimeout(cleanup, 800);
+        setTimeout(cleanup, 900);
       }
 
-      /* ── Event wiring ──
-         Strategy: use pointerdown which fires once per interaction
-         on mouse, touch, stylus, and pen — covering every device type.
-         We track the last touch so click (which also fires on touch) is skipped
-         to avoid double-paws on hybrid / touch devices.
-      */
-      let lastTouchTime = 0;
+      /* ══════════════════════════════════════════════════════
+         EVENT WIRING  —  window + capture so NOTHING blocks us
+         ══════════════════════════════════════════════════════ */
 
-      document.addEventListener('pointerdown', (e) => {
-        /* Skip if it's a touch — handled by touchstart for multi-finger support */
-        if (e.pointerType === 'touch') return;
-        spawnPaw(e.clientX, e.clientY);
+      let lastTouchTime = 0;
+      let touchActive   = false;
+
+      /* ── MOUSE (desktop / laptop) ── */
+      window.addEventListener('mousemove', (e) => {
+        moveLiveCursor(e.clientX, e.clientY);
       }, { passive: true, capture: true });
 
-      /* Touch: one paw per simultaneous finger */
-      document.addEventListener('touchstart', (e) => {
+      window.addEventListener('mousedown', (e) => {
+        spawnPaw(e.clientX, e.clientY);
+        liveCursor.classList.add('pressing');
+      }, { passive: true, capture: true });
+
+      window.addEventListener('mouseup', () => {
+        liveCursor.classList.remove('pressing');
+      }, { passive: true, capture: true });
+
+      /* ── TOUCH (phone / tablet) ── */
+      window.addEventListener('touchstart', (e) => {
+        touchActive   = true;
         lastTouchTime = Date.now();
+        liveCursor.classList.add('visible', 'pressing');
         for (const t of e.changedTouches) {
+          moveLiveCursor(t.clientX, t.clientY);
           spawnPaw(t.clientX, t.clientY);
         }
       }, { passive: true, capture: true });
 
-      /* Pen / stylus fallback (some tablets fire only click) */
-      document.addEventListener('click', (e) => {
-        if (Date.now() - lastTouchTime < 600) return; /* skip synthesised tap-click */
-        spawnPaw(e.clientX, e.clientY);
+      window.addEventListener('touchmove', (e) => {
+        /* Follow the first active finger */
+        if (e.touches.length > 0) {
+          moveLiveCursor(e.touches[0].clientX, e.touches[0].clientY);
+          liveCursor.classList.add('visible');
+          liveCursor.classList.remove('pressing');
+        }
+      }, { passive: true, capture: true });
+
+      window.addEventListener('touchend', (e) => {
+        if (e.touches.length === 0) {
+          touchActive = false;
+          liveCursor.classList.remove('pressing');
+          /* Fade out live cursor shortly after lifting finger */
+          setTimeout(() => {
+            if (!touchActive) liveCursor.classList.remove('visible');
+          }, 600);
+        }
+      }, { passive: true, capture: true });
+
+      window.addEventListener('touchcancel', () => {
+        touchActive = false;
+        liveCursor.classList.remove('visible', 'pressing');
+      }, { passive: true, capture: true });
+
+      /* ── STYLUS / PEN (Surface, iPad Pro Pencil, Wacom) ── */
+      window.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'pen') {
+          spawnPaw(e.clientX, e.clientY);
+          moveLiveCursor(e.clientX, e.clientY);
+          liveCursor.classList.add('visible', 'pressing');
+        }
+      }, { passive: true, capture: true });
+
+      window.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'pen') {
+          moveLiveCursor(e.clientX, e.clientY);
+          liveCursor.classList.add('visible');
+          liveCursor.classList.remove('pressing');
+        }
+      }, { passive: true, capture: true });
+
+      window.addEventListener('pointerup', (e) => {
+        if (e.pointerType === 'pen') liveCursor.classList.remove('pressing');
+      }, { passive: true, capture: true });
+
+      /* ── CLICK fallback: Samsung Internet, old WebView, Kindle Silk ── */
+      window.addEventListener('click', (e) => {
+        if (Date.now() - lastTouchTime > 500) {
+          /* Came from a real mouse click not already handled above */
+          spawnPaw(e.clientX, e.clientY);
+        }
       }, { passive: true, capture: true });
 
     })();
