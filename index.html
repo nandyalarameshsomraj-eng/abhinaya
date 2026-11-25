@@ -864,6 +864,81 @@
     <script src="script.js"></script>
     <script src="birthday-celebration.js"></script>
     <script src="kittens-3d.js"></script>
+
+    <!-- ✿ Cat-paw tap effect: appears on every click/touch anywhere ✿ -->
+    <script>
+    (function () {
+      'use strict';
+
+      /* Inline SVG for the tap-paw stamp (pressed / filled version) */
+      const PAW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 32 32">
+        <g transform="translate(0.7 1.4) scale(0.92) rotate(-22 15 16)">
+          <path d="M20.5 28.5 Q22.5 23.5 24.2 19.5 C26.8 18.2 27 12.2 24.2 10.6
+                   C22.6 9.8 21 10.8 20.4 11.8 C21.2 9.4 20.6 5 17.8 4.8
+                   C15.6 4.7 14.6 6.8 14.6 8.6 C14.2 6.6 13 4.4 10.8 4.8
+                   C8 5.3 7.6 9.6 8.8 11.8 C7.6 10.8 5.4 10.8 4.2 12.8
+                   C2.8 15.2 4.2 19.2 6.8 20.4 Q8.2 24.2 10.5 28.5
+                   Q15.5 30.2 20.5 28.5 Z"
+                fill="#ffeede" stroke="#5c3828" stroke-width="1.75" stroke-linejoin="round"/>
+          <path d="M10.4 24.5 Q15.5 26 20.6 24.5 L20.1 27.6 Q15.5 29.2 10.9 27.6 Z"
+                fill="#ffc299" opacity="0.9"/>
+          <ellipse cx="6.8"  cy="15.2" rx="2.0" ry="2.5" transform="rotate(-22 6.8 15.2)"  fill="#ff477e"/>
+          <ellipse cx="11.2" cy="9.0"  rx="2.1" ry="2.7" transform="rotate(-7 11.2 9.0)"   fill="#ff477e"/>
+          <ellipse cx="17.6" cy="8.8"  rx="2.1" ry="2.7" transform="rotate(8 17.6 8.8)"    fill="#ff477e"/>
+          <ellipse cx="22.9" cy="14.4" rx="2.0" ry="2.5" transform="rotate(20 22.9 14.4)"  fill="#ff477e"/>
+          <path d="M15.2 14.2 C12.4 14.2 10.3 16.5 10.6 19.2
+                   C10.8 21.4 12.7 22.4 15.2 21.7
+                   C17.7 22.4 19.6 21.4 19.8 19.2
+                   C20.1 16.5 18 14.2 15.2 14.2 Z" fill="#e63973"/>
+          <circle cx="13.9" cy="16.4" r="0.95" fill="#ffffff" opacity="0.85"/>
+        </g>
+      </svg>`;
+
+      /* Inject keyframes once */
+      const styleEl = document.createElement('style');
+      styleEl.textContent = `
+        .tap-paw-stamp {
+          position: fixed;
+          pointer-events: none;
+          z-index: 99999;
+          transform: translate(-50%, -50%) scale(0.4) rotate(-15deg);
+          opacity: 0;
+          animation: tapPawPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          filter: drop-shadow(0 2px 6px rgba(89,28,50,0.28));
+        }
+        @keyframes tapPawPop {
+          0%   { transform: translate(-50%,-50%) scale(0.3) rotate(-18deg); opacity: 0; }
+          30%  { transform: translate(-50%,-50%) scale(1.18) rotate(6deg);  opacity: 1; }
+          55%  { transform: translate(-50%,-50%) scale(0.95) rotate(-3deg); opacity: 0.95; }
+          100% { transform: translate(-50%,-50%) scale(1.1) rotate(4deg);   opacity: 0; }
+        }
+      `;
+      document.head.appendChild(styleEl);
+
+      /* Spawn a paw at (x, y) in viewport coords */
+      function spawnPaw(x, y) {
+        const el = document.createElement('div');
+        el.className = 'tap-paw-stamp';
+        el.innerHTML = PAW_SVG;
+        el.style.left = x + 'px';
+        el.style.top  = y + 'px';
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove(), { once: true });
+      }
+
+      /* Mouse clicks (desktop) */
+      document.addEventListener('click', (e) => {
+        spawnPaw(e.clientX, e.clientY);
+      }, { passive: true });
+
+      /* Touch taps (mobile / tablet) – one paw per finger */
+      document.addEventListener('touchstart', (e) => {
+        for (const t of e.changedTouches) {
+          spawnPaw(t.clientX, t.clientY);
+        }
+      }, { passive: true });
+    })();
+    </script>
 </body>
 
 </html>
