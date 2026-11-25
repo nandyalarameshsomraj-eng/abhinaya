@@ -340,6 +340,11 @@
 
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
     const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const easeInOutQuint = (t) => (t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2);
+    const smoothstep = (e0, e1, x) => {
+      const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
+      return t * t * (3 - 2 * t);
+    };
     const easeOutBack = (t) => {
       const c1 = 1.70158;
       const c3 = c1 + 1;
@@ -443,13 +448,27 @@
         };
       }
 
+      const shadeCache = new WeakMap();
+      function getShadeLUT(base) {
+        let lut = shadeCache.get(base);
+        if (lut) return lut;
+        lut = [];
+        for (let i = 0; i <= 64; i++) {
+          const lightFactor = (i / 64) * 2 - 1;
+          const f = Math.max(-0.42, Math.min(0.32, lightFactor * 0.34));
+          const r = Math.max(0, Math.min(255, Math.round(base[0] + (f > 0 ? (255 - base[0]) * f : base[0] * f))));
+          const g = Math.max(0, Math.min(255, Math.round(base[1] + (f > 0 ? (255 - base[1]) * f : base[1] * f))));
+          const b = Math.max(0, Math.min(255, Math.round(base[2] + (f > 0 ? (255 - base[2]) * f : base[2] * f))));
+          lut.push(`rgb(${r},${g},${b})`);
+        }
+        shadeCache.set(base, lut);
+        return lut;
+      }
+
       function shadeRGB(base, lightFactor) {
-        // lightFactor in [-1, 1]
-        const f = Math.max(-0.42, Math.min(0.32, lightFactor * 0.34));
-        const r = Math.max(0, Math.min(255, Math.round(base[0] + (f > 0 ? (255 - base[0]) * f : base[0] * f))));
-        const g = Math.max(0, Math.min(255, Math.round(base[1] + (f > 0 ? (255 - base[1]) * f : base[1] * f))));
-        const b = Math.max(0, Math.min(255, Math.round(base[2] + (f > 0 ? (255 - base[2]) * f : base[2] * f))));
-        return `rgb(${r},${g},${b})`;
+        const lut = getShadeLUT(base);
+        const idx = Math.max(0, Math.min(64, Math.round(((lightFactor + 1) * 0.5) * 64)));
+        return lut[idx];
       }
 
       function drawPoly(pts, fillStyle, strokeStyle, lineWidth) {
@@ -494,10 +513,10 @@
         const faces = [];
         const dAng = (aEnd - aStart) / steps;
 
-        // 1. Curved outer buttercream wall strips
+        // 1. Curved outer buttercream wall strips (0.006rad overlap avoids subpixel seams without per-strip stroke!)
         for (let i = 0; i < steps; i++) {
           const a0 = aStart + i * dAng;
-          const a1 = a0 + dAng;
+          const a1 = Math.min(aEnd, a0 + dAng + 0.006);
           const am = (a0 + a1) * 0.5;
 
           const p0t = project(ox + Math.cos(a0) * radius, oy + yTop, oz + Math.sin(a0) * radius);
@@ -506,11 +525,9 @@
           const p0b = project(ox + Math.cos(a0) * radius, oy + yBot, oz + Math.sin(a0) * radius);
 
           // Directional lighting from upper front-left
-          const lx = -0.52;
-          const lz = 0.85;
           const nx = Math.cos(am);
           const nz = Math.sin(am);
-          const diff = nx * lx + nz * lz;
+          const diff = nx * -0.52 + nz * 0.85;
 
           // View-space facing check
           const cosY = Math.cos(camYaw);
@@ -522,8 +539,7 @@
           faces.push({
             z: zMid,
             draw: () => {
-              const col = shadeRGB(baseRGB, diff);
-              drawPoly([p0t, p1t, p1b, p0b], col, col, 0.6);
+              drawPoly([p0t, p1t, p1b, p0b], shadeRGB(baseRGB, diff));
             }
           });
         }
@@ -955,7 +971,8 @@
         } else if (progress < 0.58) {
           const t = easeInOutCubic((progress - 0.44) / 0.14);
           cutAngle = THETA_START + (THETA_END - THETA_START) * t;
-          depthY = -4 - Math.sin(t * Math.PI) * 116;
+          const liftArch = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
+          depthY = -4 - liftArch * 116;
         } else if (progress < 0.84) {
           cutAngle = THETA_END;
           const t = easeInOutCubic((progress - 0.58) / 0.26);
@@ -1029,11 +1046,13 @@
         }
 
         const riseEase = easeOutBack(Math.min(1, revealT));
-        const takeEase = easeInOutCubic(takenT);
+        const takeEase = easeInOutQuint(takenT);
+        const floatBlend = smoothstep(0.65, 1.0, revealT);
+        const levitation = Math.sin(elapsed * 2.2) * 3.2 * floatBlend;
 
-        // Ring rises from inside the slice (worldY + 12) up to worldY - 56,
+        // Ring rises from inside the slice (worldY + 14) up to worldY - 58 with smooth levitation,
         // and when taken, floats into hero center spotlight!
-        const emergeY = worldY + 14 - riseEase * 72;
+        const emergeY = worldY + 14 - riseEase * 72 + levitation;
         const pAnchor = project(worldX, emergeY, worldZ);
 
         const heroX = CX;
@@ -1376,13 +1395,14 @@
           return;
         }
         if (!lastTime) lastTime = now;
-        const dt = Math.min(0.05, (now - lastTime) / 1000);
+        const dt = Math.min(0.033, Math.max(0.001, (now - lastTime) / 1000));
         lastTime = now;
         elapsed += dt;
 
-        // Smooth camera parallax spring
-        camYaw += (targetYaw - camYaw) * Math.min(1, dt * 8);
-        camPitch += (targetPitch - camPitch) * Math.min(1, dt * 8);
+        // Frame-rate independent exponential damping for silky parallax
+        const camLerp = 1 - Math.exp(-9.5 * dt);
+        camYaw += (targetYaw - camYaw) * camLerp;
+        camPitch += (targetPitch - camPitch) * camLerp;
 
         // Update candle blow progress
         for (let i = 0; i < 5; i++) {
@@ -1399,14 +1419,18 @@
           }
         }
 
-        // Advance cut -> slice -> ring choreography
+        // Advance cut -> slice -> ring choreography (smoothly overlapped for zero stop-and-go)
         if (phase === 'cutting') {
-          cutAnim = Math.min(1, cutAnim + dt * 0.62);
+          cutAnim = Math.min(1, cutAnim + dt * 0.64);
           if (cutAnim >= 1) {
             phase = 'sliding';
           }
         } else if (phase === 'sliding') {
           sliceAnim = Math.min(1, sliceAnim + dt * 0.95);
+          // Begin blooming the ring seamlessly as the slice cushions into place
+          if (sliceAnim >= 0.68) {
+            ringRiseAnim = Math.min(1, ringRiseAnim + dt * 0.68);
+          }
           if (sliceAnim >= 1) {
             phase = 'ring_rising';
             if (callbacks && callbacks.onSliceReady) callbacks.onSliceReady();
@@ -1423,9 +1447,9 @@
           }
         } else if (phase === 'ring_ready' || phase === 'ring_taken') {
           if (phase === 'ring_taken') {
-            ringTakenAnim = Math.min(1, ringTakenAnim + dt * 1.4);
+            ringTakenAnim = Math.min(1, ringTakenAnim + dt * 1.25);
           }
-          if (Math.random() < (phase === 'ring_taken' ? 0.45 : 0.22)) {
+          if (Math.random() < (phase === 'ring_taken' ? 0.42 : 0.2)) {
             const slideD = 60;
             spawnRingSparkle(Math.cos(THETA_MID) * (slideD + 38), -135, Math.sin(THETA_MID) * (slideD + 38));
           }
@@ -1851,8 +1875,9 @@
       const palette = ['#FFB6C1', '#FF8FAB', '#E0BFB8', '#F5D0A9', '#FFF0F5', '#D49A9A'];
       const originX = confettiCanvas.width / 2;
       const originY = gentle ? confettiCanvas.height * 0.35 : confettiCanvas.height * 0.48;
+      const cappedCount = window.innerWidth < 680 ? Math.min(count, 95) : count;
 
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < cappedCount; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = gentle ? Math.random() * 5 + 2 : Math.random() * 10 + 3.5;
         confettiPieces.push({
@@ -1871,22 +1896,30 @@
       }
 
       if (!confettiRafId) {
-        renderConfetti();
+        confettiLastTime = 0;
+        confettiRafId = requestAnimationFrame(renderConfetti);
       }
     }
 
-    function renderConfetti() {
+    let confettiLastTime = 0;
+    function renderConfetti(now) {
       if (!ctx || !confettiCanvas) return;
+      if (!confettiLastTime) confettiLastTime = now || performance.now();
+      const dt = Math.min(0.035, Math.max(0.001, ((now || performance.now()) - confettiLastTime) / 1000));
+      confettiLastTime = now || performance.now();
+      const step = dt * 60;
+
       ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
 
+      const dragFactor = Math.pow(0.985, step);
       for (let i = confettiPieces.length - 1; i >= 0; i--) {
         const p = confettiPieces[i];
-        p.vx *= 0.985;
-        p.vy += 0.19; // soft gravity
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.vRot;
-        p.alpha -= 0.007;
+        p.vx *= dragFactor;
+        p.vy += 0.19 * step; // frame-rate independent gravity
+        p.x += p.vx * step;
+        p.y += p.vy * step;
+        p.rot += p.vRot * step;
+        p.alpha -= 0.007 * step;
 
         if (p.alpha <= 0.02 || p.y >= confettiCanvas.height + 30) {
           confettiPieces.splice(i, 1);
@@ -1913,6 +1946,7 @@
         confettiRafId = requestAnimationFrame(renderConfetti);
       } else {
         confettiRafId = null;
+        confettiLastTime = 0;
         ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
       }
     }
@@ -2064,20 +2098,27 @@
       targetCtx.fill();
     }
 
-    function renderFlowerSplash() {
+    let flowerSplashLastTime = 0;
+    function renderFlowerSplash(now) {
       if (!splashCtx || !flowerSplashCanvas) return;
+      if (!flowerSplashLastTime) flowerSplashLastTime = now || performance.now();
+      const dt = Math.min(0.035, Math.max(0.001, ((now || performance.now()) - flowerSplashLastTime) / 1000));
+      flowerSplashLastTime = now || performance.now();
+      const step = dt * 60;
+
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       splashCtx.clearRect(0, 0, vw, vh);
 
+      const glintDrag = Math.pow(0.965, step);
       // Update & draw sparkle glints in-place
       for (let i = splashGlints.length - 1; i >= 0; i--) {
         const g = splashGlints[i];
-        g.life++;
-        g.vx *= 0.965;
-        g.vy = g.vy * 0.965 + 0.14;
-        g.x += g.vx;
-        g.y += g.vy;
+        g.life += step;
+        g.vx *= glintDrag;
+        g.vy = g.vy * glintDrag + 0.14 * step;
+        g.x += g.vx * step;
+        g.y += g.vy * step;
         const progress = g.life / g.maxLife;
         g.alpha = progress > 0.6 ? Math.max(0, 1 - (progress - 0.6) / 0.4) : 1;
 
@@ -2097,17 +2138,18 @@
       // Update & draw lily sticker splashes in-place
       for (let i = flowerSplashes.length - 1; i >= 0; i--) {
         const f = flowerSplashes[i];
-        f.life++;
-        f.vx *= f.drag;
-        f.vy = f.vy * f.drag + f.gravity;
-        f.wobblePhase += f.wobbleSpeed;
-        f.x += f.vx + Math.sin(f.wobblePhase) * 0.6;
-        f.y += f.vy;
-        f.rot += f.vRot;
+        f.life += step;
+        const fDrag = Math.pow(f.drag, step);
+        f.vx *= fDrag;
+        f.vy = f.vy * fDrag + f.gravity * step;
+        f.wobblePhase += f.wobbleSpeed * step;
+        f.x += (f.vx + Math.sin(f.wobblePhase) * 0.6) * step;
+        f.y += f.vy * step;
+        f.rot += f.vRot * step;
 
         // Bouncy overshoot scale-in during first 16 frames
         if (f.popProgress < 1) {
-          f.popProgress = Math.min(1, f.popProgress + 0.075);
+          f.popProgress = Math.min(1, f.popProgress + 0.075 * step);
           const t = f.popProgress;
           const overshoot = 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
           f.scale = Math.max(0.1, f.targetScale * overshoot);
@@ -2141,6 +2183,7 @@
         flowerSplashRafId = requestAnimationFrame(renderFlowerSplash);
       } else {
         flowerSplashRafId = null;
+        flowerSplashLastTime = 0;
         splashCtx.clearRect(0, 0, vw, vh);
       }
     }

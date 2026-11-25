@@ -703,13 +703,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fill();
         }
 
-        update() {
-            this.velocity.x *= this.friction;
-            this.velocity.y *= this.friction;
-            this.y += 0.1; // gravity
-            this.x += this.velocity.x;
-            this.y += this.velocity.y;
-            this.alpha -= 0.01;
+        update(step) {
+            const f = Math.pow(this.friction, step);
+            this.velocity.x *= f;
+            this.velocity.y *= f;
+            this.y += 0.1 * step; // gravity
+            this.x += this.velocity.x * step;
+            this.y += this.velocity.y * step;
+            this.alpha -= 0.01 * step;
         }
     }
 
@@ -717,7 +718,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Celebration Mode: ON 🎆");
         if (!fireworkActive) {
             fireworkActive = true;
-            animateFireworks();
+            fireworkLastTime = 0;
+            requestAnimationFrame(animateFireworks);
         }
         
         // Spawn a random firework every 15 seconds
@@ -731,25 +733,32 @@ document.addEventListener('DOMContentLoaded', () => {
     window.startFireworks = () => {
         if (!fireworkActive) {
             fireworkActive = true;
-            animateFireworks();
+            fireworkLastTime = 0;
+            requestAnimationFrame(animateFireworks);
         }
         let count = 0;
         const interval = setInterval(() => {
             createFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.5);
             count++;
-            if (count > 25) clearInterval(interval);
-        }, 300);
+            if (count > 18) clearInterval(interval);
+        }, 280);
     };
 
     const createFirework = (x, y) => {
         const colors = ['#ff4d6d', '#ff8fab', '#ffb7c5', '#ffd700', '#ffffff'];
         const color = colors[Math.floor(Math.random() * colors.length)];
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 36; i++) {
             particles.push(new Particle(x, y, color));
         }
     };
 
-    const animateFireworks = () => {
+    let fireworkLastTime = 0;
+    const animateFireworks = (now) => {
+        if (!fireworkLastTime) fireworkLastTime = now || performance.now();
+        const dt = Math.min(0.035, Math.max(0.001, ((now || performance.now()) - fireworkLastTime) / 1000));
+        fireworkLastTime = now || performance.now();
+        const step = dt * 60;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -757,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (particle.alpha <= 0.02) {
                 particles.splice(i, 1);
             } else {
-                particle.update();
+                particle.update(step);
                 particle.draw();
             }
         }
@@ -767,6 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             ctx.globalAlpha = 1;
             fireworkActive = false;
+            fireworkLastTime = 0;
         }
     };
 });
