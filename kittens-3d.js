@@ -375,6 +375,7 @@
       uniform mat4 uModel;
       uniform mat4 uJoints[20];
       uniform float uChubby;
+      uniform float uBaby;
       uniform float uFluffPush;
 
       varying vec2 vUV;
@@ -391,19 +392,30 @@
       void main() {
         vec3 p = aPos;
 
-        // Fat Persian kitten proportions (uChubby = 1.0 for Husky, 0.0 for Neo)
+        // Tiny adorable baby-kitten proportions (uBaby = 1.0 for Neo, matching photo 2!)
+        if (uBaby > 0.001) {
+          float kHeadMask = smoothstep(0.16, 0.25, p.z) * smoothstep(0.21, 0.29, p.y);
+          vec3 headPivot = vec3(0.0, 0.31, 0.24);
+          // Bigger cute round baby-kitten head + slightly shorter chubby legs
+          p = mix(p, headPivot + (p - headPivot) * vec3(1.16, 1.14, 1.06), kHeadMask * uBaby);
+          p.y *= 1.0 - 0.06 * uBaby * (1.0 - kHeadMask);
+        }
+
+        // Fat fluffy Persian kitten proportions (uChubby = 1.0 for Husky, matching photo 1!)
         if (uChubby > 0.001) {
           float torsoMask = smoothstep(-0.22, -0.05, p.z) * (1.0 - smoothstep(0.09, 0.22, p.z)) * smoothstep(0.05, 0.14, p.y);
           float headMask  = smoothstep(0.16, 0.24, p.z) * smoothstep(0.21, 0.29, p.y);
           float snoutMask = smoothstep(0.27, 0.34, p.z) * smoothstep(0.23, 0.33, p.y);
+          float ruffMask  = smoothstep(0.06, 0.20, p.z) * (1.0 - smoothstep(0.20, 0.29, p.y)) * smoothstep(0.06, 0.14, p.y);
 
-          // Plump chubby Persian belly & wide flanks
-          p.x *= 1.0 + uChubby * (0.18 + 0.28 * torsoMask + 0.12 * headMask);
-          p.y -= uChubby * 0.020 * torsoMask * (1.0 - smoothstep(0.09, 0.23, p.y));
+          // Plump fat Persian belly, wide flanks & fluffy white chest ruff
+          p.x *= 1.0 + uChubby * (0.20 + 0.30 * torsoMask + 0.16 * headMask + 0.14 * ruffMask);
+          p.y -= uChubby * 0.022 * torsoMask * (1.0 - smoothstep(0.09, 0.23, p.y));
           p.y += uChubby * 0.015 * torsoMask * smoothstep(0.18, 0.28, p.y);
+          p.z += uChubby * 0.018 * ruffMask;
           // Rounder flat-faced Persian cheeks & shorter nose
-          p.z -= uChubby * 0.022 * snoutMask;
-          // Extra fluffy fur card push
+          p.z -= uChubby * 0.024 * snoutMask;
+          // Extra fluffy Persian fur push
           p += aNorm * (uFluffPush * uChubby);
         }
 
@@ -704,8 +716,9 @@
       wy: 0.0,
       wz: 0.03,
       baseYaw: 0.42,
-      scale: 0.90,
-      chubby: 0.0, // Sleek ginger kitten
+      scale: 0.87,
+      chubby: 0.0,
+      baby: 1.0, // Tiny round-headed ginger baby kitten matching photo 2!
       textures: neoTextures,
       badgeEl: neoBadge,
       moodEl: neoMoodEl,
@@ -721,7 +734,8 @@
       wz: 0.03,
       baseYaw: -0.42,
       scale: 1.04,
-      chubby: 1.0, // Fat white & brown Persian kitten!
+      chubby: 1.0, // Fat white & caramel Persian kitten matching photo 1!
+      baby: 0.0,
       textures: huskyTextures,
       badgeEl: huskyBadge,
       moodEl: huskyMoodEl,
@@ -1083,6 +1097,7 @@
       gl.uniformMatrix4fv(gl.getUniformLocation(catProg, 'uJoints'), false, jointUniformBuf);
       gl.uniform3fv(gl.getUniformLocation(catProg, 'uCamPos'), camPos);
       gl.uniform1f(gl.getUniformLocation(catProg, 'uChubby'), k.chubby);
+      gl.uniform1f(gl.getUniformLocation(catProg, 'uBaby'), k.baby || 0.0);
       gl.uniform1f(gl.getUniformLocation(catProg, 'uPetGlow'), k.petLevel);
 
       const aPos = gl.getAttribLocation(catProg, 'aPos');
@@ -1104,7 +1119,7 @@
         gl.bindTexture(gl.TEXTURE_2D, k.textures[p.material]);
         gl.uniform1i(uTex, 0);
         gl.uniform1f(uAlphaTest, isFur ? 0.12 : 0.5);
-        gl.uniform1f(uFluffPush, isFur ? 0.008 : 0.0);
+        gl.uniform1f(uFluffPush, isFur ? 0.015 : 0.0);
 
         bindAttr(aPos, p.posVBO, 3);
         bindAttr(aNorm, p.normVBO, 3);
