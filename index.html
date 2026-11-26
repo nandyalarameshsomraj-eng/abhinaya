@@ -3,9 +3,20 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>For My Dearest Abhinaya ❤️</title>
     <meta name="description" content="A special, romantic surprise for the most beautiful soul.">
+
+    <!-- Mobile & Cross-Device PWA Support -->
+    <meta name="theme-color" content="#FBD7E8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="For Abhinaya">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💖</text></svg>">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -295,10 +306,7 @@
         </div>
     </div>
 
-    <video id="bg-video" autoplay muted loop playsinline poster="image1.png">
-        <source src="bg.mp4" type="video/mp4">
-        <!-- Fallback if video is not present -->
-    </video>
+    <!-- Ambient Pink Background (optional video slot removed to avoid mobile 404s) -->
 
     <!-- INTRO SCREEN -->
     <section id="intro" class="screen">

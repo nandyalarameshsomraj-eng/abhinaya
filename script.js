@@ -555,9 +555,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusText = pin.querySelector('.audio-status');
         
         if (audio.paused) {
-            audio.play();
-            pin.classList.add('playing');
-            statusText.textContent = "Playing: Her. 💖";
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    pin.classList.add('playing');
+                    statusText.textContent = "Playing: Her. 💖";
+                }).catch((err) => {
+                    console.warn("Audio playback was blocked or unsupported on this browser:", err);
+                    pin.classList.remove('playing');
+                    statusText.textContent = "Tap again to play 🎵";
+                });
+            } else {
+                pin.classList.add('playing');
+                statusText.textContent = "Playing: Her. 💖";
+            }
         } else {
             audio.pause();
             pin.classList.remove('playing');
